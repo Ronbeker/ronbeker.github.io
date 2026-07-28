@@ -273,6 +273,61 @@ mark{background:#ffe9a8;padding:0 2px;border-radius:3px}
 .qbody table{display:block;overflow-x:auto;max-width:100%}
 .modal-b pre{max-width:100%}
 
+/* ===== כפתור צף: חזרה לתוכן העניינים ===== */
+.fab{
+  position:fixed; inset-inline-end:20px; bottom:24px; width:46px; height:46px; padding:0;
+  border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--brand-dk);
+  box-shadow:0 2px 6px rgba(16,32,45,.10),0 10px 26px rgba(16,32,45,.14);
+  display:grid; place-items:center; cursor:pointer; z-index:55;
+  opacity:0; visibility:hidden; transform:translateY(12px) scale(.9);
+  transition:opacity .22s ease, transform .22s ease, visibility .22s, background .15s, color .15s, bottom .22s;
+}
+.fab.on{opacity:1; visibility:visible; transform:none}
+.fab:hover{background:var(--brand); color:#fff; border-color:var(--brand)}
+.fab:focus-visible{outline:2px solid var(--brand); outline-offset:3px}
+.fab:active{transform:scale(.94)}
+.fab .ring{
+  position:absolute; inset:-4px; border-radius:50%; pointer-events:none;
+  background:conic-gradient(var(--brand) calc(var(--p,0) * 1%), rgba(13,99,134,.14) 0);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+          mask:radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.fab .ar{
+  width:11px; height:11px; border:solid currentColor; border-width:2.2px 2.2px 0 0;
+  transform:rotate(-45deg); margin-top:4px;
+}
+@media (prefers-reduced-motion:reduce){ .fab{transition:none} html{scroll-behavior:auto} }
+@media print{ .fab{display:none!important} }
+
+/* ===== סרגל חזרה לנושא ===== */
+.ret-bar{
+  position:fixed; inset-inline:0; bottom:0; z-index:54;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  width:min(680px,calc(100% - 24px)); margin:0 auto 16px;
+  background:rgba(255,255,255,.97); backdrop-filter:blur(10px);
+  border:1px solid var(--brand-lt); border-radius:14px; padding:9px 12px 9px 8px;
+  box-shadow:0 3px 10px rgba(16,32,45,.10),0 14px 34px rgba(16,32,45,.16);
+  animation:retIn .28s ease both;
+}
+@keyframes retIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.ret-bar .rt{flex:1; min-width:150px; font-size:.9rem; color:var(--ink-2)}
+.ret-bar .rt b{color:var(--brand-dk)}
+.ret-bar .x{font-size:1.25rem;line-height:1}
+@media (prefers-reduced-motion:reduce){ .ret-bar{animation:none} }
+@media print{ .ret-bar{display:none!important} }
+@media(max-width:560px){ .ret-bar .rt{flex:1 0 100%} }
+
+/* ===== הבהוב עדין על היעד שאליו קפצנו ===== */
+@keyframes flashHl{
+  0%{background:rgba(255,214,102,.55); box-shadow:0 0 0 6px rgba(255,214,102,.30)}
+  100%{background:transparent; box-shadow:0 0 0 6px transparent}
+}
+.flash{animation:flashHl 1.7s ease-out; border-radius:8px}
+@media (prefers-reduced-motion:reduce){ .flash{animation:none; outline:2px solid var(--warn-line)} }
+
+/* התוכן לא יוסתר מאחורי הסרגל הצף */
+body:has(.ret-bar) .wrap{padding-bottom:130px}
+
 /* ---- scoped styles of the original summaries ---- */
 :root{--blue:#0d6386;--blue-dark:#074b68;--blue-light:#dcecf5;--blue-pale:#f2f8fb;--text:#202428;--muted:#5b6570;--line:#8b969e;--warn:#fff8df;--warn-border:#d6a800;--stack:#f5dada;--heap:#fff0bd;--shared:#dcefd5;--private:#e2eaf7;--bad:#f9dddd;--good:#dff0dc;--neutral:#eef2f5;--code:#151a1e;--purple:#ece5f4;--orange:#fff0cf;}
 .summary-body *{box-sizing:border-box}
@@ -1810,6 +1865,31 @@ views.summaries = () => {
 window.setRead = (sid,v)=>{ S.read[sid]=v; if(!v) delete S.read[sid]; save(); refreshChrome(); render(); };
 window.setUnd  = (sid,v)=>{ S.understood[sid]=v; if(!v) delete S.understood[sid]; save(); refreshChrome(); render(); };
 
+
+/* ---------- ניווט הלוך-חזור בין נושא לסיכום ---------- */
+let returnTo = null;
+function flash(el){ if(!el) return; el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'), 1700); }
+
+window.gotoTopicInSummary = (sid, i) => {
+  returnTo = { sid, i, title: byId[sid].topics[i] };
+  openReader(sid);
+  setTimeout(()=>{
+    const e = document.getElementById(sid+'-t'+i);
+    if(e){ e.scrollIntoView(); window.scrollBy(0,-110); flash(e); }
+  }, 70);
+};
+window.backToTopic = () => {
+  const r = returnTo; returnTo = null;
+  if(!r) return go('topics');
+  openAccs[r.sid] = true; go('topics');
+  requestAnimationFrame(()=>{
+    const row = document.getElementById('tp-'+r.sid+'-'+r.i);
+    if(row){ row.scrollIntoView({block:'center'}); flash(row); }
+  });
+};
+window.quizFromReader = () => { if(returnTo) openQuiz(returnTo.sid, returnTo.i); };
+window.clearReturn = () => { returnTo = null; render(); };
+
 /* ---------- Reader ---------- */
 let readerSid = null;
 window.openReader = (sid) => {
@@ -1830,7 +1910,9 @@ views.reader = () => {
   }
   const s = byId[readerSid]; if(!s) return '<div class="empty">לא נמצא</div>';
   const r=!!S.read[s.sid], u=!!S.understood[s.sid];
+  const ret = !!(returnTo && returnTo.sid === s.sid);
   return `<div class="reader-top">
+    ${ret ? `<button class="btn sm" onclick="backToTopic()">‹ חזרה לנושא</button>` : ''}
     <button class="btn ghost sm" onclick="go('summaries')">‹ חזרה לסיכומים</button>
     <div class="grow" style="flex:1"></div>
     <label class="chk${r?' done':''}"><input type="checkbox" ${r?'checked':''}
@@ -1848,7 +1930,13 @@ views.reader = () => {
     <button class="btn" onclick="setRead('${s.sid}',true);setUnd('${s.sid}',true);toast('סומן כנקרא ומובן');go('summaries')">
       סיימתי — סמן שקראתי והבנתי</button>
     <button class="btn ghost" onclick="go('topics');openAcc('${s.sid}')">עבור לבדיקת הנושאים</button>
-  </div>`;
+  </div>
+  ${ret ? `<div class="ret-bar" role="region" aria-label="חזרה לנושא">
+    <span class="rt">הגעת מהנושא <b>${esc(returnTo.title)}</b></span>
+    <button class="btn sm" onclick="quizFromReader()">בדוק הבנה</button>
+    <button class="btn ghost sm" onclick="backToTopic()">חזרה לנושא ›</button>
+    <button class="x" onclick="clearReturn()" aria-label="סגור">×</button>
+  </div>` : ''}`;
 };
 
 /* ---------- Topics ---------- */
@@ -1878,12 +1966,12 @@ views.topics = () => {
       </button>
       <div class="acc-b">${s.topics.map((t,i)=>{
         const r = S.topics[tkey(s.sid,i)]; const done = r?.done;
-        return `<div class="tp${done?' done':''}">
+        return `<div class="tp${done?' done':''}" id="tp-${s.sid}-${i}">
           <span class="n">${num(i+1)}</span>
           <span class="t">${esc(t)}</span>
           ${done ? `<span class="pill g">הבנתי</span>` : r?.tries ? `<span class="pill e">${num(r.score)}/3</span>` : ''}
           <span class="acts">
-            <button class="btn sm ghost" onclick="openReader('${s.sid}');setTimeout(()=>{const e=document.getElementById('${s.sid}-t${i}');if(e){e.scrollIntoView();window.scrollBy(0,-110);}},60)">לסיכום</button>
+            <button class="btn sm ghost" onclick="gotoTopicInSummary('${s.sid}',${i})">לסיכום</button>
             <button class="btn sm ${done?'ghost':''}" onclick="openQuiz('${s.sid}',${i})">${done?'תרגל שוב':'בדוק הבנה'}</button>
           </span></div>`;}).join('')}</div></div>`;
   }).join('');
@@ -2330,6 +2418,7 @@ function render(){
   $('#app').innerHTML = (views[view]||views.dash)();
   refreshChrome();
   const dt=$('#exam-date'); if(dt) dt.onchange=e=>{ S.examDate=e.target.value; save(); render(); };
+  if(window.__fabUpdate) requestAnimationFrame(window.__fabUpdate);
 }
 window.render = render;
 
@@ -2543,6 +2632,36 @@ window.hideSol = () => { EX.showSol = false; render(); };
 window.resetAll = () => { if(confirm('לאפס את כל ההתקדמות? פעולה זו אינה הפיכה.')){
   localStorage.removeItem(KEY); location.reload(); } };
 window.toast = toast;
+
+
+/* ---------- כפתור צף: חזרה לתוכן העניינים + מד התקדמות קריאה ---------- */
+(function fab(){
+  const el = document.createElement('button');
+  el.id = 'fab'; el.className = 'fab'; el.type = 'button';
+  el.setAttribute('aria-label', 'חזרה לראש העמוד ולתוכן העניינים');
+  el.title = 'חזרה לתוכן העניינים';
+  el.innerHTML = '<span class="ring" aria-hidden="true"></span><span class="ar" aria-hidden="true"></span>';
+  el.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const t = document.querySelector('.toc');
+    if(t) setTimeout(()=>t.focus?.(), 400);
+  });
+  document.body.appendChild(el);
+  let raf = 0;
+  const upd = () => {
+    raf = 0;
+    const y = window.scrollY || document.documentElement.scrollTop;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    el.style.setProperty('--p', h > 0 ? Math.min(100, Math.round(y * 100 / h)) : 0);
+    el.classList.toggle('on', y > 400);
+    const bar = document.querySelector('.ret-bar') || document.querySelector('.sticky-sub');
+    el.style.bottom = bar ? (Math.round(bar.getBoundingClientRect().height) + 30) + 'px' : '';
+  };
+  addEventListener('scroll', () => { if(!raf) raf = requestAnimationFrame(upd); }, { passive:true });
+  addEventListener('resize', upd, { passive:true });
+  window.__fabUpdate = upd; upd();
+  if(window.ResizeObserver){ new ResizeObserver(upd).observe(document.body); }
+})();
 
 /* ---------- boot ---------- */
 $('#tabs').innerHTML = TABS.map(([v,l])=>{
