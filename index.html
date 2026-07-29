@@ -1676,16 +1676,33 @@ const quizBy = {}; QUIZ.forEach(q => quizBy[q.sid] = q);
 const examBy = {}; EXAMS.forEach(e => examBy[e.id] = e);
 
 /* ---------- state ---------- */
-const DEF = { read:{}, understood:{}, topics:{}, exams:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0 };
+const DEF = { read:{}, understood:{}, topics:{}, exams:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0, mt:{} };
 let S = load();
 function load(){
   try { const raw = localStorage.getItem(KEY); if(!raw) return structuredClone(DEF);
-    return Object.assign(structuredClone(DEF), JSON.parse(raw)); }
+    const s = Object.assign(structuredClone(DEF), JSON.parse(raw));
+    if(!s.mt || typeof s.mt !== 'object') s.mt = {};
+    return s; }
   catch(e){ return structuredClone(DEF); }
+}
+/* ---------- חותמת זמן פר־פריט ----------
+   בלי זה הסנכרון היה "המכשיר האחרון ששמר דורס את הכול", ולכן התקדמות
+   נעלמה. עכשיו כל סימון נושא / קריאה / תשובה נושא חותמת זמן משלו,
+   והמיזוג מכריע לכל פריט בנפרד מי החדש יותר.                          */
+const akey = (eid,pid) => 'a:'+eid+'|'+pid;
+function touch(){ const n = Date.now();
+  for(const k of arguments) if(k) S.mt[k] = n; }
+function touchExam(eid, answers){
+  touch('e:'+eid);
+  if(answers){ const n = Date.now(); Object.keys(answers).forEach(pid => S.mt[akey(eid,pid)] = n); }
 }
 let saveT;
 function writeLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); return true; }
   catch(e){ toast('שגיאה בשמירה מקומית — ייתכן שהאחסון מלא','e'); return false; } }
+/* שמירה מקומית בלבד — להעדפות תצוגה (לשונית אחרונה וכד'). לא מזיזה את
+   updatedAt ולא דוחפת לענן, כדי שמכשיר ישן שרק דפדפו בו לא ייראה
+   "חדש יותר" מהענן וידרוס התקדמות אמיתית.                             */
+function saveLocal(){ clearTimeout(saveT); saveT = setTimeout(writeLocal, 150); }
 function save(){ S.updatedAt = Date.now(); clearTimeout(saveT);
   saveT = setTimeout(()=>{ writeLocal(); cloudPush(); }, 150); }
 function saveNow(){ S.updatedAt = Date.now(); clearTimeout(saveT); writeLocal(); cloudPush(); }
@@ -1862,8 +1879,8 @@ views.summaries = () => {
       <button class="btn sm" onclick="openReader('__all__')">פתח הכל</button>
     </div></div>`;
 };
-window.setRead = (sid,v)=>{ S.read[sid]=v; if(!v) delete S.read[sid]; save(); refreshChrome(); render(); };
-window.setUnd  = (sid,v)=>{ S.understood[sid]=v; if(!v) delete S.understood[sid]; save(); refreshChrome(); render(); };
+window.setRead = (sid,v)=>{ S.read[sid]=v; if(!v) delete S.read[sid]; touch('r:'+sid); save(); refreshChrome(); render(); };
+window.setUnd  = (sid,v)=>{ S.understood[sid]=v; if(!v) delete S.understood[sid]; touch('u:'+sid); save(); refreshChrome(); render(); };
 
 
 /* ---------- ניווט הלוך-חזור בין נושא לסיכום ---------- */
@@ -2036,11 +2053,11 @@ window.checkQuiz = ()=>{
   const score = QZ.qs.filter((q,qi)=>QZ.picked[qi]===q.a).length;
   const k = tkey(QZ.sid,QZ.i); const prev = S.topics[k] || {tries:0};
   S.topics[k] = { done: score===QZ.qs.length || !!prev.done, score, tries:(prev.tries||0)+1, ts: Date.now() };
-  saveNow(); refreshChrome(); renderQuiz();
+  touch('t:'+k); saveNow(); refreshChrome(); renderQuiz();
 };
 window.retryQuiz = ()=>{ QZ.picked=[]; QZ.checked=false; renderQuiz(); };
 window.forceDone = ()=>{ const k=tkey(QZ.sid,QZ.i); S.topics[k]={...(S.topics[k]||{}),done:true};
-  saveNow(); refreshChrome(); toast('הנושא סומן כמובן'); closeQuiz(); };
+  touch('t:'+k); saveNow(); refreshChrome(); toast('הנושא סומן כמובן'); closeQuiz(); };
 window.closeQuiz = ()=>{ $('#ov').hidden=true; $('#ov').innerHTML=''; document.body.style.overflow='';
   QZ=null; render(); };
 window.nextTopic = ()=>{
@@ -2081,7 +2098,7 @@ views.exams = () => {
     <div class="grid g3">${past.map(card).join('')}</div>`;
 };
 window.markExam = (id,v)=>{ S.exams[id]=Object.assign({},S.exams[id],{done:v}); if(!v) delete S.exams[id].done;
-  save(); refreshChrome(); render(); };
+  touch('e:'+id); save(); refreshChrome(); render(); };
 
 let EX=null, timerH=null;
 window.openExam = (id)=>{
@@ -2156,11 +2173,13 @@ function ansField(p){
   return `<textarea class="ans" rows="${p.rows||6}" dir="auto" placeholder="התשובה שלך…"
     oninput="setAns('${p.pid}',this.value)">${esc(v)}</textarea>`;
 }
-window.setAns = (pid,v)=>{ EX.answers[pid]=v; saveDraft(false);
+window.setAns = (pid,v)=>{ EX.answers[pid]=v; touch(akey(EX.e.id,pid)); saveDraft(false);
   if(document.querySelector(`input[name="a-${pid}"]`)) render(); };
 let draftT;
 window.saveDraft = (loud)=>{ clearTimeout(draftT); draftT=setTimeout(()=>{
+    if(!EX) return;
     S.exams[EX.e.id]=Object.assign({}, S.exams[EX.e.id], {answers:EX.answers, elapsed:EX.elapsed});
+    touch('e:'+EX.e.id);
     saveNow(); if(loud) toast('הטיוטה נשמרה'); }, loud?0:400); };
 window.toggleTimer = ()=>{
   EX.running=!EX.running;
@@ -2231,6 +2250,7 @@ window.submitExam = ()=>{
   download(fname, L.join('\n'));
   S.exams[e.id] = Object.assign({}, S.exams[e.id],
     {done:true, answers:EX.answers, elapsed:EX.elapsed, submittedAt:now.toISOString()});
+  touchExam(e.id, EX.answers);
   saveNow(); EX.showSol=true; refreshChrome(); render();
   toast('הקובץ ירד — שלח לי אותו כאן לבדיקה');
 };
@@ -2315,7 +2335,7 @@ window.exportProgress = ()=>{
 };
 window.importProgress = (inp)=>{
   const f=inp.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign(structuredClone(DEF), JSON.parse(r.result)); saveNow();
+  r.onload=()=>{ try{ adoptState(JSON.parse(r.result)); cloudPush(true);
       refreshChrome(); render(); toast('ההתקדמות יובאה'); }catch(e){ toast('קובץ לא תקין','e'); } };
   r.readAsText(f);
 };
@@ -2411,13 +2431,16 @@ views.reader = () => {
 /* ---------- router ---------- */
 const TABS=[['dash','דשבורד'],['summaries','סיכומים'],['topics','נושאי הקורס'],['exams','מבחנים'],['tools','כלים']];
 let view = S.lastView && views[S.lastView] ? S.lastView : 'dash';
-window.go = (v)=>{ view=v; if(['dash','summaries','topics','exams','tools'].includes(v)){ S.lastView=v; save(); }
+/* מעבר בין לשוניות הוא העדפת תצוגה מקומית בלבד — הוא לא "התקדמות".
+   קודם הוא קרא ל-save() ולכן עצם הדפדוף במכשיר ישן הפך אותו ל"חדש
+   ביותר" ודרס בענן התקדמות אמיתית ממכשיר אחר.                       */
+window.go = (v)=>{ view=v; if(['dash','summaries','topics','exams','tools'].includes(v)){ S.lastView=v; saveLocal(); }
   render(); window.scrollTo(0,0); };
 function render(){
   $$('#tabs .tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.v===view)));
   $('#app').innerHTML = (views[view]||views.dash)();
   refreshChrome();
-  const dt=$('#exam-date'); if(dt) dt.onchange=e=>{ S.examDate=e.target.value; save(); render(); };
+  const dt=$('#exam-date'); if(dt) dt.onchange=e=>{ S.examDate=e.target.value; touch('examDate'); save(); render(); };
   if(window.__fabUpdate) requestAnimationFrame(window.__fabUpdate);
 }
 window.render = render;
@@ -2443,12 +2466,13 @@ window.cloudOn = () => { const c = cloudCfg(); return !!(c.bin && c.key); };
 
 function payload(){
   const c = cloudCfg();
+  const out = structuredClone(S);
+  delete out.lastView;                       // העדפת תצוגה מקומית — לא מסתנכרנת
   if(c.skipAnswers){
-    const lean = structuredClone(S);
-    Object.keys(lean.exams||{}).forEach(k=>{ delete lean.exams[k].answers; });
-    return lean;
+    Object.keys(out.exams||{}).forEach(k=>{ delete out.exams[k].answers; });
+    Object.keys(out.mt||{}).forEach(k=>{ if(k.charAt(0)==='a') delete out.mt[k]; });
   }
-  return S;
+  return out;
 }
 function setSync(st, msg){
   syncS.st = st; syncS.msg = msg||'';
@@ -2481,6 +2505,118 @@ function progCount(x){
   return Object.keys(x.read||{}).length + Object.keys(x.understood||{}).length +
          Object.keys(x.topics||{}).length + Object.keys(x.exams||{}).length;
 }
+/* כל מפתחות ה"התקדמות" של רשומה, בפורמט של mt */
+function allKeys(rec){
+  const out = [];
+  Object.keys(rec.read||{}).forEach(k=>out.push('r:'+k));
+  Object.keys(rec.understood||{}).forEach(k=>out.push('u:'+k));
+  Object.keys(rec.topics||{}).forEach(k=>out.push('t:'+k));
+  Object.keys(rec.exams||{}).forEach(id=>{ out.push('e:'+id);
+    Object.keys((rec.exams[id]||{}).answers||{}).forEach(pid=>out.push(akey(id,pid))); });
+  ['master','notes','examDate'].forEach(k=>out.push(k));
+  return out;
+}
+
+/* ===================== מנוע המיזוג =====================
+   הבעיה הישנה: משיכה מהענן החליפה את כל המצב המקומי, ודחיפה שלחה את כל
+   המצב המקומי. כל מכשיר דרס לגמרי את השני — ומכאן "האחוזים חוזרים אחורה"
+   ו"מילאתי את אותה תשובה שלוש פעמים".
+   הפתרון: מיזוג לכל פריט בנפרד. לכל מפתח בוחרים את הצד עם חותמת הזמן
+   החדשה יותר; מפתח שנמחק נחשב "ערך" בפני עצמו, כך שגם ביטול סימון שורד.
+   לרשומות ישנות בלי mt נופלים אחורה ל-updatedAt של הרשומה כולה.        */
+function keyTs(rec, k, present){
+  const t = (rec.mt||{})[k];
+  if(typeof t === 'number') return t;
+  return present ? (rec.updatedAt || 1) : 0;
+}
+function mergeMap(prefix, a, b, recA, recB, mt){
+  const A = a||{}, B = b||{}, out = {};
+  for(const k of new Set(Object.keys(A).concat(Object.keys(B)))){
+    const hasA = Object.prototype.hasOwnProperty.call(A, k),
+          hasB = Object.prototype.hasOwnProperty.call(B, k);
+    const tA = keyTs(recA, prefix+k, hasA), tB = keyTs(recB, prefix+k, hasB);
+    const mine = tA >= tB;
+    if(mine ? hasA : hasB) out[k] = mine ? A[k] : B[k];
+    const t = Math.max(tA, tB); if(t) mt[prefix+k] = t;
+  }
+  return out;
+}
+function mergeScalar(k, a, b, recA, recB, mt, def){
+  const tA = keyTs(recA, k, a !== undefined && a !== def),
+        tB = keyTs(recB, k, b !== undefined && b !== def);
+  const t = Math.max(tA, tB); if(t) mt[k] = t;
+  return tA >= tB ? a : b;
+}
+function mergeExams(recA, recB, mt){
+  const A = recA.exams||{}, B = recB.exams||{}, out = {};
+  for(const id of new Set(Object.keys(A).concat(Object.keys(B)))){
+    const ea = A[id], eb = B[id];
+    const tA = keyTs(recA, 'e:'+id, !!ea), tB = keyTs(recB, 'e:'+id, !!eb);
+    if(!ea && !eb) continue;
+    // done / submittedAt נקבעים לפי הצד החדש יותר; elapsed הוא זמן עבודה — לוקחים את המרבי
+    const win = (tA >= tB ? ea : eb) || ea || eb;
+    const rec = Object.assign({}, win);
+    rec.elapsed = Math.max((ea&&ea.elapsed)||0, (eb&&eb.elapsed)||0);
+    const t = Math.max(tA, tB); if(t) mt['e:'+id] = t;
+    // תשובות: מיזוג פר־סעיף. תשובה שכתבת במכשיר אחד לא נמחקת בגלל
+    // שהמכשיר השני עוד לא ראה אותה (וגם לא בגלל מצב "בלי תשובות").
+    const ansA = (ea&&ea.answers)||{}, ansB = (eb&&eb.answers)||{};
+    const ans = {};
+    for(const pid of new Set(Object.keys(ansA).concat(Object.keys(ansB)))){
+      const k = akey(id, pid);
+      const hasA = Object.prototype.hasOwnProperty.call(ansA, pid),
+            hasB = Object.prototype.hasOwnProperty.call(ansB, pid);
+      const pA = keyTs(recA, k, hasA), pB = keyTs(recB, k, hasB);
+      let v;
+      if(pA === pB) v = String(ansA[pid]||'').length >= String(ansB[pid]||'').length ? ansA[pid] : ansB[pid];
+      else v = pA > pB ? (hasA ? ansA[pid] : undefined) : (hasB ? ansB[pid] : undefined);
+      if(v !== undefined) ans[pid] = v;
+      const tp = Math.max(pA, pB); if(tp) mt[k] = tp;
+    }
+    if(Object.keys(ans).length || (win && win.answers)) rec.answers = ans;
+    out[id] = rec;
+  }
+  return out;
+}
+/* recA = מקומי, recB = ענן. מחזיר מצב ממוזג חדש. */
+function mergeStates(recA, recB){
+  const mt = {};
+  const out = structuredClone(DEF);
+  out.read       = mergeMap('r:', recA.read,       recB.read,       recA, recB, mt);
+  out.understood = mergeMap('u:', recA.understood, recB.understood, recA, recB, mt);
+  out.topics     = mergeMap('t:', recA.topics,     recB.topics,     recA, recB, mt);
+  out.exams      = mergeExams(recA, recB, mt);
+  out.master   = !!mergeScalar('master',   !!recA.master, !!recB.master, recA, recB, mt, false);
+  out.notes    = mergeScalar('notes',    recA.notes||'',    recB.notes||'',    recA, recB, mt, '') || '';
+  out.examDate = mergeScalar('examDate', recA.examDate||'', recB.examDate||'', recA, recB, mt, '') || '';
+  out.lastView = recA.lastView || 'dash';                 // תמיד מקומי
+  out.mt = mt;
+  out.updatedAt = Math.max(recA.updatedAt||0, recB.updatedAt||0);
+  return out;
+}
+/* האם המצב הממוזג שונה ממה שיושב בענן — כלומר צריך לדחוף בחזרה.
+   stable stringify כדי שסדר מפתחות לא ייחשב לשינוי ויבזבז מכסת בקשות. */
+function stable(v){
+  if(Array.isArray(v)) return '['+v.map(stable).join(',')+']';
+  if(v && typeof v==='object') return '{'+Object.keys(v).sort()
+    .map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}';
+  return JSON.stringify(v===undefined ? null : v);
+}
+function differs(merged, cloud){
+  const lean = !!cloudCfg().skipAnswers;
+  const norm = x => {
+    const e = {};
+    Object.keys(x.exams||{}).forEach(id=>{
+      const r = Object.assign({}, x.exams[id]);
+      if(lean) delete r.answers;
+      if(r.answers) Object.keys(r.answers).forEach(p=>{ if(!String(r.answers[p]||'').trim()) delete r.answers[p]; });
+      e[id] = r;
+    });
+    return stable({ r:x.read||{}, u:x.understood||{}, t:x.topics||{}, e,
+                    m:!!x.master, n:x.notes||'', d:x.examDate||'' });
+  };
+  return norm(merged) !== norm(cloud);
+}
 function stashBackup(){
   try{ localStorage.setItem(KEY+'-bak', JSON.stringify({ at:Date.now(), state:S })); }catch(e){}
 }
@@ -2490,36 +2626,25 @@ window.restoreBackup = () => {
   const b = JSON.parse(raw);
   if(!confirm('לשחזר את הגיבוי מ־' + new Date(b.at).toLocaleString('he-IL') +
               ' (' + progCount(b.state) + ' סימונים)? המצב הנוכחי יוחלף.')) return;
-  S = Object.assign(structuredClone(DEF), b.state); S.updatedAt = Date.now();
-  writeLocal(); refreshChrome(); render(); cloudPush(true); toast('הגיבוי שוחזר');
+  adoptState(b.state); refreshChrome(); render(); cloudPush(true); toast('הגיבוי שוחזר');
 };
 
-/* מצב דו־משמעי בחיבור ראשון: יש התקדמות משני הצדדים ואין חותמת זמן מקומית */
-function askMerge(rec){
-  return new Promise(resolve => {
-    const mine = progCount(S), theirs = progCount(rec);
-    $('#ov').innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:600px">
-      <div class="modal-h"><h3>נמצאה התקדמות בשני המקומות</h3></div>
-      <div class="modal-b">
-        <p>במכשיר הזה יש <b>${num(mine)}</b> סימונים, ובענן יש <b>${num(theirs)}</b>.
-           לא ניתן לדעת מי חדש יותר כי ההתקדמות המקומית נשמרה בגרסה קודמת של האתר, בלי חותמת זמן.</p>
-        <p class="small muted">בכל מקרה נשמר גיבוי מקומי שאפשר לשחזר אחר כך מלשונית כלים.</p>
-      </div>
-      <div class="modal-f">
-        <button class="btn" onclick="__merge('local')">שמור את של המכשיר הזה ודחוף לענן</button>
-        <button class="btn ghost" onclick="__merge('cloud')">קח מהענן</button>
-        <div style="flex:1"></div>
-        <button class="btn ghost sm" onclick="__merge('skip')">לא עכשיו</button>
-      </div></div>`;
-    $('#ov').hidden = false; document.body.style.overflow = 'hidden';
-    window.__merge = (choice) => {
-      $('#ov').hidden = true; $('#ov').innerHTML = ''; document.body.style.overflow = '';
-      resolve(choice);
-    };
-  });
+/* אימוץ מצב שלם מבחוץ (גיבוי / ייבוא קובץ): מחליף את המצב המקומי, וחותם
+   חותמת זמן חדשה על כל מפתח — כולל מצבות למה שנעלם — כדי שהאימוץ ינצח
+   במיזוג הבא ולא "ייבלע" מול הענן.                                      */
+function adoptState(raw){
+  const dead = allKeys(S), n = Date.now();
+  const next = Object.assign(structuredClone(DEF), raw);
+  next.mt = {};
+  dead.forEach(k => next.mt[k] = n);
+  allKeys(next).forEach(k => next.mt[k] = n);
+  next.updatedAt = n;
+  S = next; writeLocal();
 }
 
 let pulling = false;
+/* משיכה = מיזוג, אף פעם לא החלפה. force משמש רק לכפתור "משוך מהענן"
+   ואז הענן מנצח בתיקו, אבל עדיין בלי לאבד פריטים שקיימים רק מקומית. */
 async function cloudPull(force){
   const c = cloudCfg();
   if(!c.bin || !c.key){ setSync('off'); return false; }
@@ -2532,46 +2657,50 @@ async function cloudPull(force){
     if(rec && rec.record && !rec.topics) rec = rec.record;   // אם X-Bin-Meta לא כובד
     const looksReal = rec && typeof rec==='object' &&
       ('topics' in rec || 'read' in rec || 'exams' in rec || 'understood' in rec);
-    if(looksReal){
-      const cloudAt = rec.updatedAt || 0, localAt = S.updatedAt || 0;
-      pulledOk = true;
-      const mine = progCount(S), theirs = progCount(rec);
-      // מצב מעבר: התקדמות מקומית מגרסה ישנה (בלי updatedAt) מול ענן שיש בו משהו
-      if(!force && !localAt && mine > 0 && theirs > 0){
-        const choice = await askMerge(rec);
-        if(choice === 'cloud'){
-          stashBackup();
-          S = Object.assign(structuredClone(DEF), rec);
-          writeLocal(); refreshChrome(); render(); setSync('ok'); toast('ההתקדמות נטענה מהענן');
-        } else if(choice === 'local'){
-          S.updatedAt = Date.now(); writeLocal(); setSync('ok'); await cloudPush(true);
-          toast('ההתקדמות המקומית נדחפה לענן');
-        } else { setSync('ok','ההכרעה נדחתה'); }
-        return true;
-      }
-      if(force || cloudAt > localAt){
-        if(mine > 0) stashBackup();
-        S = Object.assign(structuredClone(DEF), rec);
-        writeLocal(); refreshChrome(); render();
-        setSync('ok'); toast('ההתקדמות נטענה מהענן');
-      } else if(localAt > cloudAt || (mine > 0 && theirs === 0)){
-        setSync('ok'); await cloudPush(true);
-      } else setSync('ok');
-    } else {
-      pulledOk = true;
+    pulledOk = true;
+    if(!looksReal){
       setSync('ok','ה-Bin ריק — השמירה הבאה תמלא אותו');
       await cloudPush(true);
+      return true;
     }
+    if(force) rec.updatedAt = Math.max(rec.updatedAt||0, (S.updatedAt||0) + 1);
+    const before = progCount(S);
+    const merged = mergeStates(S, rec);
+    const changedLocally = differs(merged, S);
+    if(changedLocally && before > 0) stashBackup();
+    /* טיוטה פתוחה: מה שמוקלד כרגע במסך הוא הטרי ביותר — הוא מנצח את הענן */
+    if(EX && merged.exams[EX.e.id]){
+      merged.exams[EX.e.id].answers = Object.assign({}, merged.exams[EX.e.id].answers, EX.answers);
+      EX.answers = Object.assign({}, merged.exams[EX.e.id].answers);
+    }
+    S = merged; writeLocal();
+    if(changedLocally){
+      refreshChrome();
+      // לא מרעננים את המסך תוך כדי הקלדה — זה היה מוחק את מה שנכתב באותו רגע
+      const a = document.activeElement;
+      const typing = a && (a.tagName==='TEXTAREA' || a.tagName==='INPUT');
+      if(!typing) render();
+    }
+    setSync('ok');
+    if(differs(merged, rec)) await cloudPush(true);   // הענן החסיר משהו — משלימים לו
+    if(changedLocally && progCount(S) !== before) toast('ההתקדמות סונכרנה');
     return true;
   }catch(e){ setSync('err', e.message); return false; }
   finally{ pulling = false; }
 }
 
-let pushT, pushing = false;
+let pushT, pushing = false, pushQueued = false;
 function cloudPush(now){
   const c = cloudCfg();
   if(!c.bin || !c.key){ setSync('off'); return Promise.resolve(false); }
-  if(!pulledOk && now !== true){ return Promise.resolve(false); }   // עדיין לא סונכרן — לא דוחפים
+  /* אם המשיכה הראשונה נכשלה (חוסר רשת, מכסת JSONBin) — פעם קודם הדחיפה
+     הושתקה לתמיד והכל נשאר תקוע מקומית. עכשיו מנסים למשוך שוב ואז לדחוף. */
+  if(!pulledOk && now !== true){
+    if(pushQueued) return Promise.resolve(false);
+    pushQueued = true;
+    return cloudPull(false).finally(()=>{ pushQueued = false; })
+      .then(ok => ok ? cloudPush(true) : false);
+  }
   clearTimeout(pushT);
   const run = async () => {
     if(pushing){ pushT = setTimeout(run, 800); return false; }
@@ -2624,13 +2753,23 @@ window.deviceLink = () => {
 /* ---------- global bridge (inline handlers run in global scope) ---------- */
 window.toggleAcc = sid => { openAccs[sid] = !openAccs[sid]; render(); };
 window.setAllAcc = on => { openAccs = {}; if(on) SUMS.forEach(s=>openAccs[s.sid]=true); render(); };
-window.setMaster = (v, quiet) => { S.master = v; save(); refreshChrome(); if(!quiet) render(); };
-window.setNotes  = v => { S.notes = v; save(); };
+window.setMaster = (v, quiet) => { S.master = v; touch('master'); save(); refreshChrome(); if(!quiet) render(); };
+window.setNotes  = v => { S.notes = v; touch('notes'); save(); };
 window.checkRandom = () => { if(QZ.picked.filter(x=>x!=null).length < QZ.qs.length) return toast('ענה על כל השאלות','e');
   QZ.checked = true; renderRandom(); };
 window.hideSol = () => { EX.showSol = false; render(); };
-window.resetAll = () => { if(confirm('לאפס את כל ההתקדמות? פעולה זו אינה הפיכה.')){
-  localStorage.removeItem(KEY); location.reload(); } };
+/* איפוס חייב להשאיר "מצבות" — חותמות זמן חדשות למפתחות שנמחקו — אחרת
+   המיזוג הבא היה מחזיר מהענן את כל מה שנמחק.                            */
+window.resetAll = () => {
+  if(!confirm('לאפס את כל ההתקדמות? פעולה זו אינה הפיכה.')) return;
+  stashBackup();
+  const dead = allKeys(S), n = Date.now();
+  S = structuredClone(DEF);
+  dead.forEach(k => S.mt[k] = n);
+  S.updatedAt = n; writeLocal();
+  const done = () => location.reload();
+  if(cloudOn()) cloudPush(true).then(done, done); else done();
+};
 window.toast = toast;
 
 
@@ -2686,12 +2825,26 @@ document.addEventListener('keydown', e=>{
   }
   setSync(cloudOn() ? 'busy' : 'off');
   if(cloudOn()) cloudPull(false);
-  window.addEventListener('online', ()=>{ if(cloudOn() && syncS.st==='err') cloudPull(false); });
+  window.addEventListener('online', ()=>{ if(cloudOn()) cloudPull(false); });
+
+  /* קודם משכנו רק פעם אחת בעליית הדף. לשונית שנשארה פתוחה כל היום המשיכה
+     לדחוף תמונת מצב ישנה ובכך "החזירה אחורה" את מה שנעשה במכשיר השני.
+     עכשיו מסנכרנים שוב בכל חזרה ללשונית, וגם כל כמה דקות ברקע.          */
+  let lastSync = 0;
+  const resync = (minGap) => {
+    if(!cloudOn() || document.hidden) return;
+    const n = Date.now();
+    if(n - lastSync < minGap) return;
+    lastSync = n; cloudPull(false);
+  };
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) resync(15000); });
+  window.addEventListener('focus', ()=>resync(15000));
+  setInterval(()=>resync(120000), 60000);
 })();
 
 window.addEventListener('beforeunload', ()=>{
   if(EX){ S.exams[EX.e.id]=Object.assign({},S.exams[EX.e.id],{answers:EX.answers, elapsed:EX.elapsed});
-          S.updatedAt = Date.now(); }
+          touch('e:'+EX.e.id); S.updatedAt = Date.now(); }
   writeLocal();   // בלי לחדש חותמת זמן סתם — אחרת סגירת דף תיראה כשינוי
 });
 render();
