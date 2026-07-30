@@ -2125,18 +2125,18 @@ views.exam = () => {
   <div class="card" style="padding:12px 16px;margin-bottom:16px">
     <span class="small muted">${e.meta.date?`תאריך: <span class="num">${esc(e.meta.date)}</span> · `:''}${e.meta.duration?`משך: ${esc(e.meta.duration)} · `:''}${num(e.questions.length)} שאלות · ${num(parts)} סעיפים${e.meta.totalPoints?` · ${num(e.meta.totalPoints)} נקודות`:''}</span>
   </div>
-  ${e.questions.map(q=>`<div class="card eq">
+  ${e.questions.map(q=>`<div class="card eq" data-anch="q:${esc(q.n)}">
     <div class="eq-h"><h3 ${ltr?'dir="ltr"':''}>${esc(q.heading)}</h3>
       ${q.points?`<span class="pill">${num(q.points)} נק'</span>`:''}</div>
     <div class="eq-b ${ltr?'ltr':''}">
       ${q.intro?`<div class="qbody">${q.intro}</div>`:''}
-      ${q.parts.map(p=>`<div class="part">
+      ${q.parts.map(p=>`<div class="part" data-anch="p:${esc(p.pid)}">
         ${p.label?`<span class="part-lbl">${esc(p.label)}</span>`:''}
         <div class="qbody">${p.prompt||''}</div>
         ${ansField(p)}
-        ${EX.showSol && solFor(p.pid) ? `<div class="solbox"><h4>הפתרון הרשמי</h4><div class="qbody">${solFor(p.pid)}</div></div>`:''}
+        ${EX.showSol && solFor(p.pid) ? `<div class="solbox" data-anch="s:${esc(p.pid)}"><h4>הפתרון הרשמי</h4><div class="qbody">${solFor(p.pid)}</div></div>`:''}
       </div>`).join('')}
-      ${EX.showSol && solFor(q.n) ? `<div class="solbox"><h4>הפתרון הרשמי — שאלה ${esc(q.n)}</h4><div class="qbody">${solFor(q.n)}</div></div>`:''}
+      ${EX.showSol && solFor(q.n) ? `<div class="solbox" data-anch="sq:${esc(q.n)}"><h4>הפתרון הרשמי — שאלה ${esc(q.n)}</h4><div class="qbody">${solFor(q.n)}</div></div>`:''}
     </div></div>`).join('')}
   ${EX.showSol && e.solutionExtra ? `<div class="card" style="padding:16px 18px;margin-bottom:16px">
       <h3 style="margin-top:0">הערות בדיקה ומחוון</h3><div class="qbody ${ltr?'ltr':''}">${e.solutionExtra}</div></div>`:''}
@@ -2174,7 +2174,8 @@ function ansField(p){
     oninput="setAns('${p.pid}',this.value)">${esc(v)}</textarea>`;
 }
 window.setAns = (pid,v)=>{ EX.answers[pid]=v; touch(akey(EX.e.id,pid)); saveDraft(false);
-  if(document.querySelector(`input[name="a-${pid}"]`)) render(); };
+  // בחירת True/False או תשובה אמריקאית מרנדרת מחדש — גם כאן לא לזוז מהמקום
+  if(document.querySelector(`input[name="a-${pid}"]`)) renderKeep(); };
 let draftT;
 window.saveDraft = (loud)=>{ clearTimeout(draftT); draftT=setTimeout(()=>{
     if(!EX) return;
@@ -2189,9 +2190,68 @@ window.toggleTimer = ()=>{
   const b=document.getElementById('tbtn'); if(b) b.textContent=EX.running?'עצור':'הפעל שעון';
 };
 window.leaveExam = ()=>{ clearInterval(timerH); timerH=null; saveDraft(true); EX=null; go('exams'); };
+
+/* ---------- שמירת מקום בגלילה סביב render() ----------
+   הצגה/הסתרה של הפתרונות מוסיפה או מורידה תוכן גם *מעל* נקודת הצפייה,
+   ולכן אותו scrollY מצביע פתאום על מקום אחר — מכאן ה"קפיצה" הקטנה למעלה
+   או למטה. לכן זוכרים את האלמנט שנמצא כרגע בראש החלון ואת המרחק המדויק
+   שלו מראש החלון, ומחזירים אותו לאותו מרחק אחרי הרינדור.
+   שומרים שרשרת עוגנים (תיבת פתרון → סעיף → שאלה) כי בהסתרה תיבת הפתרון
+   עצמה נעלמת, ואז נעגנים לסעיף שמכיל אותה.                              */
+function cssq(s){ return String(s).replace(/["\\]/g, '\\$&'); }
+function grabAnchor(){
+  const bar = document.querySelector('header, .topbar');
+  const ref = bar ? Math.round(bar.getBoundingClientRect().bottom) + 4 : 8;
+  /* צריך את העוגן ה*ספציפי* ביותר שחוצה את קו ראש התוכן — לא את כרטיס
+     השאלה העוטף. עיגון לשאלה כולה לא מפצה על תיבות פתרון שנעלמו בתוכה,
+     ואז הדף עדיין זז.                                                  */
+  let hit = null;
+  for(const el of $$('#app [data-anch]')){
+    const r = el.getBoundingClientRect();
+    if(r.bottom <= ref) continue;              // כבר גלל מעל החלון
+    if(r.top <= ref) hit = el;                 // התחיל לפני הקו — עמוק יותר, ממשיכים
+    else { if(!hit) hit = el; break; }         // הראשון שמתחיל מתחת לקו
+  }
+  if(!hit) return null;
+  const chain = [];
+  for(let el = hit; el; el = el.parentElement){
+    const k = el.dataset && el.dataset.anch;
+    if(k) chain.push({ key:k, top: el.getBoundingClientRect().top });
+  }
+  return chain.length ? chain : null;
+}
+function applyAnchor(chain){
+  if(!chain) return;
+  for(const a of chain){
+    const el = document.querySelector('#app [data-anch="' + cssq(a.key) + '"]');
+    if(!el) continue;
+    const d = el.getBoundingClientRect().top - a.top;
+    if(Math.abs(d) > 0.5) window.scrollBy(0, d);
+    return;
+  }
+}
+/* רינדור שמשאיר את העין באותו מקום.
+   בסוף המבחן הדף מתקצר כשמסתירים פתרונות, ואז הגלילה נחסמת בתחתית ולא
+   ניתן להחזיר את העוגן למקומו. לכן זוכרים את היעד המקורי: אם המשתמש לא
+   גלל בעצמו מאז, הלחיצה הבאה תשתמש בו ולא במצב החסום — כך שכיבוי והדלקה
+   חוזרים בדיוק לאותה נקודה גם בסוף הדף.                                */
+let keepMemo = null;
+function renderKeep(){
+  const a = (keepMemo && Math.abs(window.scrollY - keepMemo.at) < 1) ? keepMemo.chain : grabAnchor();
+  render();
+  applyAnchor(a);                                  // הפריסה כבר מעודכנת
+  keepMemo = a ? { chain:a, at: window.scrollY } : null;
+  requestAnimationFrame(()=>{                      // ושוב, אם משהו זז מאוחר
+    applyAnchor(a);
+    if(keepMemo) keepMemo.at = window.scrollY;
+  });
+}
+window.renderKeep = renderKeep;
+window.__grabAnchor = grabAnchor;   /* לבדיקות */
+
 window.revealSol = ()=>{
   if(!confirm('להציג את הפתרון הרשמי לפני ההגשה?')) return;
-  EX.showSol=true; render();
+  EX.showSol=true; renderKeep();
 };
 window.submitExam = ()=>{
   const e=EX.e; clearInterval(timerH); timerH=null; EX.running=false;
@@ -2757,7 +2817,7 @@ window.setMaster = (v, quiet) => { S.master = v; touch('master'); save(); refres
 window.setNotes  = v => { S.notes = v; touch('notes'); save(); };
 window.checkRandom = () => { if(QZ.picked.filter(x=>x!=null).length < QZ.qs.length) return toast('ענה על כל השאלות','e');
   QZ.checked = true; renderRandom(); };
-window.hideSol = () => { EX.showSol = false; render(); };
+window.hideSol = () => { EX.showSol = false; renderKeep(); };
 /* איפוס חייב להשאיר "מצבות" — חותמות זמן חדשות למפתחות שנמחקו — אחרת
    המיזוג הבא היה מחזיר מהענן את כל מה שנמחק.                            */
 window.resetAll = () => {
