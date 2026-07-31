@@ -1,0 +1,225 @@
+<h1>משפט רייס וסיכום הקורס</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 13 (הרצאה 13 + תרגול 13)</p>
+
+<section>
+  <h2 id="ch13-t0">תכונה סמנטית ותכונה טריוויאלית</h2>
+
+  <div class="def">
+    <span class="term">תכונה סמנטית</span> — קבוצת שפות <span class="math">C ⊆ RE</span>. השפה המושרה:
+    <div class="lang-def">L<sub>C</sub> = {⟨M⟩ | M is a TM and L(M) ∈ C}</div>
+    התכונה שואלת רק על <b>השפה</b> <span class="math">L(M)</span> — לא על הקוד: שתי מכונות עם אותה
+    שפה נכנסות או נשארות בחוץ <b>יחד</b>.
+  </div>
+
+  <div class="def"><span class="term">תכונה טריוויאלית</span> — ‏<span class="math">C = ∅</span> או
+    <span class="math">C = RE</span> כולה (אף שפה / כל השפות). אז <span class="math">L<sub>C</sub></span>
+    היא <span class="math">∅</span> או "כל הקידודים החוקיים" — כריעה באופן משעמם.</div>
+
+  <div class="ex-box">
+    <h4>סמנטית או לא?</h4>
+    <table>
+      <tr><th>שאלה על ⟨M⟩</th><th>סוג</th></tr>
+      <tr><td>‏<span class="math">L(M) = ∅</span>? ‏<span class="math">L(M)</span> רגולרית? ‏<span class="math">ε ∈ L(M)</span>?</td><td>סמנטית ✓</td></tr>
+      <tr><td>ל-M יש 100 מצבים? M מבקרת במצב q₃ על הקלט ε?</td><td>על הקוד/הריצה — לא סמנטית ✗</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch13-t1">משפט רייס — הנוסח המדויק</h2>
+
+  <div class="thm">
+    <b>משפט רייס:</b> אם <span class="math">C</span> תכונה סמנטית <b>לא טריוויאלית</b>
+    (‏<span class="math">∅ ≠ C ⊊ RE</span>), אז <span class="math">L<sub>C</sub> ∉ R</span>.
+  </div>
+
+  <p>במילים: <b>שום שאלה לא-טריוויאלית על השפה של תוכנית איננה כריעה.</b> ריקות, סופיות,
+    רגולריות, "מכילה את המילה 42", "שווה ל-PAL" — הכול לא כריע, במכה אחת.</p>
+
+  <div class="note">עוצמת המשפט היא הכלליות: במקום רדוקציה פרטנית לכל תכונה — משפט אחד.
+    במבחן הוא חוסך את כל שאלות ה-"‏∉ R" — <b>בתנאי</b> ששלושת התנאים באמת מתקיימים (t3),
+    ושזוכרים שהוא נותן רק <span class="math">∉ R</span> (t6).</div>
+</section>
+
+<section>
+  <h2 id="ch13-t2">הוכחת רייס — הרעיון</h2>
+
+  <div class="proof">
+    תהי <span class="math">C</span> לא-טריוויאלית; נניח בה"כ <span class="math">∅ ∉ C</span>
+    (אחרת עוברים ל-<span class="math">RE ∖ C</span> — המשלים של <span class="math">L<sub>C</sub></span>
+    כריע אמ"מ הוא כריע). מאי-הטריוויאליות קיימת <span class="math">L₀ ∈ C</span>, עם מזהה
+    <span class="math">M₀</span>. נראה <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L<sub>C</sub></span>:
+    <pre>f(⟨M,w⟩) = ⟨N⟩,  N: "On input x:
+1. Run M on w.        (ignoring x)
+2. If M accepted — run M₀ on x and answer as M₀."</pre>
+    אם <span class="math">M</span> מקבלת את <span class="math">w</span>: שלב 1 מסתיים,
+    ו-<span class="math">N</span> מתנהגת כ-<span class="math">M₀</span> ⇒
+    ‏<span class="math">L(N) = L₀ ∈ C</span>. אם לא: שלב 1 לא מסתיים לעולם ⇒
+    ‏<span class="math">L(N) = ∅ ∉ C</span>. לכן
+    <span class="math">⟨M,w⟩ ∈ A<sub>TM</sub> ⟺ ⟨N⟩ ∈ L<sub>C</sub></span>. <span class="qed">∎</span>
+  </div>
+
+  <p>המבנה מוכר מפרק 12: מכונה מתוכנתת שהשפה שלה קופצת בין <span class="math">∅</span> (מחוץ
+    ל-C) ל-<span class="math">L₀</span> (בתוך C) לפי קבלת <span class="math">w</span> —
+    רייס הוא בעצם "תבנית הרדוקציה האוניברסלית".</p>
+</section>
+
+<section>
+  <h2 id="ch13-t3">צ'ק־ליסט התחולה של רייס</h2>
+
+  <div class="algo">
+    <h4>שלוש בדיקות — כולן חובה בתשובה (הפורמט של 2023א ש3.6)</h4>
+    <ol>
+      <li><b>‏C ⊆ RE מוגדרת דרך L(M):</b> התנאי מנוסח (או ניתן לניסוח) כ"‏<span class="math">L(M) ∈ C</span>"
+        — תכונה של השפה בלבד.</li>
+      <li><b>‏C ≠ ∅:</b> מציגים שפה ב-RE שמקיימת — עד קונקרטי
+        (למשל <span class="math">A<sub>TM</sub> ∈ C</span> או <span class="math">∅ ∈ C</span>).</li>
+      <li><b>‏C ≠ RE:</b> מציגים שפה ב-RE שלא מקיימת — עד קונקרטי שני.</li>
+    </ol>
+    <p>שלושתן עברו? ‏<span class="math">L<sub>C</sub> ∉ R</span> ממשפט רייס. מצטטים וסוגרים.</p>
+  </div>
+
+  <div class="ex-box">
+    <h4>הדוגמה הרשמית — 2023א ש3.6</h4>
+    <p>‏<span class="math">L = {⟨M⟩ | ∃w: M</span> לא מקבלת את <span class="math">w}</span>.
+      מנסחים: ‏<span class="math">C = {L′ ∈ RE | L′ ≠ Σ<sup>*</sup>}</span> (יש מילה לא-מתקבלת ⟺
+      השפה אינה הכול). בדיקות: ‏<span class="math">C ⊆ RE</span> ✓;
+      ‏<span class="math">A<sub>TM</sub> ∈ C</span> (‏≠ Σ*) ✓;
+      ‏<span class="math">Σ<sup>*</sup> ∈ RE ∖ C</span> ✓. רייס ⇒ לא כריעה. תשובה: נכון.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch13-t4">מתי רייס לא חל — המלכודות</h2>
+
+  <p>שאלות "הוכח או הפרך: לפי משפט רייס L איננה כריעה" הן ז'אנר קבוע — ולעיתים התשובה
+    <b>False</b>. שלוש המלכודות:</p>
+
+  <ul>
+    <li><b>התכונה טריוויאלית-בפועל מעל RE:</b> ‏2024ב ש3.5:
+      ‏<span class="math">L(M) ≠ PAL<sub>TM</sub></span>. מכיוון ש-<span class="math">PAL<sub>TM</sub> ∉ RE</span>,
+      <b>כל</b> שפת-מכונה שונה ממנה ⇒ ‏<span class="math">C = RE</span> כולה ⇒ טריוויאלית ⇒
+      ‏<span class="math">L = {⟨M⟩}</span> כל הקידודים — <b>כריעה</b>. תמיד לבדוק: האם ה"תנאי"
+      בכלל מסנן משהו בתוך RE?</li>
+    <li><b>תכונה לא-סמנטית:</b> תנאי על מבנה הקוד ("יש ל-M לולאה", "פחות מ-50 מצבים") — רייס
+      שותק; לרוב כריע ישירות (בדיקת תחביר).</li>
+    <li><b>שילוב תחבירי-סמנטי:</b> כמו <span class="math">L∞<sub>k</sub></span> (‏2023ב ש3.5) —
+      תנאי סמנטי <b>וגם</b> חסם אורך על ⟨M⟩: הקבוצה סופית ⇒ כריעה. הרכיב התחבירי שובר את
+      ה"סמנטיות הטהורה".</li>
+  </ul>
+
+  <div class="warn">ניסוח התשובה בהפרכה: לא "רייס לא חל ולכן כריעה" — אי-תחולה לא מוכיחה כריעות!
+    צריך <b>גם</b> להראות שהתכונה טריוויאלית/תחבירית <b>וגם</b> לתת מכריע בפועל
+    (‏"בדיקת תקינות הקידוד — כריעה"). כך בדיוק בפתרון הרשמי של 2024ב ש3.5.</div>
+</section>
+
+<section>
+  <h2 id="ch13-t5">ניסוח C בתשובת מבחן</h2>
+
+  <div class="algo">
+    <h4>מהשפה אל C — שלושה צעדים</h4>
+    <ol>
+      <li>לתרגם את תנאי השפה לתנאי על <span class="math">L(M)</span> בלבד. דוגמאות:
+        "‏M מקבלת את ε" ⇝ ‏<span class="math">ε ∈ L(M)</span>;
+        "‏∃w שלא מתקבלת" ⇝ ‏<span class="math">L(M) ≠ Σ<sup>*</sup></span>;
+        "‏M מקבלת מילה זוגית-אורך" ⇝ ‏<span class="math">L(M) ∩ (ΣΣ)<sup>*</sup> ≠ ∅</span>.</li>
+      <li>לכתוב <span class="math">C = {L′ ∈ RE | תנאי(L′)}</span> — מפורשות, עם השם
+        <span class="math">L′</span> (לא M!).</li>
+      <li>לספק את שני העדים (∈C ו-∈RE∖C) — קונקרטיים, עם שמות שפות מהקורס.</li>
+    </ol>
+  </div>
+
+  <div class="ex-box">
+    <h4>ספריית עדים מהירה</h4>
+    <p>שפות נוחות לעדים: ‏<span class="math">∅</span>, ‏<span class="math">Σ<sup>*</sup></span>,
+      ‏<span class="math">{ε}</span>, ‏<span class="math">A<sub>TM</sub></span>, כל שפה סופית,
+      ‏<span class="math">a<sup>*</sup></span>. כמעט כל זוג-עדים נבנה מהרשימה הזו —
+      וכולן ב-RE (כנדרש: העדים חייבים להיות שפות RE!).</p>
+  </div>
+
+  <div class="warn">טעות הניסוח הנפוצה: לכתוב <span class="math">C</span> כקבוצת מכונות
+    (‏<span class="math">C = {⟨M⟩ | …}</span>). ‏C היא קבוצת <b>שפות</b>; ‏<span class="math">L<sub>C</sub></span>
+    היא קבוצת המכונות. הבלבול הזה מפיל את כל שלוש הבדיקות.</div>
+</section>
+
+<section>
+  <h2 id="ch13-t6">רייס שולל R בלבד — לא RE</h2>
+
+  <div class="thm">רייס נותן <span class="math">L<sub>C</sub> ∉ R</span> — וזהו. הוא <b>אינו</b>
+    קובע דבר על RE/coRE: ‏<span class="math"><span class="comp">E<sub>TM</sub></span></span>
+    (סמנטית, לא-טריוויאלית) דווקא ב-RE; ‏<span class="math">REG<sub>TM</sub></span> מחוץ לשניהם.
+    המיקום המדויק דורש עבודה נוספת.</div>
+
+  <p>לכן בשאלה 2 המלאה (R? RE? coRE?) רייס יכול לענות רק על השורה של R. את RE/coRE סוגרים
+    כרגיל: מזהה (∃/∀ מפרק 11) או רדוקציה מכוונת (פרק 12).</p>
+
+  <div class="note">גם ההפך נכון: כשצריך רק "‏∉ R" ורייס חל — אין סיבה לכתוב רדוקציה ידנית.
+    לזהות מה השאלה באמת דורשת = לבחור את הכלי הזול. (בשאלות "הוכח או הפרך: לפי רייס…" —
+    חובה לעבוד עם רייס, כמובן.)</p></div>
+</section>
+
+<section>
+  <h2 id="ch13-t7">מפת השפות המרכזיות — הסיכום</h2>
+
+  <table>
+    <tr><th>שפה</th><th>R</th><th>RE</th><th>coRE</th><th>הכלי</th></tr>
+    <tr><td><span class="math">A<sub>DFA</sub>, E<sub>DFA</sub>, EQ<sub>DFA</sub>, A<sub>CFG</sub>, E<sub>CFG</sub></span></td><td>✓</td><td>✓</td><td>✓</td><td>סימולציה חסומה / גרפים</td></tr>
+    <tr><td><span class="math">A<sub>TM</sub></span></td><td>✗</td><td>✓</td><td>✗</td><td>אלכסון + U</td></tr>
+    <tr><td><span class="math">HALT<sub>TM</sub></span></td><td>✗</td><td>✓</td><td>✗</td><td>רדוקציה מ-A_TM</td></tr>
+    <tr><td><span class="math">E<sub>TM</sub></span></td><td>✗</td><td>✗</td><td>✓</td><td>‏Ā_TM ≤m + dovetailing למשלים</td></tr>
+    <tr><td><span class="math">REG<sub>TM</sub>, EQ<sub>TM</sub>, PAL<sub>TM</sub>, L<sub>∞</sub></span></td><td>✗</td><td>✗</td><td>✗</td><td>שתי רדוקציות (או רייס ל-R בלבד)</td></tr>
+  </table>
+
+  <p>ולזכור את הסולם השלם של הקורס:</p>
+  <div class="lang-def">REG ⊊ CFL ⊊ R ⊊ RE ⊊ כל השפות</div>
+  <p>עם העדים: ‏<span class="math">a<sup>n</sup>b<sup>n</sup></span>;
+    ‏<span class="math">a<sup>n</sup>b<sup>n</sup>c<sup>n</sup></span>;
+    ‏<span class="math">A<sub>TM</sub></span>;
+    ‏<span class="math"><span class="comp">A<sub>TM</sub></span></span>.</p>
+</section>
+
+<section>
+  <h2 id="ch13-t8">אסטרטגיית המבחן המלאה</h2>
+
+  <p>מבנה המבחן (2023–2024) קבוע להפליא — וכך גם תוכנית העבודה:</p>
+
+  <ol class="pump-steps">
+    <li data-who="שאלה 1"><b>סגירויות ובניות (35–40 נק'):</b> אופרטור חדש על שפות. הכלים:
+      פירוק <span class="math">L<sup>A</sup><sub>p,q</sub></span>, הצבות, מכפלות, PDA עם מחסנית
+      יצירתית. סעיף אחרון: לרוב "הראו שהתוצאה לא ח"ה" — ניפוח ח"ה עם המקרים.</li>
+    <li data-who="שאלה 2"><b>‏R/RE/coRE (30–40 נק'):</b> נסחו כמתים + משלים; מזהה לצד החיובי
+      (‏dovetailing, נכונות דו-כיוונית); רדוקציה לצד השלילי (בחרו מקור לפי המחלקה הנשללת!);
+      ‏R בחינם מאחת השלילות.</li>
+    <li data-who="שאלה 3"><b>סעיפים קצרים (25–30 נק'):</b> ניפוח רגולרי, בניית דקדוק/PDA,
+      עמימות, הוכח-או-הפרך על רדוקציות, רייס. כל סעיף 5–6 נק' — לא להיתקע; לעבור ולחזור.</li>
+  </ol>
+
+  <div class="ex-box">
+    <h4>ניהול זמן מוצע (3 שעות)</h4>
+    <p>‏~15 דק' קריאה ותכנון → שאלה 3 קודם (נקודות מהירות, מחמם) → שאלה 1 → שאלה 2 (הכי כבדה,
+      עם הכי הרבה כתיבה) → רבע שעה אחרונה: לוודא שכל "הוכח או הפרך" פותח ב-<b>True/False מפורש</b>,
+      שכל רדוקציה כוללת את משפט החישוביות, ושכל מזהה מנומק בשני הכיוונים.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch13-t9">צ'ק־ליסט ליום המבחן</h2>
+
+  <ul>
+    <li><b>דף הנוסחאות מצורף למבחן</b> — כל ההגדרות והבניות שם. אל תשננו נוסחים; שננו
+      <b>מתי ואיך</b> להשתמש (הוא זמין כאן באתר מכל מסך — כפתור "דף נוסחאות").</li>
+    <li><b>כמתים לפני הכול:</b> בכל שאלת חישוביות — לכתוב את התנאי ואת משלימו ככמתים. זה מכתיב
+      את כל ההמשך.</li>
+    <li><b>המילים הרגישות:</b> מקבלת / דוחה / עוצרת / לא-מקבלת — ארבע ישויות שונות.
+      קו עילי = משלים — לקרוא פעמיים.</li>
+    <li><b>בניות סטנדרטיות בשליפה:</b> ‏N שמתעלמת מהקלט; N עם תקציב <span class="math">|x|</span>;
+      מזהה dovetailing; מתג <span class="math">∅/Σ<sup>*</sup></span>; ‏3 בדיקות רייס.</li>
+    <li><b>מלכודות הסיווג:</b> לפני שמוכיחים אי-רגולריות — לבדוק קריסה (בולע-כול, זהות, סופיות);
+      ‏"או" = איחוד (ח"ה), "וגם" = שתי השוואות (אף אחת); היפוך אוהב מחסנית, העתק-ישר לא.</li>
+    <li><b>נימוק קצר עדיף מריק:</b> הציון מושפע גם מבהירות (כתוב על הטופס!) — משפט מבנה
+      ("נוכיח בסגירויות: …") בראש כל תשובה קונה כיוון ונקודות.</li>
+  </ul>
+
+  <div class="note"><b>ולסיום:</b> עברתם את כל הסולם — מאוטומט בן שני מצבים ועד גבולות החישוב.
+    ‏88% היו במערכות הפעלה; עכשיו לכו לשבור את זה. בהצלחה! 🎓</div>
+</section>

@@ -1,0 +1,140 @@
+{
+  "id": "ai2",
+  "year": 2026,
+  "moed": "AI",
+  "label": "מבחן תרגול AI 2",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "",
+    "duration": "3 שעות",
+    "staff": "נוצר על ידי AI — במתכונת מבחני 2023–2024 של ד\"ר רעות לוי",
+    "totalPoints": 100,
+    "note": "מבחן תרגול שני. שימו לב: הפרופיל של שאלה 2 כאן שונה משל מבחן תרגול 1 — כדאי לפתור את שניהם."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (7, 14, 14 נקודות)",
+      "points": 35,
+      "intro": "<p dir=\"auto\">עבור מילה <span class=\"math\">w = σ₁σ₂…σ<sub>n</sub></span> נגדיר <span class=\"math\">stut(w) = σ₁σ₁σ₂σ₂…σ<sub>n</sub>σ<sub>n</sub></span> (הכפלת כל אות), ועבור שפה: <span class=\"math\">stut(L) = {stut(w) | w ∈ L}</span>.</p>",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "1",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו ע\"י שימוש בסגירויות:</b> אם <span class=\"math\">L</span> שפה רגולרית אזי <span class=\"math\">stut(L)</span> שפה רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1b",
+          "label": "2",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">בהינתן <span class=\"en\">DFA</span>‏ <span class=\"math\">A = (Q, Σ, δ_A, q<sub>s</sub>, F)</span> עבור שפה <span class=\"math\">L</span>.</p><p dir=\"auto\"><b>בנו <span class=\"en\">DFA</span>‏</b> <span class=\"math\">B = (Q, Σ, δ_B, q<sub>s</sub>, F)</span> כך ש-<span class=\"math\">L(B) = {w | stut(w) ∈ L}</span>.</p><p dir=\"auto\">כלומר, עליכם לשנות רק את <span class=\"math\">δ_A</span> ל-<span class=\"math\">δ_B</span>. הראו את הבנייה יחד עם הסבר. אין צורך בהוכחת נכונות.</p>",
+          "tags": { "subj": "automata", "qt": "construction" }
+        },
+        {
+          "pid": "q1c",
+          "label": "3",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">עבור שפה <span class=\"math\">L</span> נגדיר:</p><div class=\"lang-def\">Half(L) = {x | ∃y ∈ Σ<sup>*</sup> s.t. |y| = |x| and xy ∈ L}</div><p dir=\"auto\"><b>הוכיחו ע\"י שימוש ב-<span class=\"math\">A</span>:</b> אם <span class=\"math\">L</span> רגולרית אזי <span class=\"math\">Half(L)</span> רגולרית — ע\"י בניית אוטומט מפורש.</p>",
+          "tags": { "subj": "closure", "qt": "construction" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">L = {⟨M, k⟩ | M is a TM, k ∈ ℕ and |L(M)| ≤ k}</div><p dir=\"auto\">(כלומר: <span class=\"math\">M</span> מקבלת לכל היותר <span class=\"math\">k</span> מילים שונות.)</p>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ RE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ coRE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 18,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם <b>לכל</b> הסעיפים (1 עד 3).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (5 × 5 נקודות)",
+      "points": 25,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "1",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {w ∈ {0,1}<sup>*</sup> | #₀(w) = 2·#₁(w)}</span>.</p><p dir=\"auto\"><b>הוכיחו ע\"י למת הניפוח לשפות רגולריות</b> ש-<span class=\"math\">L</span> איננה שפה רגולרית.</p>",
+          "tags": { "subj": "pump-reg", "qt": "pumping" }
+        },
+        {
+          "pid": "q3b",
+          "label": "2",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {a<sup>i</sup>b<sup>j</sup> | i ≠ j}</span>.</p><p dir=\"auto\"><b>בנו דקדוק חסר הקשר</b> לשפה <span class=\"math\">L</span>. הסבירו בקצרה.</p>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q3c",
+          "label": "3",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">בהינתן ה-<span class=\"en\">DFA</span>‏ הבא (מעגל על <span class=\"math\">a</span> עם <span class=\"math\">F = {q₀, q₁}</span>):</p><div class=\"fsa\"><svg viewBox=\"0 0 320 220\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"st st-acc\" cx=\"85\" cy=\"55\" r=\"20\"/><circle class=\"st st-acc\" cx=\"85\" cy=\"55\" r=\"25\"/><text class=\"slbl\" x=\"85\" y=\"55\">q₀</text><circle class=\"st st-acc\" cx=\"235\" cy=\"55\" r=\"20\"/><circle class=\"st st-acc\" cx=\"235\" cy=\"55\" r=\"25\"/><text class=\"slbl\" x=\"235\" y=\"55\">q₁</text><circle class=\"st\" cx=\"235\" cy=\"165\" r=\"25\"/><text class=\"slbl\" x=\"235\" y=\"165\">q₂</text><circle class=\"st\" cx=\"85\" cy=\"165\" r=\"25\"/><text class=\"slbl\" x=\"85\" y=\"165\">q₃</text><path class=\"tr\" d=\"M110,55 L207,55\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"158\" y=\"45\" text-anchor=\"middle\">a</text><path class=\"tr\" d=\"M235,80 L235,137\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"245\" y=\"112\">a</text><path class=\"tr\" d=\"M210,165 L113,165\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"158\" y=\"185\" text-anchor=\"middle\">a</text><path class=\"tr\" d=\"M85,140 L85,83\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"70\" y=\"112\">a</text></svg></div><p dir=\"auto\">הציגו <b>מילה בודדת</b> <span class=\"math\">w ∈ L(a<sup>*</sup>)</span> שמפרידה גם בין <span class=\"math\">q₀</span> ל-<span class=\"math\">q₂</span> וגם בין <span class=\"math\">q₁</span> ל-<span class=\"math\">q₃</span>. הסבירו.</p>",
+          "tags": { "subj": "minimize", "qt": "short" }
+        },
+        {
+          "pid": "q3d",
+          "label": "4",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> אם <span class=\"math\">L ∈ RE ∖ R</span> אזי <span class=\"math\"><span class=\"comp\">L</span> ∉ RE</span>.</p>",
+          "tags": { "subj": "r-re-core", "qt": "claim" }
+        },
+        {
+          "pid": "q3e",
+          "label": "5",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {⟨M⟩ | M is a TM and (L(M) is finite or L(M) = Σ<sup>*</sup>)}</span>.</p><p dir=\"auto\"><b>הוכיחו או הפריכו:</b> לפי משפט <span class=\"en\">Rice</span>‏ השפה <span class=\"math\">L</span> איננה כריעה.</p>",
+          "tags": { "subj": "rice", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+<h1>‏R, RE ו־coRE</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 11 (הרצאה 11 + תרגול 11)</p>
+
+<section>
+  <h2 id="ch11-t0">שלוש המחלקות במבט אחד</h2>
+
+  <div class="def">
+    <ul>
+      <li><span class="math"><b>R</b></span> — קיים <b>מכריע</b>: עוצר תמיד ועונה נכון.</li>
+      <li><span class="math"><b>RE</b></span> — קיים <b>מזהה</b>: מקבל בדיוק את מילות השפה
+        (על השאר — דוחה או מתלולאת).</li>
+      <li><span class="math"><b>coRE</b></span> — המשלים ניתן לזיהוי:
+        ‏<span class="math">L ∈ coRE ⟺ <span class="comp">L</span> ∈ RE</span>.</li>
+    </ul>
+  </div>
+
+  <p>אינטואיציית העדים: שפה ב-RE אם ל"כן" יש <b>עד סופי שאפשר למצוא</b>
+    (ריצה מקבלת, מילה, זוג…); ב-coRE אם ל"לא" יש עד כזה. ‏R = שני הצדדים מאושרים בזמן סופי.</p>
+
+  <div class="hier">
+    <div class="ring"><span class="hlbl">כל השפות</span>
+      <div class="ring"><span class="hlbl">RE ∪ coRE</span>
+        <div class="ring"><span class="hlbl">R = RE ∩ coRE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <p>ארבעה אזורים למפה: ‏<span class="math">R</span>; ‏<span class="math">RE ∖ R</span>
+    (עד ל"כן" בלבד — ‏<span class="math">A<sub>TM</sub></span>); ‏<span class="math">coRE ∖ R</span>
+    (עד ל"לא" בלבד — ‏<span class="comp">A<sub>TM</sub></span>, ‏<span class="math">E<sub>TM</sub></span>);
+    ומחוץ לשניהם (‏<span class="math">REG<sub>TM</sub></span>, ‏<span class="math">EQ<sub>TM</sub></span>).</p>
+</section>
+
+<section>
+  <h2 id="ch11-t1">R = RE ∩ coRE</h2>
+
+  <div class="thm">‏<span class="math">L ∈ R</span> אם ורק אם <span class="math">L ∈ RE</span> וגם
+    <span class="math">L ∈ coRE</span>.</div>
+
+  <div class="proof">
+    <b>⇐</b> מכריע ל-<span class="math">L</span> הוא מזהה ל-<span class="math">L</span>; והיפוך תשובתו —
+    מכריע (ובפרט מזהה) ל-<span class="math"><span class="comp">L</span></span>
+    (מותר להפוך תשובות של <b>מכריע</b> — הוא תמיד עוצר!).<br>
+    <b>⇒</b> יהיו <span class="math">M₁</span> מזהה ל-<span class="math">L</span> ו-<span class="math">M₂</span>
+    מזהה ל-<span class="math"><span class="comp">L</span></span>. המכריע מריץ את שניהם <b>במקביל</b>
+    (צעד לזה, צעד לזה — או על שני סרטים): כל מילה שייכת לאחת השפות, ולכן אחת הריצות תעצור-ותקבל
+    בזמן סופי; אם <span class="math">M₁</span> קיבלה — קבל, אם <span class="math">M₂</span> — דחה.
+    <span class="qed">∎</span>
+  </div>
+
+  <div class="warn">שתי נקודות שנבחנות שוב ושוב: (1) להפוך תשובות של <b>מזהה</b> אסור —
+    לולאה נשארת לולאה, לא הופכת לקבלה; היפוך כשר רק למכריע. (2) הריצה במקביל חיונית —
+    "קודם M₁ עד הסוף ואז M₂" נתקעת אם M₁ מתלולאת.</div>
+</section>
+
+<section>
+  <h2 id="ch11-t2">A_TM ∈ RE — המכונה האוניברסלית</h2>
+
+  <div class="def"><span class="math">A<sub>TM</sub> = {⟨M, w⟩ | M is a TM and M accepts w}</span></div>
+
+  <div class="algo">
+    <h4>המזהה</h4>
+    <pre>U': "On input ⟨M, w⟩:
+1. Simulate M on w (using the universal machine).
+2. If M accepted — accept. If M rejected — reject."</pre>
+  </div>
+
+  <p>אם <span class="math">M</span> מקבלת את <span class="math">w</span> — הסימולציה מגלה זאת
+    בזמן סופי ⇒ קבלה. אם לא — דחייה או לולאה (הסימולציה נמשכת לנצח). זה בדיוק פרופיל של
+    <b>מזהה</b>: ‏<span class="math">A<sub>TM</sub> ∈ RE</span>.</p>
+
+  <div class="note">‏<span class="math">A<sub>TM</sub></span> היא "אמא של RE" — עוד לפני שנדבר על
+    שלמות: כל שאלת "האם M מקבלת" מגולמת בה. השאלה הגדולה: האם אפשר <b>להכריע</b> אותה?</div>
+</section>
+
+<section>
+  <h2 id="ch11-t3">שיטת האלכסון: A_TM ∉ R</h2>
+
+  <div class="proof">
+    נניח בשלילה שקיים מכריע <span class="math">H</span> ל-<span class="math">A<sub>TM</sub></span>:
+    ‏<span class="math">H(⟨M,w⟩)</span> עונה "כן" אם <span class="math">M</span> מקבלת את
+    <span class="math">w</span>, "לא" אחרת — ותמיד עוצר. נבנה את המכונה:
+    <pre>D: "On input ⟨M⟩:
+1. Run H on ⟨M, ⟨M⟩⟩.
+2. If H says yes — reject; if H says no — accept."</pre>
+    ‏<span class="math">D</span> מכונה חוקית (משתמשת ב-<span class="math">H</span> העוצר), אז נריץ
+    אותה על הקידוד <b>של עצמה</b>: ‏<span class="math">D(⟨D⟩)</span> מקבלת
+    ⟺ ‏<span class="math">H</span> ענה "לא" על <span class="math">⟨D,⟨D⟩⟩</span>
+    ⟺ ‏<span class="math">D</span> <b>לא</b> מקבלת את <span class="math">⟨D⟩</span> — סתירה.
+    לכן <span class="math">H</span> לא קיים. <span class="qed">∎</span>
+  </div>
+
+  <p>זהו לב הקורס: <b>ההפניה העצמית</b> (מכונה שרצה על הקוד של עצמה) הופכת מכריע-לכאורה
+    למכונה סותרת-עצמה. אותו רעיון כמו הפרדוקס של השקרן ("המשפט הזה שקרי") — אבל ממוסד למתמטיקה.</p>
+
+  <div class="note">מסקנה מיידית: ‏<span class="math">RE ≠ R</span> — ההכלה ממש. ובצירוף
+    <span class="math">R = RE ∩ coRE</span>: ‏<span class="math">A<sub>TM</sub> ∉ coRE</span>
+    (אחרת הייתה ב-R). את המסקנה הזו נארוז בנושא הבא.</div>
+</section>
+
+<section>
+  <h2 id="ch11-t4">המשלים והמפה: A_TM ∉ coRE</h2>
+
+  <div class="thm">
+    <span class="math">A<sub>TM</sub> ∈ RE ∖ R</span>, ולכן:
+    ‏<span class="math">A<sub>TM</sub> ∉ coRE</span>, ‏<span class="math"><span class="comp">A<sub>TM</sub></span> ∈ coRE ∖ R</span>,
+    ‏<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>.
+  </div>
+
+  <p>כללי המשלים ששווה לשנן (סימטריה מושלמת):</p>
+  <ul>
+    <li><span class="math">L ∈ R ⟺ <span class="comp">L</span> ∈ R</span> (מכריע מתהפך).</li>
+    <li><span class="math">L ∈ RE ⟺ <span class="comp">L</span> ∈ coRE</span> (הגדרה).</li>
+    <li><span class="math">L ∈ RE ∖ R ⟹ <span class="comp">L</span> ∈ coRE ∖ RE</span>… ליתר דיוק:
+      ‏<span class="math"><span class="comp">L</span> ∈ coRE ∖ R</span>, וגם
+      <span class="math"><span class="comp">L</span> ∉ RE</span> (אחרת שתיהן ב-RE ⇒ שתיהן ב-R).</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>העדים הקבועים של כל אזור</h4>
+    <table>
+      <tr><th>אזור</th><th>עדים מהקורס</th></tr>
+      <tr><td><span class="math">R</span></td><td><span class="math">A<sub>DFA</sub>, E<sub>DFA</sub>, EQ<sub>DFA</sub>, PAL</span></td></tr>
+      <tr><td><span class="math">RE ∖ R</span></td><td><span class="math">A<sub>TM</sub>, HALT<sub>TM</sub></span></td></tr>
+      <tr><td><span class="math">coRE ∖ R</span></td><td><span class="math"><span class="comp">A<sub>TM</sub></span>, <span class="comp">HALT<sub>TM</sub></span>, E<sub>TM</sub></span></td></tr>
+      <tr><td>מחוץ ל-<span class="math">RE ∪ coRE</span></td><td><span class="math">REG<sub>TM</sub>, EQ<sub>TM</sub>, PAL<sub>TM</sub>, L<sub>∞</sub></span></td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch11-t5">סימולציה מוגבלת־צעדים — הכלי</h2>
+
+  <p>הבעיה: "הרץ את M על x" עלול לא לעצור. הפתרון: <b>"הרץ את M על x למשך i צעדים"</b> —
+    צעד שתמיד עוצר, ומדווח אחת משלוש: קיבלה / דחתה / לא סיימה עדיין.</p>
+
+  <div class="ex-box">
+    <h4>הבנייה המבריקה של 2024ב ש2</h4>
+    <pre>N_{M,w}: "On input x:
+1. Run M on w for |x| steps.
+2. If M didn't accept during these steps — accept.
+3. Otherwise — reject."</pre>
+    <p>אם <span class="math">M</span> לא מקבלת את <span class="math">w</span> —
+      ‏<span class="math">N</span> מקבל <b>כל</b> קלט. אם מקבלת תוך <span class="math">k</span>
+      צעדים — ‏<span class="math">N</span> מקבל בדיוק את המילים הקצרות מ-<span class="math">k</span>
+      (שפה סופית ≠ ‏<span class="math">Σ<sup>*</sup></span>). כך התכונה "מקבלת-כל-קלט" של
+      <span class="math">N</span> מקודדת את "<span class="math">M</span> לא מקבלת את
+      <span class="math">w</span>" — רדוקציה מ-<span class="math"><span class="comp">A<sub>TM</sub></span></span>!
+      (מלוא הפרטים בפרק 12.)</p>
+  </div>
+
+  <div class="note">הטריק "אורך הקלט כתקציב צעדים" הופך שאלת-אינסוף (האם אי-פעם?) לסדרת
+    שאלות סופיות. שווה לזהות אותו מיד — הוא מופיע כמעט בכל בניית מכונה מתוחכמת במבחנים.</div>
+</section>
+
+<section>
+  <h2 id="ch11-t6">Dovetailing — לולאת החיפוש האינסופית</h2>
+
+  <p>איך מזהה מחפש עד <span class="math">(x, k)</span> — מילה ותקציב — כששניהם לא חסומים?
+    מסדרים את כל הזוגות בסדרה אחת ובודקים בזה אחר זה:</p>
+
+  <div class="algo">
+    <h4>התבנית (כמו במזהי 2023–2024)</h4>
+    <pre>M_L: "On input ⟨M⟩:
+1. For i from 0 to ∞:
+   1.1. For every x with |x| ≤ i, in lexicographic order:
+      1.1.1. Run M on x for i steps.
+      1.1.2. If M accepted — accept."</pre>
+    <p>כל איטרציה <span class="math">i</span> — עבודה <b>סופית</b> (מספר סופי של מילים, כל אחת
+      ל-<span class="math">i</span> צעדים). אם קיים עד — נגיע לאיטרציה שבה גם המילה נכללת וגם
+      התקציב מספיק, ונקבל. אם לא — נרוץ לנצח, וזה בסדר: אנחנו מזהה, לא מכריע.</p>
+  </div>
+
+  <div class="warn">הטעות הפוסלת: "לכל <span class="math">x</span>: הרץ את <span class="math">M</span>
+    על <span class="math">x</span> עד הסוף" — ריצה אחת מתלולאת חוסמת את כל הבאות אחריה.
+    התקציב <span class="math">i</span> (או ריצה-במקביל) הוא לא קישוט — הוא מה שמציל את הזיהוי.
+    בהוכחת הנכונות חובה גם לנמק שכל איטרציה סופית — כמו שהפתרונות הרשמיים עושים במפורש.</div>
+</section>
+
+<section>
+  <h2 id="ch11-t7">תבנית ה־∃: מתי שפה ב־RE</h2>
+
+  <div class="thm">שפה מהצורה <span class="math">{⟨M⟩ | ∃ עד סופי שניתן לאימות בזמן סופי}</span> —
+    ב-RE. המזהה: ‏dovetailing על כל העדים האפשריים + אימות כל מועמד.</div>
+
+  <ul>
+    <li>"‏<span class="math">∃x: M</span> מקבלת את <span class="math">x</span>"
+      (‏<span class="math"><span class="comp">E<sub>TM</sub></span></span>) — עד: זוג (מילה, תקציב) ✓ RE.</li>
+    <li>"‏<span class="math">M</span> עוצרת על <span class="math">w</span>"
+      (‏<span class="math">HALT<sub>TM</sub></span>) — עד: מספר הצעדים ✓ RE.</li>
+    <li>"‏<span class="math">∃x, y</span>: ‏<span class="math">M</span> עוצרת על <span class="math">x</span>
+      ודוחה את <span class="math">y</span> ו-<span class="math">xy ∈ L(D)</span>" — שאלה 2 של 2024א,
+      עד מורכב (שני זוגות) — אותה תבנית, לולאה מקוננת יותר ✓ RE.</li>
+  </ul>
+
+  <div class="note">מבחן מהיר: נסחו את תנאי השפה ככמת. אם הוא "∃ + אימות סופי" — יש מזהה.
+    שימו לב שהאימות חייב לעצור: "‏<span class="math">M</span> <b>דוחה</b> את <span class="math">y</span>"
+    ניתן לאימות (מחכים לדחייה); "‏<span class="math">M</span> <b>לא מקבלת</b> את <span class="math">y</span>"
+    — לא (אולי לולאה)!</div>
+</section>
+
+<section>
+  <h2 id="ch11-t8">תבנית ה־∀: מתי שפה ב־coRE</h2>
+
+  <div class="thm">שפה שהמשלים שלה מנוסח כ-∃ (כלומר: השפה עצמה היא תנאי ∀) — ב-coRE.
+    המזהה-של-המשלים מחפש <b>עד-נגדי</b>.</div>
+
+  <ul>
+    <li>‏<span class="math">E<sub>TM</sub> = {⟨M⟩ | ∀x: M</span> לא מקבלת<span class="math">}</span> —
+      המשלים "∃ מילה מתקבלת" ב-RE ⇒ ‏<span class="math">E<sub>TM</sub> ∈ coRE</span>.</li>
+    <li>"‏<span class="math">∀w ∈ PAL: M</span> לא דוחה את <span class="math">w·w</span>"
+      (שאלה 2 של מבחן-לדוגמה) — עד-נגדי: פלינדרום שנדחה ✓ coRE.</li>
+    <li>‏<span class="math">L(M) ⊆ L(D)∘L(D)</span> (‏2023א ש2) — עד-נגדי:
+      ‏<span class="math">w ∈ L(M)</span> שאינו בשרשור ✓ coRE.</li>
+  </ul>
+
+  <div class="warn">כמת מעורב — ‏<span class="math">∀∃</span> או <span class="math">∃∀</span>
+    שלא מצטמצם — רמז חזק לאזור "מחוץ לשניהם": ‏<span class="math">REG<sub>TM</sub></span>
+    ("‏∃ אוטומט כך ש-∀ מילה…"), ‏<span class="math">EQ<sub>TM</sub></span>. שם לא עוזר שום מזהה —
+    ומוכיחים עם שתי רדוקציות (פרק 12).</div>
+</section>
+
+<section>
+  <h2 id="ch11-t9">אסטרטגיית שאלה 2 במבחן</h2>
+
+  <p>שאלה 2 (40 נק'!) היא תמיד: שפה של קידודים, ושלוש שאלות —
+    ‏<span class="math">L ∈ R?</span> ‏<span class="math">L ∈ RE?</span>
+    ‏<span class="math">L ∈ coRE?</span> עם הוכחה מלאה. סדר עבודה:</p>
+
+  <ol class="pump-steps">
+    <li data-who="נסחו">כתבו את תנאי השפה בכמתים, ואת <b>המשלים</b> (היפוך הכמתים!) —
+      חצי מהפתרון נמצא כאן.</li>
+    <li data-who="זהו">‏∃+אימות-עוצר ⇒ כנראה RE (בנו מזהה dovetailing);
+      ‏∀ ⇒ כנראה coRE (מזהה למשלים); מעורב ⇒ כנראה אף אחד.</li>
+    <li data-who="הוכיחו חיוב">כתבו את המזהה במלואו + נכונות דו-כיוונית
+      ("אם בשפה — יגיע לקבלה כי…; אם לא — לא יקבל לעולם כי…").</li>
+    <li data-who="הוכיחו שלילה">לצד השלילי — רדוקציה מ-<span class="math">A<sub>TM</sub></span> או
+      <span class="math"><span class="comp">A<sub>TM</sub></span></span> (פרק 12). זכרו:
+      ‏<span class="math">∉ coRE ⟹ ∉ R</span>, ‏<span class="math">∉ RE ⟹ ∉ R</span> —
+      תשובת ה-R מגיעה בחינם מאחת השלילות.</li>
+  </ol>
+
+  <div class="ex-box">
+    <h4>הדפוס בשלושת המבחנים האחרונים</h4>
+    <p>‏2024א: ‏RE כן, coRE לא (⇒ R לא). ‏2024ב: הכול לא — שתי רדוקציות
+      (‏<span class="math">A<sub>TM</sub></span> וגם <span class="math"><span class="comp">A<sub>TM</sub></span></span>).
+      ‏2023א: ‏coRE כן, RE לא. שלושת הפרופילים האפשריים — והמנגנון זהה: מזהה לצד החיובי,
+      רדוקציה לצד השלילי.</p>
+  </div>
+
+  <div class="note"><b>לב הפרק:</b> ‏R = שני עדים, RE = עד ל"כן", coRE = עד ל"לא"; האלכסון קובע
+    ‏<span class="math">A<sub>TM</sub> ∈ RE∖R</span>; סימולציה מוגבלת + dovetailing הם המנוע של כל
+    מזהה; והכמתים של תנאי השפה הם המצפן של שאלה 2.</div>
+</section>

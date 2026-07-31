@@ -1,0 +1,140 @@
+{
+  "id": "ai1",
+  "year": 2026,
+  "moed": "AI",
+  "label": "מבחן תרגול AI 1",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "",
+    "duration": "3 שעות",
+    "staff": "נוצר על ידי AI — במתכונת מבחני 2023–2024 של ד\"ר רעות לוי",
+    "totalPoints": 100,
+    "note": "מבחן תרגול במתכונת המדויקת של מבחני 2023–2024: שאלה 1 — סגירויות ובניות, שאלה 2 — R/RE/coRE, שאלה 3 — חמישה סעיפים קצרים. פתרון מלא לכל סעיף."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (7, 14, 14 נקודות)",
+      "points": 35,
+      "intro": "<p dir=\"auto\">עבור מילה <span class=\"math\">w = σ₁σ₂…σ<sub>n</sub></span> (‏<span class=\"math\">n ≥ 1</span>) נגדיר את הרוטציה השמאלית <span class=\"math\">Rot(w) = σ₂σ₃…σ<sub>n</sub>σ₁</span>, ועבור שפה: <span class=\"math\">Rot(L) = {Rot(w) | w ∈ L, w ≠ ε}</span>.</p>",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "1",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">בהינתן <span class=\"en\">DFA</span>‏ <span class=\"math\">A = (Q, Σ, δ, q<sub>s</sub>, F)</span> עבור שפה <span class=\"math\">L</span>.</p><p dir=\"auto\"><b>הוכיחו ע\"י שימוש ב-<span class=\"math\">A</span>:</b> ‏<span class=\"math\">Rot(L)</span> היא שפה רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1b",
+          "label": "2",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">עבור שפה <span class=\"math\">L</span> נגדיר:</p><div class=\"lang-def\">Mid(L) = {y | ∃x, z ∈ Σ<sup>*</sup> s.t. |x| = |z| and xyz ∈ L}</div><p dir=\"auto\"><b>הוכיחו ע\"י שימוש ב-<span class=\"math\">A</span>:</b> אם <span class=\"math\">L</span> רגולרית אזי <span class=\"math\">Mid(L)</span> רגולרית.</p><p dir=\"auto\" class=\"small\"><b>רמז:</b> אילו זוגות מצבים <span class=\"math\">(p,q)</span> \"טובים\"? האם צריך לדעת לחשב אותם?</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1c",
+          "label": "3",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">עבור שפה <span class=\"math\">L</span> נגדיר:</p><div class=\"lang-def\">Fold(L) = {x·y<sup>R</sup> | xy ∈ L and |x| = |y|}</div><p dir=\"auto\"><b>הוכיחו:</b> אם <span class=\"math\">L</span> רגולרית אזי <span class=\"math\">Fold(L)</span> חסרת הקשר — ע\"י בנייה של <span class=\"en\">PDA</span>‏ שמתבסס על ה-<span class=\"en\">DFA</span>‏ <span class=\"math\">A</span>.</p>",
+          "tags": { "subj": "pda", "qt": "construction" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">L = {⟨M₁, M₂⟩ | M₁ and M₂ are TMs and L(M₁) ∩ L(M₂) ≠ ∅}</div>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ RE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ coRE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 18,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם <b>לכל</b> הסעיפים (1 עד 3).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (5 × 5 נקודות)",
+      "points": 25,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "1",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {a<sup>n</sup>b<sup>m</sup> | n &gt; 2m}</span>.</p><p dir=\"auto\"><b>הוכיחו ע\"י למת הניפוח לשפות רגולריות</b> ש-<span class=\"math\">L</span> איננה שפה רגולרית.</p>",
+          "tags": { "subj": "pump-reg", "qt": "pumping" }
+        },
+        {
+          "pid": "q3b",
+          "label": "2",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {a<sup>i</sup>b<sup>j</sup>c<sup>k</sup> | j = i + k}</span>.</p><p dir=\"auto\"><b>בנו דקדוק חסר הקשר</b> לשפה <span class=\"math\">L</span>. הסבירו בקצרה.</p>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q3c",
+          "label": "3",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\">יהי <span class=\"math\">G</span> הדקדוק: <span class=\"math\">S → SS | aSb | ε</span>.</p><p dir=\"auto\"><b>הוכיחו</b> ש-<span class=\"math\">G</span> דקדוק <b>עמום</b> ע\"י הצגת מילה ושני עצי גזירה שלה.</p>",
+          "tags": { "subj": "cfg", "qt": "proof" }
+        },
+        {
+          "pid": "q3d",
+          "label": "4",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> אם <span class=\"math\">L₁ ≤<sub>m</sub> L₂</span> וגם <span class=\"math\">L₂ ≤<sub>m</sub> L₁</span> אזי <span class=\"math\">L₁ = L₂</span>.</p>",
+          "tags": { "subj": "reduction", "qt": "claim" }
+        },
+        {
+          "pid": "q3e",
+          "label": "5",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {⟨M⟩ | M is a TM and L(M) ∩ PAL ≠ ∅}</span>.</p><p dir=\"auto\"><b>הוכיחו או הפריכו:</b> לפי משפט <span class=\"en\">Rice</span>‏ השפה <span class=\"math\">L</span> איננה כריעה.</p>",
+          "tags": { "subj": "rice", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

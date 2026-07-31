@@ -1,0 +1,116 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p>Define a regular substitution <span class="math">f</span> over <span class="math">Σ</span>: for every <span class="math">σ ∈ Σ</span>, ‏<span class="math">f(σ) = {σσ}</span> — each letter is replaced by the (regular, in fact finite) language containing exactly its doubling.</p>
+<p>Then <span class="math">f(L) = {stut(w) | w ∈ L} = stut(L)</span>, and regular languages are closed under regular substitution — so <span class="math">stut(L)</span> is regular.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p><b>Construction:</b> for every <span class="math">p ∈ Q</span> and <span class="math">σ ∈ Σ</span> define:</p>
+<div class="lang-def">δ_B(p, σ) = δ_A(δ_A(p, σ), σ)</div>
+<p>(same <span class="math">Q</span>, ‏<span class="math">q_s</span> and <span class="math">F</span>).</p>
+<p><b>Explanation:</b> one step of <span class="math">B</span> on the letter <span class="math">σ</span> simulates exactly two steps of <span class="math">A</span> on <span class="math">σσ</span>. By induction, the run of <span class="math">B</span> on <span class="math">w</span> ends in the same state as the run of <span class="math">A</span> on <span class="math">stut(w)</span>; since the accepting states are unchanged, <span class="math">w ∈ L(B) ⟺ stut(w) ∈ L(A) = L</span>.</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p>For <span class="math">i ≥ 0</span> let <span class="math">S_i = {q ∈ Q | ∃y, |y| = i, δ′_A(q, y) ∈ F}</span> — the states from which <b>some</b> word of length exactly <span class="math">i</span> reaches acceptance. Note the backward recurrence:</p>
+<div class="lang-def">S₀ = F&nbsp;,&nbsp;&nbsp; S_{i+1} = pre(S_i) = {q | ∃σ: δ_A(q, σ) ∈ S_i}</div>
+<p>Now <span class="math">x ∈ Half(L)</span> iff after reading <span class="math">x</span> (say <span class="math">|x| = i</span>) the automaton sits in a state of <span class="math">S_i</span> — the remaining half <span class="math">y</span> of the same length exists exactly then.</p>
+<p><b>The automaton:</b> ‏<span class="math">B = (Q × P(Q), Σ, δ_B, (q_s, S₀), F_B)</span> where:</p>
+<ul>
+<li><span class="math">δ_B((q, S), σ) = (δ_A(q, σ), pre(S))</span> — the first component follows <span class="math">x</span> forward; the second advances the "reachable-in-exactly-<span class="math">i</span>-steps" set (which does not depend on <span class="math">σ</span>).</li>
+<li><span class="math">F_B = {(q, S) | q ∈ S}</span> — accept when the current state can still reach <span class="math">F</span> in exactly the number of steps read so far.</li>
+</ul>
+<p>After reading <span class="math">x</span> the state is <span class="math">(δ′_A(q_s, x), S_{|x|})</span>, so <span class="math">B</span> accepts exactly <span class="math">Half(L)</span>. ‏<span class="math">B</span> is a finite (deterministic!) automaton — <span class="math">Half(L)</span> is regular.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מכך ש-<span class="math">L ∉ RE</span>.</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ RE</span> — כי <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> ו-<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>.</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">L ∈ coRE</span> — מזהה למשלים שמחפש <span class="math">k+1</span> מילים מתקבלות שונות.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∈ coRE</span>:</b> note that</p>
+<div class="lang-def"><span class="comp">L</span> = {⟨M, k⟩ | |L(M)| ≥ k+1} ∪ {malformed inputs}</div>
+<p>We construct a recognizer <span class="math">S</span> for <span class="math"><span class="comp">L</span></span>:</p>
+<pre>S: "On input z:
+1. If z is not of the form ⟨M, k⟩ — accept.   (syntactic check, decidable)
+2. For i from 0 to ∞:
+   2.1. Counter := 0.
+   2.2. For every x with |x| ≤ i, in lexicographical order:
+      2.2.1. Run M on x for i steps.
+      2.2.2. If M accepted — Counter++.
+   2.3. If Counter ≥ k+1 — accept."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨M,k⟩ ∈ <span class="comp">L</span></span>: there exist <span class="math">k+1</span> distinct accepted words <span class="math">x₁,…,x_{k+1}</span>; let <span class="math">s</span> be the maximal number of steps needed to accept any of them and <span class="math">ℓ</span> the maximal length. At iteration <span class="math">i = max{s, ℓ}</span> the sweep counts at least <span class="math">k+1</span> acceptances and <span class="math">S</span> accepts. Every iteration is finite (finitely many words, bounded simulations), so this iteration is reached.</li>
+<li><span class="math">⟨M,k⟩ ∉ <span class="comp">L</span></span> (i.e. <span class="math">|L(M)| ≤ k</span>): no sweep can ever count <span class="math">k+1</span> distinct accepted words, so <span class="math">S</span> never accepts.</li>
+</ul>
+<p><b><span class="math">L ∉ RE</span> and <span class="math">L ∉ R</span>:</b> we show <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> (<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>, therefore <span class="math">L ∉ RE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_{M,w}, 0⟩</span> where:</p>
+<pre>N_{M,w}: "On input x: Run M on w and do as M does."</pre>
+<p><b>Correctness:</b> ‏<span class="math">f</span> is computable (finite syntactic encoding).</p>
+<ul>
+<li><span class="math">⟨M,w⟩ ∈ <span class="comp">A<sub>TM</sub></span></span>: ‏<span class="math">M</span> does not accept <span class="math">w</span> ⇒ <span class="math">L(N_{M,w}) = ∅</span> ⇒ <span class="math">|L(N)| = 0 ≤ 0</span> ⇒ <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ <span class="comp">A<sub>TM</sub></span></span>: ‏<span class="math">M</span> accepts <span class="math">w</span> ⇒ <span class="math">L(N_{M,w}) = Σ<sup>*</sup></span>, which is infinite — in particular <span class="math">|L(N)| &gt; 0</span> ⇒ <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p>Assume towards contradiction that <span class="math">L</span> is regular; let <span class="math">n</span> be the promised constant.</p>
+<p>Choose <span class="math">w = 0<sup>2n</sup>1<sup>n</sup> ∈ L</span> (indeed <span class="math">#₀ = 2n = 2·#₁</span>), ‏<span class="math">|w| ≥ n</span>.</p>
+<p>For every division <span class="math">w = xyz</span> with <span class="math">|xy| ≤ n</span>, <span class="math">|y| &gt; 0</span>: the first <span class="math">n</span> letters are all <span class="math">0</span>, so <span class="math">y = 0<sup>t</sup></span>, ‏<span class="math">t ≥ 1</span>.</p>
+<p>Choose <span class="math">i = 0</span>: ‏<span class="math">xy<sup>0</sup>z = 0<sup>2n−t</sup>1<sup>n</sup></span>, and <span class="math">2n − t ≠ 2n = 2·n</span> — the condition fails, so <span class="math">xy<sup>0</sup>z ∉ L</span>, contradicting condition 3. Therefore <span class="math">L</span> is not regular.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p><span class="math">i ≠ j</span> splits into <span class="math">i &gt; j</span> or <span class="math">i &lt; j</span> — a union of two one-sided comparisons:</p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">A</span> | <span class="nt">B</span></div>
+<div class="rule"><span class="nt">A</span> → a<span class="nt">A</span>b | a<span class="nt">C</span></div>
+<div class="rule"><span class="nt">C</span> → a<span class="nt">C</span> | ε</div>
+<div class="rule"><span class="nt">B</span> → a<span class="nt">B</span>b | <span class="nt">D</span>b</div>
+<div class="rule"><span class="nt">D</span> → <span class="nt">D</span>b | ε</div>
+</div>
+<p><span class="math">A</span> generates <span class="math">i &gt; j</span>: pairs <span class="math">aAb</span> plus a <b>mandatory</b> surplus <span class="math">a</span> (the rule <span class="math">A → aC</span>) and optional further <span class="math">a</span>'s. Symmetrically <span class="math">B</span> generates <span class="math">i &lt; j</span> with a mandatory surplus <span class="math">b</span>. The union is exactly <span class="math">i ≠ j</span>.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<p><span class="math">w = "a"</span>.</p>
+<ul>
+<li><span class="math">δ(q₀, a) = q₁ ∈ F</span> but <span class="math">δ(q₂, a) = q₃ ∉ F</span> — the word <span class="math">a</span> separates <span class="math">q₀</span> from <span class="math">q₂</span>.</li>
+<li><span class="math">δ(q₁, a) = q₂ ∉ F</span> but <span class="math">δ(q₃, a) = q₀ ∈ F</span> — the same word separates <span class="math">q₁</span> from <span class="math">q₃</span>.</li>
+</ul>
+<p>A single word, two separations — exactly as required.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><b>True.</b></p>
+<p>Since <span class="math">L ∈ RE</span>, by definition <span class="math"><span class="comp">L</span> ∈ coRE</span>. Assume towards contradiction that also <span class="math"><span class="comp">L</span> ∈ RE</span>.</p>
+<p>Then <span class="math">L ∈ RE</span> and <span class="math"><span class="comp">L</span> ∈ RE</span>, i.e. <span class="math">L ∈ RE ∩ coRE = R</span> (running the two recognizers in parallel yields a decider) — contradicting <span class="math">L ∉ R</span>.</p>
+<p>Therefore <span class="math"><span class="comp">L</span> ∉ RE</span>.</p>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>True.</b> Define:</p>
+<div class="lang-def">C = {L′ ∈ RE | L′ is finite or L′ = Σ<sup>*</sup>}</div>
+<p>Then <span class="math">L = L_C</span> — the condition depends only on <span class="math">L(M)</span> (semantic).</p>
+<ul>
+<li><span class="math">C ⊆ RE</span>: by definition.</li>
+<li><span class="math">C ≠ ∅</span>: ‏<span class="math">∅ ∈ RE</span> and it is finite, so <span class="math">∅ ∈ C</span>.</li>
+<li><span class="math">C ≠ RE</span>: ‏<span class="math">A<sub>TM</sub> ∈ RE</span>, it is infinite, and <span class="math">A<sub>TM</sub> ≠ Σ<sup>*</sup></span> (e.g. the empty word is not a valid encoding ⟨M,w⟩) — so <span class="math">A<sub>TM</sub> ∈ RE ∖ C</span>.</li>
+</ul>
+<p>The property is semantic and non-trivial, so by Rice's theorem <span class="math">L = L_C ∉ R</span> — the claim is true.</p>
+</div>
+</section>

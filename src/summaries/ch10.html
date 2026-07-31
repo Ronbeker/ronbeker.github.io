@@ -1,0 +1,184 @@
+<h1>וריאציות של מ"ט ובעיות כריעות על אוטומטים</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 10 (הרצאה 10 + תרגול 10)</p>
+
+<section>
+  <h2 id="ch10-t0">עקרון הסימולציה — איך מוכיחים שקילות</h2>
+
+  <p>כל "שדרוג" למכונת טיורינג נבדק באותה שיטה: מראים ששני המודלים <b>מדמים</b> זה את זה.</p>
+
+  <div class="algo">
+    <h4>תבנית הוכחת שקילות מודלים</h4>
+    <ol>
+      <li><b>כיוון קל:</b> המודל הבסיסי הוא מקרה פרטי של המורחב (מכונה רגילה היא רב-סרטית עם סרט אחד…).</li>
+      <li><b>כיוון מעניין:</b> מכונה רגילה מדמה את המורחבת — מתארים איך מקודדים את ה"תוספת"
+        על סרט יחיד, ואיך כל צעד של המורחבת מתורגם לסדרת צעדים סופית של הרגילה.</li>
+      <li>מסקנה: אותה מחלקת שפות בדיוק — התוספת היא נוחות, לא כוח.</li>
+    </ol>
+  </div>
+
+  <div class="note">זו הצדקה מעשית לתזת צ'רץ'-טיורינג: שוב ושוב מגלים שהרחבות "חזקות" מתקפלות
+    לאותו כוח חישוב. במבחן, סימולציות כאלה מצוטטות ולא מוכחות מחדש — "מותר להסתמך על טענות מהכיתה".</div>
+</section>
+
+<section>
+  <h2 id="ch10-t1">סרט דו־כיווני ומכונת Stay</h2>
+
+  <ul>
+    <li><b>‏Stay (S):</b> מרשים ל-δ גם "להישאר במקום": ‏<span class="math">{L, R, S}</span>.
+      סימולציה: ‏<span class="math">S</span> = צעד ימינה ואז שמאלה (עם מצב ביניים). טכני לגמרי —
+      ובתרגול 10 זו דוגמת החימום.</li>
+    <li><b>סרט אינסופי לשני הכיוונים:</b> מקפלים אותו לסרט חד-כיווני עם שני מסלולים
+      (תא <span class="math">i</span> מחזיק את הזוג <span class="math">(i, −i)</span>) וסמן קצה;
+      המצבים זוכרים באיזה "מסלול" אנחנו.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>מה נחשב תשובה מלאה לשאלת סימולציה</h4>
+    <p>(1) הקידוד — איך מצב הסרט המורחב מיוצג בסרט הרגיל; (2) תרגום צעד — מה עושה הרגילה עבור
+      כל צעד של המורחבת; (3) שימור התוצאה — קבלה/דחייה/לולאה עוברות כמו שהן. שלושת הרכיבים,
+      בקצרה — בלי טבלאות מעברים.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch10-t2">מכונה רב־סרטית</h2>
+
+  <div class="def"><span class="term">מ"ט רב-סרטית</span> — ‏<span class="math">k</span> סרטים
+    ו-<span class="math">k</span> ראשים עצמאיים;
+    ‏<span class="math">δ: Q × Γ<sup>k</sup> → Q × Γ<sup>k</sup> × {L,R}<sup>k</sup></span>.
+    הקלט על סרט 1, השאר ריקים.</div>
+
+  <div class="algo">
+    <h4>הסימולציה בסרט יחיד</h4>
+    <p>שומרים את כל הסרטים זה-אחר-זה עם מפרידי <span class="math">#</span>, ומסמנים בכל קטע את
+      מיקום הראש בגרסה מנוקדת של האות (<span class="math">ȧ</span>). כל צעד של הרב-סרטית:
+      סריקה שאוספת את <span class="math">k</span> האותיות המנוקדות → עדכון לפי δ → סריקה שכותבת
+      ומזיזה נקודות. גלישה מעבר ל-# — מזיזים את הזנב ימינה ("פינוי מקום").</p>
+  </div>
+
+  <p>שימושיות בפועל: "העתק את הקלט לסרט שני", "נהל מונה בסרט נפרד" — צעדים לגיטימיים בתיאורי
+    high-level, כי רב-סרטית ≡ רגילה.</p>
+</section>
+
+<section>
+  <h2 id="ch10-t3">מ"ט אי־דטרמיניסטית</h2>
+
+  <div class="def"><span class="term">NTM</span> — ‏<span class="math">δ: Q × Γ → P(Q × Γ × {L,R})</span>;
+    הריצה היא <b>עץ</b> של ענפים, והמכונה מקבלת אם <b>ענף כלשהו</b> מקבל.</div>
+
+  <div class="thm">לכל NTM קיימת מ"ט דטרמיניסטית שקולה. הרעיון: סריקת עץ הריצות
+    <b>לרוחב (BFS)</b> — מנסים את כל הענפים עד עומק 1, עד עומק 2, וכן הלאה
+    (בכתובות ענפים על סרט עזר). אם קיים ענף מקבל בעומק <span class="math">d</span> — נמצא אותו
+    בשלב <span class="math">d</span>.</p></div>
+
+  <div class="warn">למה לא DFS? ענף אינסופי היה בולע את הסימולציה לפני שהיא מגיעה לענף המקבל.
+    החיפוש-לרוחב (או ניסוי כל הענפים באורך חסום ועולה) הוא אותו רעיון בדיוק כמו ה-dovetailing
+    שנפגוש במזהים של פרק 11 — שווה להפנים אותו כאן, בגרסה הפשוטה.</div>
+
+  <div class="note">מסקנת שני הפרקים: ‏R ו-RE יציבות לחלוטין תחת כל הווריאציות. לכן מותר לתכנן
+    high-level עם ניחושים ("נחש עד", "נחש חלוקה") — ולדעת שזה עדיין RE.</div>
+</section>
+
+<section>
+  <h2 id="ch10-t4">A_DFA כריעה</h2>
+
+  <div class="def"><span class="math">A<sub>DFA</sub> = {⟨D, w⟩ | D is a DFA and D accepts w}</span></div>
+
+  <div class="algo">
+    <h4>המכריע</h4>
+    <pre>M: "On input ⟨D, w⟩:
+1. Check that the input encodes a valid DFA and a word; if not, reject.
+2. Simulate the run of D on w (|w| transition steps).
+3. If the run ends in an accepting state — accept; otherwise reject."</pre>
+  </div>
+
+  <p>העצירה מובטחת: ריצת DFA על מילה סופית אורכת בדיוק <span class="math">|w|</span> צעדים.
+    לכן <span class="math">A<sub>DFA</sub> ∈ R</span>. אותו טיעון עובד ל-<span class="math">A<sub>NFA</sub></span>
+    ו-<span class="math">A<sub>REX</sub></span> — ממירים ל-DFA (בנייה סופית) ומסמלצים.</p>
+
+  <div class="note">ההבדל התהומי מ-<span class="math">A<sub>TM</sub></span>: סימולציית DFA עוצרת
+    בהכרח; סימולציית מ"ט — לא. "להריץ ולראות" הוא מכריע רק כשהריצה חסומה מראש.</div>
+</section>
+
+<section>
+  <h2 id="ch10-t5">E_DFA כריעה</h2>
+
+  <div class="def"><span class="math">E<sub>DFA</sub> = {⟨D⟩ | D is a DFA and L(D) = ∅}</span></div>
+
+  <div class="algo">
+    <h4>המכריע — חיפוש נגישות בגרף</h4>
+    <pre>M: "On input ⟨D⟩:
+1. Mark the start state.
+2. Repeat until no new state gets marked:
+   2.1. Mark every state reachable by one transition from a marked state.
+3. If no accepting state is marked — accept; otherwise reject."</pre>
+  </div>
+
+  <p>לולאת הסימון רצה לכל היותר <span class="math">|Q|</span> סיבובים — עצירה מובטחת.
+    השפה ריקה ⟺ אף מצב מקבל אינו נגיש. (בדיוק הבדיקה שהכרנו בפרק 4 — עכשיו כאלגוריתם רשמי.)</p>
+
+  <div class="ex-box">
+    <h4>שימוש חוזר במבחן</h4>
+    <p>‏<span class="math">E<sub>DFA</sub> ∈ R</span> מופיע כצעד-עזר בפתרונות: המזהה של 2023א ש2
+      פותח ב-"If ‏L(D) = ∅, accept (‏E_DFA ∈ R)". מותר להשתמש בו כקופסה שחורה — עם אזכור השם.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch10-t6">EQ_DFA כריעה</h2>
+
+  <div class="def"><span class="math">EQ<sub>DFA</sub> = {⟨D₁, D₂⟩ | L(D₁) = L(D₂)}</span></div>
+
+  <p>שתי דרכים להכריע:</p>
+  <ul>
+    <li><b>הפרש סימטרי:</b> בונים DFA ל-<span class="math">(L₁ ∩ <span class="comp">L₂</span>) ∪ (<span class="comp">L₁</span> ∩ L₂)</span>
+      (מכפלות ומשלים — בניות סופיות מפרק 2) ובודקים ריקנות עם המכריע של
+      <span class="math">E<sub>DFA</sub></span>. שוויון ⟺ ההפרש הסימטרי ריק.</li>
+    <li><b>מינימיזציה/שקילות:</b> מריצים את אלגוריתם מחלקות השקילות על האיחוד ובודקים
+      <span class="math">q<sub>s1</sub> ≡ q<sub>s2</sub></span> (פרק 4).</li>
+  </ul>
+
+  <div class="note">התבנית הכללית: על אוטומטים סופיים <b>כמעט הכול כריע</b>, כי כל השאלות מתכנסות
+    לבדיקות סופיות על גרף. ההיפוך הגמור יגיע במעבר למ"ט: ‏<span class="math">EQ<sub>TM</sub></span>
+    אפילו לא ב-RE ∪ coRE.</div>
+</section>
+
+<section>
+  <h2 id="ch10-t7">בעיות כריעות על דקדוקים</h2>
+
+  <ul>
+    <li><b>‏<span class="math">A<sub>CFG</sub> = {⟨G, w⟩ | w ∈ L(G)}</span> כריעה:</b> ממירים
+      ל-CNF; מילה באורך <span class="math">n ≥ 1</span> נגזרת — אם בכלל — בבדיוק
+      <span class="math">2n−1</span> צעדים (פרק 7!); עוברים על מספר סופי של גזירות באורך הזה.</li>
+    <li><b>‏<span class="math">E<sub>CFG</sub></span> כריעה:</b> אלגוריתם סימון "מניב":
+      מסמנים טרמינלים, ואז כל משתנה שיש לו כלל שכל צדו הימני מסומן; ‏<span class="math">L(G) = ∅</span>
+      ⟺ ‏<span class="math">S</span> לא סומן. עוצר תוך <span class="math">|V|</span> סיבובים.</li>
+    <li><b>‏<span class="math">EQ<sub>CFG</sub></span> — כבר <b>לא</b> כריעה!</b> אין "הפרש סימטרי"
+      לדקדוקים (אין משלים/חיתוך ב-CFL) — והתוצאה באמת אי-כריעה (מוזכרת בקורס בלי הוכחה).</li>
+  </ul>
+
+  <div class="warn">הניגוד <span class="math">EQ<sub>DFA</sub> ∈ R</span> מול
+    <span class="math">EQ<sub>CFG</sub> ∉ R</span> הוא חומר קבוע לשאלות נכון/לא נכון —
+    האינסטינקט "על תיאורים סופיים הכול כריע" נשבר כבר בדקדוקים.</div>
+</section>
+
+<section>
+  <h2 id="ch10-t8">גבול הכריעות — לקראת A_TM</h2>
+
+  <p>סיכום ביניים של "השפות המרכזיות" עד כה:</p>
+
+  <table>
+    <tr><th>שפה</th><th>סטטוס</th><th>הכלי</th></tr>
+    <tr><td><span class="math">A<sub>DFA</sub>, E<sub>DFA</sub>, EQ<sub>DFA</sub></span></td><td><span class="math">∈ R</span></td><td>סימולציה חסומה / גרפים / מכפלה</td></tr>
+    <tr><td><span class="math">A<sub>CFG</sub>, E<sub>CFG</sub></span></td><td><span class="math">∈ R</span></td><td>CNF / סימון מניב</td></tr>
+    <tr><td><span class="math">EQ<sub>CFG</sub></span></td><td><span class="math">∉ R</span></td><td>(מצוטט)</td></tr>
+    <tr><td><span class="math">A<sub>TM</sub></span></td><td>פרק 11</td><td>אלכסון…</td></tr>
+  </table>
+
+  <p>מדוע "להריץ ולראות" קורס במעבר למ"ט? כי הצעד "‏Run M on w" עלול לא לעצור — ואין לנו דרך
+    לדעת מתי לוותר. את זה נהפוך מטענת-תחושה למשפט מדויק בפרק הבא, עם שיטת האלכסון.</p>
+
+  <div class="note"><b>לב הפרק:</b> וריאציות מ"ט = אותו כוח (סימולציה!); על אוטומטים ודקדוקים
+    כמעט הכול כריע כי הריצות/בדיקות חסומות; והגבול עובר בדיוק היכן שסימולציה מפסיקה להיות חסומה.
+    כל המכריעים של הפרק הם צעדי-עזר לגיטימיים במבחן — בשמם המפורש.</div>
+</section>

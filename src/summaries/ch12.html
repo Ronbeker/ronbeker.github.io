@@ -1,0 +1,266 @@
+<h1>רדוקציות מיפוי</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 12 (הרצאה 12 + תרגול 12)</p>
+
+<section>
+  <h2 id="ch12-t0">רדוקציית מיפוי — ההגדרה</h2>
+
+  <div class="def">
+    <span class="term">רדוקציית מיפוי</span> — ‏<span class="math">A ≤<sub>m</sub> B</span> אם קיימת
+    פונקציה <b>ניתנת לחישוב</b> <span class="math">f: Σ<sup>*</sup> → Σ<sup>*</sup></span>
+    (מ"ט שעוצרת על כל קלט ומחזירה פלט) כך שלכל <span class="math">w</span>:
+    <div class="lang-def">w ∈ A&nbsp;&nbsp;⟺&nbsp;&nbsp;f(w) ∈ B</div>
+  </div>
+
+  <p>אינטואיציה: "‏A היא מקרה פרטי מחופש של B" — מי שיודע לענות על B, עונה על A דרך התרגום
+    <span class="math">f</span>. שימו לב לשקילות הדו-כיוונית: גם "כן"→"כן" וגם "לא"→"לא".</p>
+
+  <div class="reduce">
+    <div class="rbox">A (הקשה הידועה)</div>
+    <span class="rarr">≤<sub>m</sub></span>
+    <div class="rbox">B (הנאשמת)</div>
+    <div class="rcap">כיוון ההוכחה במבחן: מהשפה שכבר ידוע שהיא קשה — אל השפה שרוצים להוכיח שקשה</div>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch12-t1">מה ≤m משמר — כללי ההעברה</h2>
+
+  <div class="thm">אם <span class="math">A ≤<sub>m</sub> B</span> אז:
+    <ul>
+      <li><span class="math">B ∈ R ⟹ A ∈ R</span> &nbsp;(שקול: ‏<span class="math">A ∉ R ⟹ B ∉ R</span>)</li>
+      <li><span class="math">B ∈ RE ⟹ A ∈ RE</span> &nbsp;(שקול: ‏<span class="math">A ∉ RE ⟹ B ∉ RE</span>)</li>
+      <li><span class="math">B ∈ coRE ⟹ A ∈ coRE</span> &nbsp;(שקול: ‏<span class="math">A ∉ coRE ⟹ B ∉ coRE</span>)</li>
+    </ul>
+    <b>השייכוּת יורדת עם כיוון החץ; הקושי מטפס נגדו.</b></div>
+
+  <p>ההוכחה בת שורה: מכריע/מזהה ל-B + חישוב <span class="math">f</span> = מכריע/מזהה ל-A
+    ("חשב <span class="math">f(w)</span>, שאל את B").</p>
+
+  <div class="ex-box">
+    <h4>טבלת השימוש המבצעית</h4>
+    <table>
+      <tr><th>מטרה</th><th>מה מוכיחים</th></tr>
+      <tr><td><span class="math">B ∉ R, B ∉ coRE</span></td><td><span class="math">A<sub>TM</sub> ≤<sub>m</sub> B</span></td></tr>
+      <tr><td><span class="math">B ∉ R, B ∉ RE</span></td><td><span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> B</span></td></tr>
+      <tr><td>שפה מחוץ לשניהם</td><td>שתי הרדוקציות ביחד</td></tr>
+    </table>
+    <p>(‏<span class="math">HALT<sub>TM</sub></span> ומשלימה משמשים באותם תפקידים —
+      ‏מבחן-לדוגמה ש2 השתמש דווקא ב-<span class="math"><span class="comp">HALT<sub>TM</sub></span></span>.)</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch12-t2">תבנית הכתיבה המלאה של רדוקציה</h2>
+
+  <div class="algo">
+    <h4>ארבעת הרכיבים (הפורמט הרשמי המדויק)</h4>
+    <ol>
+      <li><b>הכרזה:</b> "נראה <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span>
+        (‏<span class="math">A<sub>TM</sub> ∉ coRE</span>, לכן <span class="math">L ∉ coRE</span>
+        ו-<span class="math">L ∉ R</span>)".</li>
+      <li><b>הגדרת f:</b> ‏<span class="math">f(⟨M,w⟩) = ⟨N<sub>M,w</sub>⟩</span> (או זוג/שלשה),
+        עם פסאודו-קוד מלא של המכונות הנבנות.</li>
+      <li><b>חישוביות:</b> "‏<span class="math">f</span> ניתנת לחישוב: כל שנדרש הוא לכתוב את הקידוד
+        של <span class="math">N<sub>M,w</sub></span> — מחרוזת סופית שנבנית בזמן סופי." (משפט קבוע —
+        אבל חובה לכתוב אותו!)</li>
+      <li><b>נכונות דו-כיוונית:</b> ‏<span class="math">⟨M,w⟩ ∈ A<sub>TM</sub> ⟹ f(⟨M,w⟩) ∈ L</span>
+        וגם <span class="math">⟨M,w⟩ ∉ A<sub>TM</sub> ⟹ f(⟨M,w⟩) ∉ L</span> —
+        שני כיוונים מפורשים, כל אחד עם הנימוק שלו.</li>
+    </ol>
+  </div>
+
+  <div class="warn">רוב הנקודות הולכות לאיבוד ברכיב 4: כותבים כיוון אחד ושוכחים שהשני אינו
+    "אותו דבר בהיפוך" — ב"לא מקבלת" מסתתרות דחייה <b>וגם</b> לולאה, ולכל אחת התנהגות אחרת של
+    <span class="math">N<sub>M,w</sub></span>. בדקו את שתיהן.</div>
+</section>
+
+<section>
+  <h2 id="ch12-t3">HALT_TM — הרדוקציה הראשונה</h2>
+
+  <div class="def"><span class="math">HALT<sub>TM</sub> = {⟨M,w⟩ | M halts on input w}</span></div>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">A<sub>TM</sub> ≤<sub>m</sub> HALT<sub>TM</sub></span></h4>
+    <p>‏<span class="math">f(⟨M,w⟩) = ⟨N, w⟩</span> כאשר:</p>
+    <pre>N: "On input x:
+1. Run M on x.
+2. If M accepted — accept.
+3. If M rejected — loop."</pre>
+    <p><b>נכונות:</b> אם <span class="math">M</span> מקבלת את <span class="math">w</span> —
+      ‏<span class="math">N</span> עוצרת על <span class="math">w</span> (מקבלת) ⇒ בשפה.
+      אם לא (דוחה <b>או</b> מתלולאת) — ‏<span class="math">N</span> על <span class="math">w</span>
+      מתלולאת (בשורה 3 או כבר בשורה 1) ⇒ לא בשפה. ✓</p>
+  </div>
+
+  <p>הטריק: "המרת דחייה ללולאה" מאחדת את שתי צורות ה"לא" לצורה אחת שנראית ל-HALT.
+    מסקנה: ‏<span class="math">HALT<sub>TM</sub> ∈ RE ∖ R</span> — בדיוק כמו
+    <span class="math">A<sub>TM</sub></span> (‏RE מסימולציה-עד-עצירה; לא R מהרדוקציה).</p>
+</section>
+
+<section>
+  <h2 id="ch12-t4">E_TM — רדוקציה עם משלים</h2>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">A<sub>TM</sub> ≤<sub>m</sub> <span class="comp">E<sub>TM</sub></span></span> (ולכן <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> E<sub>TM</sub></span>)</h4>
+    <p>‏<span class="math">f(⟨M,w⟩) = ⟨N<sub>M,w</sub>⟩</span> כאשר:</p>
+    <pre>N_{M,w}: "On input x:
+1. Run M on w.   (ignoring x!)
+2. If M accepted — accept."</pre>
+    <p>אם <span class="math">M</span> מקבלת את <span class="math">w</span>:
+      ‏<span class="math">L(N) = Σ<sup>*</sup> ≠ ∅</span>; אחרת <span class="math">L(N) = ∅</span>.
+      לכן <span class="math">⟨M,w⟩ ∈ A<sub>TM</sub> ⟺ ⟨N⟩ ∉ E<sub>TM</sub></span>. ✓</p>
+  </div>
+
+  <p>שתי נקודות מבניות: (1) <b>התעלמות מהקלט</b> — ‏<span class="math">N</span> מקודדת את השאלה על
+    <span class="math">(M,w)</span> בתוך ההתנהגות הגלובלית שלה; ‏<span class="math">L(N)</span>
+    קופצת בין <span class="math">∅</span> ל-<span class="math">Σ<sup>*</sup></span>.
+    (2) <b>רדוקציה למשלים</b> — ‏<span class="math">A ≤<sub>m</sub> <span class="comp">B</span></span>
+    שקולה ל-<span class="math"><span class="comp">A</span> ≤<sub>m</sub> B</span>
+    (אותה f!). מסקנה: ‏<span class="math">E<sub>TM</sub> ∈ coRE ∖ R</span>.</p>
+
+  <div class="warn">האם ההיפוך המצוין פה מפר את "אסור להפוך מזהה"? לא — לא הפכנו מכונה;
+    בחרנו לאיזו שפה (B או המשלים שלה) ממפים. משחקי המשלים האלה הם בדיוק הקווים העיליים
+    שראינו במבחני 2024 — לקרוא אותם בדקדקנות.</div>
+</section>
+
+<section>
+  <h2 id="ch12-t5">גלריית המכונות המתוכנתות N_{M,w}</h2>
+
+  <p>כל רדוקציה בונה מכונה שמקודדת את השאלה. הגלריה מהמבחנים:</p>
+
+  <table>
+    <tr><th>‏N על קלט x</th><th>‏L(N) כש-M מקבלת את w</th><th>‏L(N) כשלא</th><th>שימש ב…</th></tr>
+    <tr><td>הרץ M על w; ענה כמוה</td><td><span class="math">Σ<sup>*</sup></span></td><td><span class="math">∅</span></td><td>‏E_TM, ‏2023ב ש2</td></tr>
+    <tr><td>הרץ M על w; אם קיבלה — קבל; אחרת לולאה</td><td><span class="math">Σ<sup>*</sup></span></td><td><span class="math">∅</span> (בלי לעצור)</td><td>‏HALT-גרסאות</td></tr>
+    <tr><td>אם קיבלה — <b>דחה</b>; אחרת לולאה</td><td><span class="math">∅</span> ועוצרת-דוחה</td><td><span class="math">∅</span> בלי לעצור</td><td>‏2024א ש2 (עם D)</td></tr>
+    <tr><td>הרץ M על w ל-<span class="math">|x|</span> צעדים; קבל אם <b>לא</b> קיבלה</td><td>סופית (<span class="math">≠ Σ<sup>*</sup></span>)</td><td><span class="math">Σ<sup>*</sup></span></td><td>‏2024ב ש2 (מ-<span class="comp">A<sub>TM</sub></span>)</td></tr>
+  </table>
+
+  <p>לצד <span class="math">N</span> מצרפים לעיתים רכיב קבוע — DFA קטן
+    (‏<span class="math">L(D)={00}</span> ב-2024א, ‏<span class="math">{1}</span> ב-2023ב) —
+    שמכייל את התנאי המספרי/מבני של שפת היעד.</p>
+
+  <div class="note">לקרוא את הגלריה = לדעת לכתוב את הרדוקציה הבאה: בוחרים את ההתנהגות הגלובלית
+    שמפרידה נכון (‏∅ מול Σ*, עוצרת מול לא, סופית מול הכול), ומכוונים אותה לתנאי של שפת היעד.</div>
+</section>
+
+<section>
+  <h2 id="ch12-t6">הטריק של התקציב: רדוקציות מ־Ā_TM</h2>
+
+  <p>להוכיח <span class="math">L ∉ RE</span> — מראים
+    <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span>.
+    הקושי: המכונה הנבנית צריכה "לזהות אי-קבלה" — שאין לה עד. הפתרון: <b>תקציב הצעדים</b>.</p>
+
+  <div class="ex-box">
+    <h4>השלד של 2024ב ש2 (החלק השני)</h4>
+    <pre>N_{M,w}: "On input x:
+1. Run M on w for |x| steps.
+2. If M didn't accept within these steps — accept.
+3. Otherwise — reject."</pre>
+    <p>‏<span class="math">⟨M,w⟩ ∈ <span class="comp">A<sub>TM</sub></span></span> ⟹ אף תקציב לא
+      יגלה קבלה ⟹ ‏<span class="math">L(N) = Σ<sup>*</sup></span> ("‏N מקבלת כל קלט" — התנאי של
+      שפת היעד שם). ‏<span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span> (קבלה תוך <span class="math">k</span>
+      צעדים) ⟹ ‏<span class="math">L(N) = {x : |x| &lt; k}</span> — סופית, לא
+      <span class="math">Σ<sup>*</sup></span>. ✓</p>
+  </div>
+
+  <div class="note">התבנית הכללית: תכונת-"לעולם לא" (אי-קבלה, אי-עצירה) הופכת לתכונת-"לכל תקציב",
+    והיא נבדקת קלט-קלט עם <span class="math">|x|</span> כתקציב. כשפוגשים שפה שהתנאי שלה הוא
+    "‏M מקבלת את <b>כל</b> הקלטים" או "‏<span class="math">L(M) = Σ<sup>*</sup></span>" —
+    כמעט תמיד הרדוקציה הזו בסביבה.</div>
+</section>
+
+<section>
+  <h2 id="ch12-t7">REG_TM ו־EQ_TM — מחוץ לשני העולמות</h2>
+
+  <div class="def"><span class="math">REG<sub>TM</sub> = {⟨M⟩ | L(M) is regular}</span>,&nbsp;
+    <span class="math">EQ<sub>TM</sub> = {⟨M₁,M₂⟩ | L(M₁) = L(M₂)}</span> — שתיהן
+    <b>מחוץ ל-RE ∪ coRE</b>.</div>
+
+  <p>הרעיון (על REG): בונים <span class="math">N<sub>M,w</sub></span> שמחליפה בין שפה רגולרית
+    לשפה לא-רגולרית לפי קבלת <span class="math">w</span>:</p>
+  <pre>N_{M,w}: "On input x:
+1. If x has the form 0ⁿ1ⁿ — accept.
+2. Otherwise: run M on w; if M accepted — accept."</pre>
+  <p>‏<span class="math">M</span> מקבלת את <span class="math">w</span> ⟹
+    ‏<span class="math">L(N) = Σ<sup>*</sup></span> (רגולרית!); לא מקבלת ⟹
+    ‏<span class="math">L(N) = {0<sup>n</sup>1<sup>n</sup>}</span> (לא רגולרית). זה נותן
+    <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> REG<sub>TM</sub></span>
+    ⟹ ‏<span class="math">∉ RE</span>; ובחילוף התפקידים (רגולרית כשלא-מקבלת) —
+    ‏<span class="math">A<sub>TM</sub> ≤<sub>m</sub> REG<sub>TM</sub></span> ⟹
+    ‏<span class="math">∉ coRE</span>. שתי רדוקציות = מחוץ לשניהם.</p>
+
+  <div class="note">‏<span class="math">EQ<sub>TM</sub></span> — אותו משחק מול מכונה קבועה:
+    השוואה ל-<span class="math">M<sub>∅</sub></span> נותנת את הצד האחד, ל-<span class="math">M<sub>Σ*</sub></span>
+    את השני. וכך גם <span class="math">PAL<sub>TM</sub></span> ו-<span class="math">L<sub>∞</sub></span>
+    מדף הנוסחאות — כל תכונה סמנטית "עשירה" נופלת לשני הצדדים (וזה בדיוק נושא פרק 13: משפט רייס).</div>
+</section>
+
+<section>
+  <h2 id="ch12-t8">תכונות ≤m — טרנזיטיביות ומשלים</h2>
+
+  <ul>
+    <li><b>טרנזיטיביות:</b> ‏<span class="math">A ≤<sub>m</sub> B ≤<sub>m</sub> C ⟹ A ≤<sub>m</sub> C</span>
+      (הרכבת פונקציות חישוביות — חישובית). מאפשרת "לרדת" מ-HALT במקום מ-A_TM כשנוח.</li>
+    <li><b>משלים:</b> ‏<span class="math">A ≤<sub>m</sub> B ⟺ <span class="comp">A</span> ≤<sub>m</sub> <span class="comp">B</span></span>
+      — אותה <span class="math">f</span> בדיוק (השקילות נשמרת תחת שלילה בשני הצדדים).</li>
+    <li><b>רפלקסיביות:</b> ‏<span class="math">A ≤<sub>m</sub> A</span> (הזהות).
+      וגם: כל <span class="math">A ∈ R</span> ניתנת לרדוקציה לכל שפה לא-טריוויאלית
+      (המכריע בוחר <span class="math">w<sub>in</sub></span>/<span class="math">w<sub>out</sub></span>) —
+      הנקודה של 2024ב ש3.4!</li>
+    <li><b>אי-סימטריה מהותית:</b> ‏<span class="math">A ≤<sub>m</sub> B</span> לא גורר
+      <span class="math">B ≤<sub>m</sub> A</span> — קושי זורם רק בכיוון אחד.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>שתי הפתעות מהמבחנים</h4>
+    <p>‏<b>‏L ≤m L̄ אפשרית גם לכריעות</b> (2024ב ש3.4: זוגי↔אי-זוגי עם <span class="math">f(w)=1w</span>) —
+      אל תניחו שרדוקציה-למשלים מעידה על קושי.
+      <b>ורדוקציה "כמעט-מכל-מקום"</b> (2023ב ש3.6): ‏<span class="math">f</span> שמקיימת את התנאי רק
+      מחוץ לקבוצה סופית <span class="math">A</span> — ניתנת לתיקון עם מכריעי
+      <span class="math">A∩L₁, A∖L₁</span> ועדים <span class="math">w<sub>in</sub>/w<sub>out</sub></span>.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch12-t9">טעויות כיוון קלאסיות</h2>
+
+  <ul>
+    <li><b>רדוקציה הפוכה:</b> להוכיח ש-<span class="math">B</span> קשה — חייבים
+      <span class="math">קשה ≤<sub>m</sub> B</span>. להראות <span class="math">B ≤<sub>m</sub> A<sub>TM</sub></span>
+      אומר רק ש-B "לא יותר קשה מ-A_TM" — כלום. (בדיקה עצמית: הידועה משמאל!)</li>
+    <li><b>כיוון ההעברה:</b> שייכות יורדת מ-B ל-A. ‏"‏<span class="math">A ∈ R</span> ו-<span class="math">A ≤<sub>m</sub> B</span>
+      ⟹ ‏<span class="math">B ∈ R</span>" — <b>שגוי</b> (כל כריעה נמפית ל-A_TM!).</li>
+    <li><b>בחירת מחלקה שגויה לשלילה:</b> ‏<span class="math">A<sub>TM</sub> ≤<sub>m</sub> B</span> שולל
+      ‏coRE (ו-R); הוא <b>לא</b> שולל RE — ‏B בהחלט יכולה להיות ב-RE
+      (‏A_TM עצמה!). לשלילת RE — רדוקציה מ-<span class="math"><span class="comp">A<sub>TM</sub></span></span>.</li>
+    <li><b>‏f "כמעט חישובית":</b> ‏f שמפעילה בעצמה בדיקה לא-כריעה ("אם M עוצרת אז…") — פסולה.
+      ‏f חייבת להיות מכריע-מחשב אמיתי; כל הקושי צריך לשבת בתוך המכונה הנבנית, לא בתוך f.</li>
+  </ul>
+
+  <div class="note">משפט הבדיקה לפני הגשה: "מהידועה אל הנאשמת; השייכות נגד הכיוון; המחלקה
+    הנשללת תואמת את הידועה; ו-f עצמה תמימה". ארבע בדיקות של עשר שניות.</div>
+</section>
+
+<section>
+  <h2 id="ch12-t10">רדוקציות טיורינג — מבט קצר</h2>
+
+  <div class="def"><span class="term">רדוקציית טיורינג</span> — ‏<span class="math">A ≤<sub>T</sub> B</span>:
+    קיים מכריע ל-<span class="math">A</span> שמורשה לקרוא ל<b>אורקל</b> של <span class="math">B</span>
+    (תשובות מיידיות לשאלות "האם <span class="math">x ∈ B</span>?") — מספר פעמים, ועם עיבוד חופשי
+    של התשובות.</div>
+
+  <p>ההבדל מ-≤m: מיפוי הוא "שאלה אחת, בלי לגעת בתשובה"; טיורינג מרשה הכול. לכן:</p>
+  <ul>
+    <li>‏<span class="math">A ≤<sub>m</sub> B ⟹ A ≤<sub>T</sub> B</span> (מקרה פרטי).</li>
+    <li>‏<span class="math">A<sub>TM</sub> ≤<sub>T</sub> <span class="comp">A<sub>TM</sub></span></span>
+      (שואלים את האורקל והופכים) — אבל <span class="math">A<sub>TM</sub> ≰<sub>m</sub> <span class="comp">A<sub>TM</sub></span></span>!
+      (‏≤m היה גורר <span class="math">A<sub>TM</sub> ∈ coRE</span>.) ההיפוך שאסור ב-≤m — מותר ב-≤T.</li>
+    <li>‏≤T משמר רק כריעות (‏<span class="math">B ∈ R ⟹ A ∈ R</span>) — <b>לא</b> RE/coRE.
+      לכן לשאלות RE/coRE במבחן חובה ≤m דווקא.</li>
+  </ul>
+
+  <div class="note"><b>לב הפרק:</b> ‏≤m = תרגום חישובי ששומר שייכות דו-כיוונית; הקושי מטפס נגד
+    החץ; המכונות המתוכנתות (עם או בלי תקציב) הן ארגז הכלים; שתי רדוקציות משליכות שפה אל מחוץ
+    לשני העולמות; והכיוון — תמיד מהידועה אל הנאשמת.</div>
+</section>

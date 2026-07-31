@@ -1,0 +1,122 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p>A word of <span class="math">Rot(L)</span> has the form <span class="math">x·σ₁</span> where <span class="math">σ₁x ∈ L</span>: the first letter <span class="math">σ₁</span> moved to the end.</p>
+<p>For every <span class="math">σ ∈ Σ</span> let <span class="math">q_σ = δ(q_s, σ)</span> — the state reached after reading the (removed) first letter. Then <span class="math">σx ∈ L</span> iff <span class="math">x ∈ L<sup>A</sup><sub>q_σ,f</sub></span> for some <span class="math">f ∈ F</span>. Therefore:</p>
+<div class="lang-def">Rot(L) = ⋃<sub>σ∈Σ, f∈F</sub> L<sup>A</sup><sub>q_σ,f</sub> · {σ}</div>
+<p>Each <span class="math">L<sup>A</sup><sub>q_σ,f</sub></span> is regular (adjust initial/accepting states of <span class="math">A</span>), <span class="math">{σ}</span> is regular, and regular languages are closed under concatenation and finite union — so <span class="math">Rot(L)</span> is regular.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p>Call a pair of states <span class="math">(p, q)</span> <b>good</b> if there exists <span class="math">k ≥ 0</span> such that some word of length <span class="math">k</span> leads from <span class="math">q_s</span> to <span class="math">p</span>, and some word of length <span class="math">k</span> leads from <span class="math">q</span> into <span class="math">F</span>.</p>
+<p>Note that <span class="math">y ∈ Mid(L)</span> iff there exists a good pair <span class="math">(p,q)</span> with <span class="math">y ∈ L<sup>A</sup><sub>p,q</sub></span>: the prefix <span class="math">x</span> (of length <span class="math">k</span>) takes <span class="math">q_s</span> to <span class="math">p</span>, then <span class="math">y</span> takes <span class="math">p</span> to <span class="math">q</span>, then the suffix <span class="math">z</span> (of the same length <span class="math">k</span>) takes <span class="math">q</span> into <span class="math">F</span>.</p>
+<p>Therefore:</p>
+<div class="lang-def">Mid(L) = ⋃<sub>(p,q) good</sub> L<sup>A</sup><sub>p,q</sub></div>
+<p>The set of good pairs is <b>some</b> subset of the finite set <span class="math">Q × Q</span> — it exists even if we do not compute it (for regularity it suffices that an automaton <b>exists</b>). Each <span class="math">L<sup>A</sup><sub>p,q</sub></span> is regular, and a finite union of regular languages is regular — so <span class="math">Mid(L)</span> is regular.</p>
+<p class="small">(One can in fact compute the good pairs: the sequence of set-pairs (states reachable from <span class="math">q_s</span> in exactly <span class="math">k</span> steps, states reaching <span class="math">F</span> in exactly <span class="math">k</span> steps) takes finitely many values, so the union over <span class="math">k</span> stabilizes — but the existence argument already completes the proof.)</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p>Define PDA <span class="math">P = (Q_P, Σ, Γ, δ_P, q_{sP}, F_P)</span>:</p>
+<p><span class="math">Q_P = {q_{sP}, q_{acc}} ⊎ Q ⊎ (Q × F × Q)</span>,&nbsp; <span class="math">Γ = Σ ⊎ {$}</span>,&nbsp; <span class="math">F_P = {q_{acc}}</span>.</p>
+<p>A phase-2 state <span class="math">(c, f, m)</span> carries: the current state <span class="math">c</span> of a <b>backward</b> run of <span class="math">A</span>, the guessed accepting state <span class="math">f</span>, and the remembered midpoint <span class="math">m</span>.</p>
+<ul>
+<li><span class="math">δ_P(q_{sP}, ε, ε) = {(q_s, $)}</span> — push a bottom marker, start simulating <span class="math">A</span>.</li>
+<li><b>Phase 1 (reading <span class="math">x</span>):</b> for every transition <span class="math">δ(p, σ) = q</span> of <span class="math">A</span>: add <span class="math">δ_P(p, σ, ε) = {(q, σ)}</span> — simulate <span class="math">A</span> forward and <b>push every letter read</b>.</li>
+<li><b>Guess the midpoint:</b> for every <span class="math">p ∈ Q</span> and every <span class="math">f ∈ F</span>: add <span class="math">δ_P(p, ε, ε) = {((f, f, p), ε)}</span> — remember the midpoint <span class="math">p</span> and start a backward run at the guessed final state <span class="math">f</span>.</li>
+<li><b>Phase 2 (reading <span class="math">y<sup>R</sup></span>):</b> for every transition <span class="math">δ(p′, σ) = q′</span> of <span class="math">A</span>: add <span class="math">δ_P((q′, f, m), σ, σ) = {((p′, f, m), ε)}</span> — each input letter undoes one <span class="math">A</span>-transition, and pops one pushed letter (enforcing <span class="math">|x| = |y|</span>).</li>
+<li><b>Accept:</b> for every <span class="math">m ∈ Q, f ∈ F</span>: add <span class="math">δ_P((m, f, m), ε, $) = {(q_{acc}, ε)}</span> — the backward run has returned exactly to the midpoint and the stack is empty.</li>
+</ul>
+<p><b>Why it works:</b> a word is accepted iff it can be split as <span class="math">x·(y<sup>R</sup>)</span> such that <span class="math">q_s →x→ m</span> (phase 1), and reading <span class="math">y<sup>R</sup></span> backwards from some <span class="math">f ∈ F</span> arrives at <span class="math">m</span> — i.e. the forward run <span class="math">m →y→ f</span> exists, so <span class="math">xy ∈ L</span>; the stack discipline (push per letter of <span class="math">x</span>, pop per letter of <span class="math">y<sup>R</sup></span>, ‏<span class="math">$</span> exposed exactly at the end) gives <span class="math">|x| = |y|</span>. Hence <span class="math">L(P) = Fold(L)</span> — context-free.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מ-<span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">L ∈ RE</span> — מזהה dovetailing שמחפש מילה משותפת (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ coRE</span> — כי <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> ו-<span class="math">A<sub>TM</sub> ∉ coRE</span>.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∈ RE</span>:</b> we construct a recognizer <span class="math">M_L</span>:</p>
+<pre>M_L: "On input ⟨M₁, M₂⟩:
+1. For i from 0 to ∞:
+   1.1. For every x with |x| ≤ i, in lexicographical order:
+      1.1.1. Run M₁ on x for i steps.
+      1.1.2. Run M₂ on x for i steps.
+      1.1.3. If both accepted — accept."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨M₁,M₂⟩ ∈ L</span>: there exists <span class="math">x ∈ L(M₁) ∩ L(M₂)</span>; let <span class="math">k₁, k₂</span> be the numbers of steps in which the machines accept it. At iteration <span class="math">i = max{|x|, k₁, k₂}</span> both simulations discover the acceptance and <span class="math">M_L</span> accepts. Every earlier iteration performs a finite amount of work (finitely many words, bounded simulations), so the iteration is reached after finitely many steps.</li>
+<li><span class="math">⟨M₁,M₂⟩ ∉ L</span>: no word is accepted by both, so the condition in line 1.1.3 never holds and <span class="math">M_L</span> never accepts (it runs forever).</li>
+</ul>
+<p><b><span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>:</b> we show <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (<span class="math">A<sub>TM</sub> ∉ coRE</span>, therefore <span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_{M,w}, T⟩</span> where:</p>
+<pre>T: "On input x: Accept."
+
+N_{M,w}: "On input x: Run M on w and do as M does."</pre>
+<p><b>Correctness:</b> note that <span class="math">L(T) = Σ<sup>*</sup></span>.</p>
+<ul>
+<li><span class="math">f</span> is a computable function: it only writes the (finite) encodings of the two machines, in finite time.</li>
+<li><span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span>: <span class="math">L(N_{M,w}) = Σ<sup>*</sup></span>, so <span class="math">L(N) ∩ L(T) = Σ<sup>*</sup> ≠ ∅</span> — <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ A<sub>TM</sub></span>: <span class="math">L(N_{M,w}) = ∅</span>, so the intersection is empty — <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p>Assume towards contradiction that <span class="math">L = {a<sup>n</sup>b<sup>m</sup> | n &gt; 2m}</span> is regular; let <span class="math">n</span> be the promised constant.</p>
+<p>Choose <span class="math">w = a<sup>2n+1</sup>b<sup>n</sup></span>: indeed <span class="math">2n+1 &gt; 2n</span> so <span class="math">w ∈ L</span>, and <span class="math">|w| ≥ n</span>.</p>
+<p>For every division <span class="math">w = xyz</span> with <span class="math">|xy| ≤ n</span>, <span class="math">|y| &gt; 0</span>: the first <span class="math">n</span> letters are all <span class="math">a</span>, so <span class="math">y = a<sup>t</sup></span> with <span class="math">t ≥ 1</span>.</p>
+<p>Choose <span class="math">i = 0</span>: ‏<span class="math">xy<sup>0</sup>z = a<sup>2n+1−t</sup>b<sup>n</sup></span>, and since <span class="math">t ≥ 1</span>: ‏<span class="math">2n+1−t ≤ 2n</span>, i.e. the condition <span class="math">n_a &gt; 2n_b</span> fails — <span class="math">xy<sup>0</sup>z ∉ L</span>, contradicting condition 3. Therefore <span class="math">L</span> is not regular.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p>Note that <span class="math">j = i + k</span> means the word is <span class="math">a<sup>i</sup>b<sup>i</sup>·b<sup>k</sup>c<sup>k</sup></span> — a concatenation of two matched blocks:</p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">X</span><span class="nt">Y</span></div>
+<div class="rule"><span class="nt">X</span> → a<span class="nt">X</span>b | ε</div>
+<div class="rule"><span class="nt">Y</span> → b<span class="nt">Y</span>c | ε</div>
+</div>
+<p><span class="math">X</span> generates <span class="math">a<sup>i</sup>b<sup>i</sup></span>, ‏<span class="math">Y</span> generates <span class="math">b<sup>k</sup>c<sup>k</sup></span>; their concatenation gives exactly <span class="math">a<sup>i</sup>b<sup>i+k</sup>c<sup>k</sup></span>.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<p><span class="math">w = ab</span>, with two distinct parse trees:</p>
+<div class="cols2">
+<div class="deriv"><ul><li><span class="nt">S</span><ul><li>a</li><li><span class="nt">S</span><ul><li>ε</li></ul></li><li>b</li></ul></li></ul></div>
+<div class="deriv"><ul><li><span class="nt">S</span><ul>
+<li><span class="nt">S</span><ul><li>a</li><li><span class="nt">S</span><ul><li>ε</li></ul></li><li>b</li></ul></li>
+<li><span class="nt">S</span><ul><li>ε</li></ul></li>
+</ul></li></ul></div>
+</div>
+<p>Left: ‏<span class="math">S ⇒ aSb ⇒ ab</span>. Right: ‏<span class="math">S ⇒ SS ⇒ aSbS ⇒ abS ⇒ ab</span>. Two different parse trees for the same word — <span class="math">G</span> is ambiguous.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><b>False.</b> Counter example:</p>
+<p><span class="math">L₁ = {w | |w| is even}</span>, ‏<span class="math">L₂ = {w | |w| is odd}</span> — both decidable, and <span class="math">L₁ ≠ L₂</span> (in fact disjoint).</p>
+<p><span class="math">f(w) = 1w</span> is computable and flips parity, so it is simultaneously a mapping reduction <span class="math">L₁ ≤<sub>m</sub> L₂</span> (‏<span class="math">|w|</span> even ⟺ <span class="math">|1w|</span> odd) and <span class="math">L₂ ≤<sub>m</sub> L₁</span>.</p>
+<p>Mutual reducibility means "equally hard" — not equality of the languages.</p>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>True.</b> Define:</p>
+<div class="lang-def">C = {L′ ∈ RE | L′ ∩ PAL ≠ ∅}</div>
+<p>Then <span class="math">L = L_C = {⟨M⟩ | L(M) ∈ C}</span> — the condition depends only on <span class="math">L(M)</span> (a semantic property).</p>
+<ul>
+<li><span class="math">C ⊆ RE</span>: by definition.</li>
+<li><span class="math">C ≠ ∅</span>: ‏<span class="math">Σ<sup>*</sup> ∈ RE</span> and <span class="math">Σ<sup>*</sup> ∩ PAL ≠ ∅</span> (e.g. <span class="math">ε ∈ PAL</span>), so <span class="math">Σ<sup>*</sup> ∈ C</span>.</li>
+<li><span class="math">C ≠ RE</span>: ‏<span class="math">∅ ∈ RE</span> and <span class="math">∅ ∩ PAL = ∅</span>, so <span class="math">∅ ∉ C</span>.</li>
+</ul>
+<p>The property is semantic and non-trivial, so by Rice's theorem <span class="math">L ∉ R</span> — the claim is true.</p>
+</div>
+</section>
