@@ -1,0 +1,265 @@
+<h1>פעולות רגולריות ו־NFA</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 2 (הרצאה 2 + תרגול 2)</p>
+
+<section>
+  <h2 id="ch2-t0">תכונות סגור — הרעיון וארגז הכלים</h2>
+
+  <div class="def">
+    <span class="term">סגירות (Closure)</span> — מחלקת שפות <span class="math">C</span> <b>סגורה</b> לפעולה
+    <span class="math">op</span> אם הפעלת הפעולה על שפות מהמחלקה תמיד מחזירה שפה מהמחלקה:
+    <span class="math">L₁, L₂ ∈ C ⟹ op(L₁, L₂) ∈ C</span>.
+  </div>
+
+  <p>המחלקה הרגולרית סגורה לשלל פעולות, וכל סגירות היא <b>כלי הוכחה דו-כיווני</b>:</p>
+  <ul>
+    <li><b>כיוון הבנייה:</b> להוכיח ששפה מסובכת רגולרית — מרכיבים אותה משפות פשוטות בפעולות סגורות (כך בנויים הפתרונות של שאלה 1 בכל מבחני 2023–2024).</li>
+    <li><b>כיוון השלילה:</b> להוכיח ששפה <em>איננה</em> רגולרית — מניחים שהיא כן, מפעילים פעולות סגורות עד שמגיעים לשפה שידוע שאיננה רגולרית, וסתירה (כך עובדות שאלות "הוכיחו שלא ח"ה" עם הצבות).</li>
+  </ul>
+
+  <table>
+    <tr><th>פעולה</th><th>רגולריות סגורות?</th><th>הבנייה</th></tr>
+    <tr><td>משלים <span class="math"><span class="comp">L</span></span></td><td>כן</td><td>היפוך <span class="math">F</span> (על DFA!)</td></tr>
+    <tr><td>חיתוך <span class="math">L₁ ∩ L₂</span></td><td>כן</td><td>מכפלה</td></tr>
+    <tr><td>איחוד <span class="math">L₁ ∪ L₂</span></td><td>כן</td><td>מכפלה / NFA</td></tr>
+    <tr><td>הפרש <span class="math">L₁ ∖ L₂</span></td><td>כן</td><td><span class="math">L₁ ∩ <span class="comp">L₂</span></span></td></tr>
+    <tr><td>שרשור <span class="math">L₁·L₂</span></td><td>כן</td><td>NFA עם ε</td></tr>
+    <tr><td>כוכב <span class="math">L<sup>*</sup></span></td><td>כן</td><td>NFA עם ε</td></tr>
+    <tr><td>היפוך <span class="math">L<sup>R</sup></span></td><td>כן</td><td>היפוך חיצים + החלפת התחלה/קבלה</td></tr>
+    <tr><td>הצבה רגולרית <span class="math">f(L)</span></td><td>כן</td><td>הרכבת אוטומטים/רגקסים</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2 id="ch2-t1">משלים — היפוך המצבים המקבלים ב־DFA</h2>
+
+  <div class="thm">אם <span class="math">L</span> רגולרית אז <span class="math"><span class="comp">L</span> = Σ<sup>*</sup> ∖ L</span> רגולרית.
+    <b>בנייה:</b> בהינתן DFA <span class="math">A = (Q, Σ, δ, q<sub>s</sub>, F)</span> עם <span class="math">L(A) = L</span>,
+    האוטומט <span class="math">A′ = (Q, Σ, δ, q<sub>s</sub>, Q ∖ F)</span> מקיים
+    <span class="math">L(A′) = <span class="comp">L</span></span>.</div>
+
+  <p>הנימוק בן שורה: לכל מילה יש ריצה <b>יחידה</b> ב-DFA, שמסתיימת במצב מסוים —
+    היא מתקבלת ב-<span class="math">A′</span> אם ורק אם נדחתה ב-<span class="math">A</span>.</p>
+
+  <div class="warn">ההיפוך עובד <b>רק על DFA</b> (ורק כשהוא שלם!). ב-NFA מילה מתקבלת אם
+    <em>קיימת</em> ריצה מקבלת — היפוך המצבים המקבלים לא הופך "קיימת מקבלת" ל"כל הריצות דוחות".
+    זו אחת הטעויות הנפוצות במבחן: כדי לקחת משלים של NFA, קודם ממירים ל-DFA (בבניית תת-הקבוצות) ורק אז הופכים.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t2">בניית המכפלה — חיתוך, איחוד והפרש</h2>
+
+  <div class="algo">
+    <h4>Product construction</h4>
+    <p>בהינתן <span class="math">A₁ = (Q₁, Σ, δ₁, s₁, F₁)</span> ו-<span class="math">A₂ = (Q₂, Σ, δ₂, s₂, F₂)</span>,
+      נבנה אוטומט שמריץ את שניהם <b>במקביל</b>:</p>
+    <div class="lang-def">Q = Q₁ × Q₂&nbsp;,&nbsp; δ((p,q), σ) = (δ₁(p,σ), δ₂(q,σ))&nbsp;,&nbsp; q<sub>s</sub> = (s₁, s₂)</div>
+    <ul>
+      <li><b>חיתוך:</b> <span class="math">F = F₁ × F₂</span> — שניהם חייבים לקבל.</li>
+      <li><b>איחוד:</b> <span class="math">F = (F₁ × Q₂) ∪ (Q₁ × F₂)</span> — מספיק אחד.</li>
+      <li><b>הפרש:</b> <span class="math">F = F₁ × (Q₂ ∖ F₂)</span> — הראשון מקבל והשני דוחה.</li>
+    </ul>
+  </div>
+
+  <div class="ex-box">
+    <h4>מתרגול 2</h4>
+    <p>‏<span class="math">L₂ = {w | #₀(w) is even <b>and</b> #₁(w) = 2}</span>:
+      אוטומט הזוגיות (2 מצבים) × אוטומט הספירה-עד-2 (4 מצבים: 0,1,2,יותר) —
+      8 מצבים מהצורה <span class="math">(זוגיות, מונה)</span>, מקבלים: <span class="math">(זוגי, 2)</span>.
+      עבור "or" — אותה מכפלה בדיוק, רק <span class="math">F</span> משתנה.</p>
+  </div>
+
+  <div class="note">המכפלה היא הבנייה שעובדת <b>בלי ניחושים</b> — היא נשארת דטרמיניסטית. לכן זו
+    גם הדרך היחידה מבין הבניות בפרק שמכבדת משלים והפרש ישירות.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t3">NFA — ההגדרה הפורמלית</h2>
+
+  <div class="def">
+    <span class="term">אוטומט סופי לא-דטרמיניסטי (NFA)</span> — חמישייה
+    <span class="math">B = (Q, Σ, δ, q<sub>s</sub>, F)</span> שבה פונקציית המעברים מחזירה <b>קבוצת</b> מצבים
+    ומותר לה לקרוא גם את המילה הריקה:
+    <div class="lang-def">δ: Q × Σ<sub>ε</sub> → P(Q)&nbsp;&nbsp;,&nbsp;&nbsp;Σ<sub>ε</sub> = Σ ∪ {ε}</div>
+  </div>
+
+  <p>המשמעות בציור: מאותו מצב מותר שיצאו כמה חיצים עם אותה אות, מותר שלא יצא אף חץ
+    (<span class="math">δ(q,σ) = ∅</span> — הריצה "נתקעת"), ומותר חץ מסומן <span class="math">ε</span>
+    שנלקח בלי לקרוא קלט.</p>
+
+  <div class="fsa"><svg viewBox="0 0 430 110" xmlns="http://www.w3.org/2000/svg">
+    <path class="tr" d="M8,55 L30,55" marker-end="url(#arr)"/>
+    <circle class="st" cx="58" cy="55" r="25"/><text class="slbl" x="58" y="55">q₀</text>
+    <circle class="st" cx="185" cy="55" r="25"/><text class="slbl" x="185" y="55">q₁</text>
+    <circle class="st" cx="300" cy="55" r="25"/><text class="slbl" x="300" y="55">q₂</text>
+    <circle class="st st-acc" cx="400" cy="55" r="20"/><circle class="st st-acc" cx="400" cy="55" r="25"/>
+    <text class="slbl" x="400" y="55">q₃</text>
+    <path class="tr" d="M46,35 C36,10 80,10 70,35" marker-end="url(#arr)"/>
+    <text class="lbl" x="58" y="8" text-anchor="middle">0,1</text>
+    <path class="tr" d="M83,55 L157,55" marker-end="url(#arr)"/>
+    <text class="lbl" x="120" y="45" text-anchor="middle">1</text>
+    <path class="tr" d="M210,55 L272,55" marker-end="url(#arr)"/>
+    <text class="lbl" x="241" y="45" text-anchor="middle">0,ε</text>
+    <path class="tr" d="M325,55 L372,55" marker-end="url(#arr)"/>
+    <text class="lbl" x="348" y="45" text-anchor="middle">1</text>
+  </svg><div class="fsa-cap">‏NFA (מסגנון סיפסר): מקבל מילים שמכילות 11 או 101 — הלולאה מנחשת מתי מתחילה התבנית</div></div>
+</section>
+
+<section>
+  <h2 id="ch2-t4">קבלה ב־NFA — ריצות אפשריות וניחוש</h2>
+
+  <div class="def"><span class="term">קבלה ב-NFA</span> — ‏<span class="math">B</span> מקבל את <span class="math">w</span>
+    אם <b>קיימת</b> ריצה — בחירה חוקית אחת של מעברים (כולל מעברי <span class="math">ε</span>) —
+    שמסתיימת במצב מקבל אחרי קריאת כל <span class="math">w</span>.
+    מילה נדחית רק אם <b>כל</b> הריצות נתקעות או מסתיימות במצב לא-מקבל.</div>
+
+  <p>שתי דרכים שקולות לחשוב על זה:</p>
+  <ul>
+    <li><b>ניחוש ואימות:</b> האוטומט "מנחש" ברגעי הבחירה, ומספיק שקיים ניחוש מוצלח. נוח לתכנון:
+      "ננחש איפה מתחילה הסיפא / איפה עמדת השוני / מהי החלוקה".</li>
+    <li><b>קבוצת מצבים חיה:</b> אחרי כל אות מחזיקים את קבוצת <em>כל</em> המצבים האפשריים.
+      זו בדיוק נקודת המבט שהופכת לבניית תת-הקבוצות.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>למה NFA מקל על החיים</h4>
+    <p>"האות השלישית מהסוף היא 1": ה-NFA יושב בלולאה, מנחש ברגע מסוים "מכאן נשארו בדיוק 3 אותיות",
+      קורא 1 ואז שתי אותיות — 4 מצבים בלבד, לעומת <span class="math">2³</span> חלונות ב-DFA.
+      הניחוש מוצלח ⟺ המילה בשפה.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch2-t5">מעברי ε וסגירת ε</h2>
+
+  <div class="def"><span class="term">סגירת ε</span> — עבור קבוצת מצבים <span class="math">R</span>:
+    <span class="math">E(R)</span> = כל המצבים שנגישים ממצבי <span class="math">R</span>
+    באמצעות אפס או יותר מעברי <span class="math">ε</span> בלבד (כולל <span class="math">R</span> עצמה).</div>
+
+  <p>מעברי <span class="math">ε</span> הם "תזוזות חינם": הם מאפשרים לחבר רכיבים בלי לצרוך קלט —
+    הדבק של בניות האיחוד, השרשור והכוכב שנראה בהמשך. בכל חישוב של "איפה אנחנו יכולים להיות"
+    חייבים לסגור ב-<span class="math">E(·)</span>: אחרי המצב ההתחלתי, ואחרי כל צריכת אות.</p>
+
+  <div class="warn">לשכוח את סגירת ה-ε של <b>המצב ההתחלתי</b> (<span class="math">E(q<sub>s</sub>)</span>)
+    היא טעות ההמרה הנפוצה ביותר — היא משנה אפילו את השאלה אם <span class="math">ε</span> בשפה.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t6">בניית תת־הקבוצות: NFA ← DFA</h2>
+
+  <div class="algo">
+    <h4>Subset construction (מדף הנוסחאות)</h4>
+    <p>בהינתן NFA ‏<span class="math">N = (Q_N, Σ, δ_N, q<sub>sN</sub>, F_N)</span> בונים DFA
+      ‏<span class="math">D</span>:</p>
+    <ul>
+      <li><span class="math">Q_D = P(Q_N)</span> — מצב של <span class="math">D</span> = קבוצת מצבים של <span class="math">N</span>.</li>
+      <li><span class="math">δ_D(R, σ) = ⋃<sub>r∈R</sub> E(δ_N(r, σ))</span> — צועדים מכל מצב בקבוצה, ואז סוגרים ב-ε.</li>
+      <li><span class="math">q<sub>sD</sub> = E(q<sub>sN</sub>)</span>.</li>
+      <li><span class="math">F_D = {R | R ∩ F_N ≠ ∅}</span> — הקבוצה מקבלת אם מכילה מצב מקבל כלשהו.</li>
+    </ul>
+  </div>
+
+  <div class="ex-box">
+    <h4>טכניקת העבודה בפועל</h4>
+    <p>לא בונים את כל <span class="math">P(Q)</span>! מתחילים מ-<span class="math">E(q<sub>s</sub>)</span>
+      ומגלים רק קבוצות <b>נגישות</b> — ממלאים טבלה שורה-שורה עד שאין קבוצות חדשות.
+      לרוב מתקבלות הרבה פחות מ-<span class="math">2<sup>|Q|</sup></span> שורות.</p>
+    <table class="ttable">
+      <tr><th>R</th><th>0</th><th>1</th></tr>
+      <tr><th>→ {q₀}</th><td>{q₀}</td><td>{q₀,q₁}</td></tr>
+      <tr><th>{q₀,q₁}</th><td>{q₀,q₂}</td><td>{q₀,q₁,q₂}</td></tr>
+      <tr><td colspan="3">… וממשיכים רק עם קבוצות שבאמת הופיעו</td></tr>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch2-t7">נכונות הבנייה והמחיר המעריכי</h2>
+
+  <div class="thm"><b>משפט:</b> לכל NFA קיים DFA שקול. לכן: שפה ניתנת לזיהוי ע"י NFA ⟺ היא רגולרית —
+    אי-דטרמיניזם <b>לא מוסיף כוח ביטוי</b> לאוטומטים סופיים, רק נוחות.</div>
+
+  <p><b>רעיון הנכונות</b> (אינווריאנטה, כמו בפרק 1): לכל מילה <span class="math">w</span>,
+    המצב שאליו מגיע <span class="math">D</span> הוא <em>בדיוק</em> קבוצת המצבים שאליהם
+    <span class="math">N</span> יכול להגיע על <span class="math">w</span>. אינדוקציה על האורך —
+    צעד אחד של <span class="math">D</span> מדמה את כל הצעדים האפשריים של <span class="math">N</span>.
+    קבלה משתמרת כי <span class="math">R ∩ F_N ≠ ∅</span> ⟺ קיימת ריצה מקבלת.</p>
+
+  <div class="note"><b>המחיר:</b> יש NFA-ים בני <span class="math">n</span> מצבים שכל DFA שקול להם דורש
+    <span class="math">2<sup>n</sup></span> מצבים — הדוגמה הקלאסית היא "האות ה-<span class="math">n</span> מהסוף היא 1"
+    (פרק 1). המעריכיות היא אמיתית, לא חולשה של הבנייה.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t8">סגור לאיחוד, שרשור וכוכב — בניות NFA</h2>
+
+  <p>עם ε-מעברים שלוש הבניות נהיות ציוריות (אלה גם הבניות של רגקס→NFA בפרק הבא):</p>
+
+  <ul>
+    <li><b>איחוד <span class="math">L₁ ∪ L₂</span>:</b> מצב התחלתי חדש עם שני מעברי
+      <span class="math">ε</span> אל שני האוטומטים — "בוחרים ענף".</li>
+    <li><b>שרשור <span class="math">L₁·L₂</span>:</b> מכל מצב מקבל של הראשון — מעבר
+      <span class="math">ε</span> אל ההתחלה של השני; המקבלים של הראשון <b>מפסיקים להיות מקבלים</b>.
+      הניחוש: איפה נגמר החלק של <span class="math">L₁</span>.</li>
+    <li><b>כוכב <span class="math">L<sup>*</sup></span>:</b> מצב התחלתי חדש <b>מקבל</b>
+      (בשביל <span class="math">ε</span>) עם <span class="math">ε</span> פנימה, ומכל מקבל —
+      <span class="math">ε</span> חזרה להתחלה המקורית, לסיבוב נוסף.</li>
+  </ul>
+
+  <div class="fsa"><svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg">
+    <path class="tr" d="M6,60 L26,60" marker-end="url(#arr)"/>
+    <circle class="st st-acc" cx="52" cy="60" r="16"/><circle class="st st-acc" cx="52" cy="60" r="21"/>
+    <text class="slbl" x="52" y="60">s</text>
+    <rect x="110" y="30" rx="12" width="130" height="60" class="st"/>
+    <text class="slbl" x="175" y="60">A (של L)</text>
+    <path class="tr" d="M73,60 L104,60" marker-end="url(#arr)"/>
+    <text class="lbl" x="88" y="50" text-anchor="middle">ε</text>
+    <circle class="st st-acc" cx="290" cy="60" r="16"/><circle class="st st-acc" cx="290" cy="60" r="21"/>
+    <text class="slbl" x="290" y="60">f</text>
+    <path class="tr" d="M243,60 L266,60" marker-end="url(#arr)"/>
+    <path class="tr" d="M285,38 C260,-5 130,-5 118,26" marker-end="url(#arr)"/>
+    <text class="lbl" x="200" y="10" text-anchor="middle">ε (סיבוב נוסף)</text>
+  </svg><div class="fsa-cap">שלד בניית הכוכב: התחלה חדשה מקבלת, ε פנימה, ε מהמקבלים חזרה</div></div>
+
+  <div class="warn">בבניית הכוכב אסור פשוט להפוך את ההתחלה הישנה למקבלת — זה עלול להוסיף לשפה
+    מילים שמגיעות להתחלה באמצע ריצה. תמיד מוסיפים <b>מצב התחלתי חדש</b>.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t9">איך כותבים הוכחת סגירות במבחן</h2>
+
+  <div class="algo">
+    <h4>מבנה תשובה מלא (סגנון הפתרונות הרשמיים)</h4>
+    <ol>
+      <li><b>נתון:</b> "‏<span class="math">L</span> רגולרית ⇒ קיים DFA ‏<span class="math">A = (Q,Σ,δ,q<sub>s</sub>,F)</span> עם <span class="math">L(A)=L</span>".</li>
+      <li><b>בנייה:</b> מגדירים את האוטומט/הביטוי החדש <b>בכל רכיביו</b> — מי המצבים, מי ההתחלה, מי המקבלים, ומהי δ (בנוסחה או בתיאור מדויק של "לכל מעבר… מוסיפים…").</li>
+      <li><b>נכונות (כשנדרשת):</b> טענת שקילות דו-כיוונית — "מילה מתקבלת בחדש ⟺ התנאי של השפה החדשה", לרוב דרך פירוק <span class="math">L<sup>A</sup><sub>p,q</sub></span> או אינווריאנטה.</li>
+    </ol>
+  </div>
+
+  <div class="ex-box">
+    <h4>הכלי שחוזר בכל מבחן: <span class="math">L<sup>A</sup><sub>p,q</sub> = {w | δ′(p,w) = q}</span></h4>
+    <p>השפה "מ-p ל-q" תמיד רגולרית (מגדירים את p התחלתי ואת q מקבל יחיד). איתה מפרקים כל
+      מניפולציה מבנית: רוטציות (<span class="math">{y#x | xy ∈ L}</span>), הכנסות
+      (<span class="en">Op</span>‏ של 2023ב), מחיקות (<span class="en">Drop_all_a</span>‏ של 2023א),
+      היפוכי רישא (<span class="math">{u<sup>R</sup>v | uv ∈ L}</span>) — מאחדים על מצבי הביניים.</p>
+  </div>
+
+  <div class="note">אם הבנייה משתמשת בקבוצה שקיימת אבל לא ידועה (כמו קבוצת מצבי-הביניים במנה
+    <span class="math">L′∖L</span> — ‏L049 במאגר) — זה עדיין תקף! להוכחת רגולריות מספיק
+    ש<b>קיים</b> אוטומט, לא שאנחנו יודעים לחשב אותו.</div>
+</section>
+
+<section>
+  <h2 id="ch2-t10">טעויות קלאסיות סביב סגירות ו־NFA</h2>
+
+  <ul>
+    <li><b>משלים על NFA:</b> היפוך מקבלים ב-NFA לא נותן את המשלים (קבלה = "קיימת ריצה"). קודם דטרמיניזציה.</li>
+    <li><b>משלים על DFA חלקי:</b> אם δ לא מלאה (חסר מצב מלכודת) — ההיפוך שגוי. משלימים קודם.</li>
+    <li><b>"סגור להורדת מילה":</b> רגולרית פחות קבוצה סופית — רגולרית (L096); אבל תת-קבוצה של רגולרית — <b>לא</b> בהכרח רגולרית (<span class="math">{aⁿbⁿ} ⊆ a<sup>*</sup>b<sup>*</sup></span>).</li>
+    <li><b>כיוון ההסקה:</b> מ-<span class="math">L₁ ∪ L₂</span> רגולרית <b>אי אפשר</b> להסיק ש-<span class="math">L₁</span> רגולרית (קחו <span class="math">L₂ = Σ<sup>*</sup></span>). סגירות עובדת "פנימה", לא "החוצה" — אלא אם יש מידע נוסף (כמו L096: השלמה סופית).</li>
+    <li><b>חיתוך/איחוד אינסופיים:</b> הסגירות היא לפעולות <b>סופיות</b>. איחוד אינסופי של רגולריות יכול לתת כל שפה שהיא (כל שפה היא איחוד המילים-היחידות שלה!).</li>
+  </ul>
+
+  <div class="note"><b>לב הפרק:</b> מכפלה = ריצה במקביל בלי ניחוש; NFA = ניחוש ואימות;
+    תת-הקבוצות = לעקוב אחרי כל הניחושים בבת אחת; והסגירויות הן שפת ההוכחה של שאלה 1 במבחן.</div>
+</section>

@@ -1,0 +1,233 @@
+<h1>שפות לא רגולריות ולמת הניפוח</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 5 (הרצאה 5 + תרגול 5)</p>
+
+<section>
+  <h2 id="ch5-t0">למה קיימות שפות לא רגולריות</h2>
+
+  <p>אוטומט סופי זוכר כמות חסומה של מידע. שפה שמכריחה לזכור כמות <b>לא חסומה</b> —
+    לא יכולה להיות רגולרית. הדוגמה הקנונית:</p>
+  <div class="lang-def">L = {0<sup>n</sup>1<sup>n</sup> | n ≥ 0}</div>
+  <p>כדי לדעת כמה 1-ים "מגיע לי" אחרי ה-0-ים, חייבים לזכור את <span class="math">n</span> —
+    והוא יכול להיות כל מספר. אינטואיציה נכונה, אבל היא <b>לא הוכחה</b>: אולי יש טריק חכם?
+    (לפעמים באמת יש — ראו את המלכודות במאגר השפות: ‏<span class="math">{a<sup>n</sup>ub<sup>n</sup> | u ∈ {a,b}<sup>*</sup>}</span>
+    דווקא רגולרית!)</p>
+
+  <div class="note">בדיוק בשביל זה קיימת למת הניפוח: כלי <b>פורמלי</b> להפוך את "צריך זיכרון אינסופי"
+    להוכחה חתומה. לצידה יש גם את דרך מחלקות-השקילות (אינסוף נציגים מפרידים, פרק 4) ואת דרך
+    הסגירויות (t9) — שלושתן לגיטימיות במבחן אלא אם נדרשה שיטה ספציפית.</div>
+</section>
+
+<section>
+  <h2 id="ch5-t1">למת הניפוח — הנוסח המדויק</h2>
+
+  <div class="thm">
+    אם <span class="math">L</span> שפה רגולרית, אז קיים <span class="math">n ∈ ℕ</span> (קבוע הניפוח) כך
+    שלכל מילה <span class="math">w ∈ L</span> עם <span class="math">|w| ≥ n</span> קיימת חלוקה
+    <span class="math">w = xyz</span> המקיימת:
+    <ol>
+      <li><span class="math">|y| &gt; 0</span> — החלק האמצעי אינו ריק.</li>
+      <li><span class="math">|xy| ≤ n</span> — החלק הנשאב נמצא ב-<span class="math">n</span> האותיות הראשונות.</li>
+      <li>לכל <span class="math">i ≥ 0</span>: ‏<span class="math">xy<sup>i</sup>z ∈ L</span> — אפשר לשאוב את
+        <span class="math">y</span> כמה שרוצים (גם אפס פעמים!).</li>
+    </ol>
+  </div>
+
+  <p>שימו לב היטב למבנה הכמתים — הוא לב העניין:</p>
+  <div class="lang-def">∃n&nbsp; ∀w∈L,|w|≥n&nbsp; ∃(x,y,z)&nbsp; ∀i≥0: xy<sup>i</sup>z ∈ L</div>
+  <p>ה-<span class="math">n</span> והחלוקה — <b>לא בשליטתנו</b>; המילה וה-<span class="math">i</span> — כן.
+    מכאן נגזר כל מבנה ההוכחה בנושא הבא.</p>
+</section>
+
+<section>
+  <h2 id="ch5-t2">מאיפה הלמה מגיעה — שובך היונים על הריצה</h2>
+
+  <p>ההוכחה קצרה ושווה להכיר, כי היא מסבירה כל תנאי בלמה:</p>
+  <div class="proof">
+    יהי DFA עם <span class="math">n</span> מצבים עבור <span class="math">L</span>. ריצה על מילה
+    <span class="math">w</span> באורך <span class="math">≥ n</span> מבקרת ב-<span class="math">n+1</span>
+    מצבים לפחות בקריאת <span class="math">n</span> האותיות הראשונות — לפי שובך היונים, מצב כלשהו
+    <span class="math">q</span> חוזר על עצמו. נסמן: ‏<span class="math">x</span> — עד הביקור הראשון ב-<span class="math">q</span>;
+    ‏<span class="math">y</span> — הלולאה מ-<span class="math">q</span> ל-<span class="math">q</span> (לא ריקה — תנאי 1;
+    בתוך <span class="math">n</span> הראשונות — תנאי 2); ‏<span class="math">z</span> — השאר.
+    הלולאה ניתנת לדילוג או לשכפול בלי לשנות את מצב הסיום — תנאי 3. <span class="qed">∎</span>
+  </div>
+
+  <div class="note">קבוע הניפוח הוא בעצם "מספר המצבים של אוטומט כלשהו לשפה" — לכן איננו יודעים אותו,
+    רק שהוא קיים. כל טיעון שמתחיל ב"ניקח n=3" — פסול מהיסוד.</div>
+</section>
+
+<section>
+  <h2 id="ch5-t3">משחק היריב — מבנה הוכחת אי־רגולריות</h2>
+
+  <p>הוכחת אי-רגולריות = שלילת הלמה. בגלל הכמתים, נוח לחשוב על זה כמשחק נגד יריב:</p>
+
+  <ol class="pump-steps">
+    <li data-who="פתיחה">מניחים בשלילה ש-<span class="math">L</span> רגולרית; הלמה מספקת קבוע <span class="math">n</span> — <b>היריב בוחר, אנחנו לא יודעים אותו</b>.</li>
+    <li data-who="אנחנו">בוחרים מילה <span class="math">w ∈ L</span> עם <span class="math">|w| ≥ n</span> — מותר (וחובה) לבטא אותה באמצעות <span class="math">n</span>.</li>
+    <li data-who="יריב">היריב מחלק <span class="math">w = xyz</span> בכפוף לתנאים 1–2. עלינו לטפל <b>בכל חלוקה חוקית</b> — לא לבחור אחת נוחה!</li>
+    <li data-who="אנחנו">בוחרים <span class="math">i</span> (לכל חלוקה מותר <span class="math">i</span> אחר) ומראים <span class="math">xy<sup>i</sup>z ∉ L</span> — סתירה לתנאי 3.</li>
+  </ol>
+
+  <p>ניצחנו בכל תרחיש ⇒ הלמה נכשלת ⇒ ‏<span class="math">L</span> איננה רגולרית.</p>
+
+  <div class="warn">הבלבול הקטלני ביותר: לבחור את החלוקה בעצמכם. אם ההוכחה שלכם אומרת
+    "ניקח <span class="math">y = </span>..." בלי למצות את כל האפשרויות — היא שווה מעט מאוד נקודות.
+    (בזכות תנאי 2, לרוב כל החלוקות נראות אותו דבר — זה בסדר, אבל חובה לומר זאת במפורש.)</div>
+</section>
+
+<section>
+  <h2 id="ch5-t4">הוכחה מלאה: {0ⁿ1ⁿ}</h2>
+
+  <div class="ex-box">
+    <h4>המופת שכל הוכחה נמדדת מולו (בסגנון הפתרונות הרשמיים)</h4>
+    <p>נניח בשלילה ש-<span class="math">L = {0<sup>n</sup>1<sup>n</sup> | n ≥ 0}</span> רגולרית,
+      ויהי <span class="math">n</span> הקבוע המובטח מהלמה.</p>
+    <p><b>בחירת מילה:</b> ‏<span class="math">w = 0<sup>n</sup>1<sup>n</sup> ∈ L</span>, ואכן <span class="math">|w| = 2n ≥ n</span>.</p>
+    <p><b>כל חלוקה:</b> תהי <span class="math">w = xyz</span> עם <span class="math">|xy| ≤ n</span>,
+      ‏<span class="math">|y| &gt; 0</span>. מכיוון ש-<span class="math">n</span> האותיות הראשונות כולן
+      <span class="math">0</span>: בהכרח <span class="math">x = 0<sup>s</sup></span>, ‏<span class="math">y = 0<sup>t</sup></span>
+      עם <span class="math">t ≥ 1</span>, ‏<span class="math">s + t ≤ n</span>.</p>
+    <p><b>שאיבה:</b> נבחר <span class="math">i = 2</span>: ‏
+      <span class="math">xy²z = 0<sup>n+t</sup>1<sup>n</sup></span>, ומכיוון ש-<span class="math">t &gt; 0</span>
+      יש בה יותר 0-ים מ-1-ים ⇒ ‏<span class="math">xy²z ∉ L</span> — סתירה לתנאי 3.</p>
+    <p>לכן <span class="math">L</span> איננה רגולרית. <span class="qed">∎</span></p>
+  </div>
+
+  <div class="note">כל המרכיבים חייבים להופיע: ההנחה בשלילה, "יהי n המובטח", מילה התלויה ב-n,
+    מיצוי צורת החלוקה <b>מהתנאים</b>, בחירת i, והסתירה. זה השלד שחוזר בכל המבחנים
+    (2024א ש3.1, 2024ב ש3.2, 2023ב ש3.1).</div>
+</section>
+
+<section>
+  <h2 id="ch5-t5">אומנות בחירת המילה</h2>
+
+  <p>רוב ההוכחה מוכרעת בבחירת <span class="math">w</span>. עקרונות:</p>
+  <ul>
+    <li><b>לדחוף את החולשה לחלון:</b> בגלל תנאי 2 השאיבה נוגעת רק ב-<span class="math">n</span> הראשונות —
+      בוחרים מילה שתחילתה היא בדיוק החלק הרגיש (בלוק אחיד שהשוואתו קריטית).</li>
+    <li><b>על הגבול:</b> מילה שיושבת "בקצה" של התנאי, כך שכל שינוי קטן מפיל אותה החוצה.
+      ב-2024א ש3.1 (<span class="math">{a<sup>m</sup>ba<sup>n</sup>b | m ≥ 2n}</span>) הרשמי בחר
+      <span class="math">w = a<sup>2n</sup>ba<sup>n</sup>b</span> — שוויון מדויק, ואז שאיבה למטה שוברת.</li>
+    <li><b>אחידות בהתחלה:</b> אם תחילת המילה הומוגנית (רק <span class="math">a</span>-ים),
+      צורת החלוקה נקבעת יחידה — ‏<span class="math">y = a<sup>t</sup></span> — והמשחק מתקצר.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>מתרגול 5: ‏<span class="math">{0<sup>m</sup>1<sup>n</sup> | m &gt; n}</span></h4>
+    <p>בוחרים <span class="math">w = 0<sup>n+1</sup>1<sup>n</sup></span> — היתרון של ה-0-ים הוא בדיוק 1.
+      כל <span class="math">y = 0<sup>t</sup></span>, ושאיבה <b>למטה</b> (<span class="math">i=0</span>)
+      מוחקת <span class="math">t ≥ 1</span> אפסים: ‏<span class="math">0<sup>n+1−t</sup>1<sup>n</sup></span>
+      עם <span class="math">m ≤ n</span> — מחוץ לשפה.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch5-t6">ניצול התנאי |xy| ≤ n</h2>
+
+  <p>תנאי 2 הוא החבר הכי טוב שלכם: הוא כולא את <span class="math">y</span> בתחילת המילה
+    ומצמצם דרמטית את מגוון החלוקות שצריך למצות.</p>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">{ww | w ∈ Σ<sup>*</sup>}</span> — ‏2023ב ש3.1</h4>
+    <p>בחירה רשמית: ‏<span class="math">w = 0<sup>n</sup>10<sup>n</sup>1</span>. בזכות תנאי 2,
+      ‏<span class="math">y = 0<sup>t</sup></span> בתוך בלוק ה-0-ים הראשון. שאיבה למעלה:
+      ‏<span class="math">0<sup>n+t</sup>10<sup>n</sup>1</span> — אם <span class="math">t</span> אי-זוגי
+      האורך אי-זוגי (אין בכלל חלוקה לשני חצאים); אם זוגי — החצי הראשון כולו 0-ים בעוד השני
+      מכיל 1, סתירה. בלי תנאי 2 היו נדרשים עוד תריסר מקרים.</p>
+  </div>
+
+  <div class="note">אם בכל זאת נשארו כמה צורות חלוקה (מילה שמתחילה בשני בלוקים בתוך חלון ה-n) —
+    מפרקים למקרים ממוספרים וסוגרים כל אחד. מבנה "מקרה 1 / מקרה 2" מסודר הוא בדיוק מה שהבודק מחפש —
+    כך כתובים הפתרונות הרשמיים של למת הניפוח לח"ה (פרק 8).</div>
+</section>
+
+<section>
+  <h2 id="ch5-t7">ניפוח למטה — i = 0</h2>
+
+  <p>תנאי 3 מבטיח <span class="math">xy<sup>i</sup>z ∈ L</span> גם עבור <span class="math">i = 0</span> —
+    מחיקת <span class="math">y</span>. מתי זה הכלי הנכון?</p>
+  <ul>
+    <li><b>תנאי "≥" עם שוויון הדוק:</b> ‏<span class="math">m ≥ 2n</span> עם
+      <span class="math">w = a<sup>2n</sup>ba<sup>n</sup>b</span>: שאיבה למעלה רק מוסיפה
+      <span class="math">a</span>-ים ונשארת בשפה! חייבים למחוק: ‏<span class="math">i = 0</span> נותן
+      <span class="math">a<sup>2n−t</sup>ba<sup>n</sup>b</span> עם <span class="math">2n−t &lt; 2n</span> —
+      מחוץ לשפה (הפתרון הרשמי של 2024א ש3.1 בדיוק).</li>
+    <li><b>אורכים מינימליים:</b> כשהמילה שנבחרה היא הקצרה ביותר בסביבתה — מחיקה מפילה מתחת לסף.</li>
+  </ul>
+
+  <div class="warn">בדקו את כיוון האי-שוויון לפני שבוחרים <span class="math">i</span>:
+    תנאי "≥" נשבר בדרך כלל למטה, תנאי "≤" למעלה, ושוויון "=" נשבר בשני הכיוונים.
+    בחירת כיוון שגוי = שאיבה שנשארת בשפה = הוכחה ריקה.</div>
+</section>
+
+<section>
+  <h2 id="ch5-t8">חשבון אורכים והערת ה־(i−1)t</h2>
+
+  <div class="thm">אם <span class="math">|y| = t</span> אז <span class="math">|xy<sup>i</sup>z| = |w| + (i−1)·t</span>
+    — כל שאיבה מוסיפה (או גורעת, עבור <span class="math">i=0</span>) בדיוק <span class="math">t</span> אותיות.
+    (ההערה מופיעה במפורש בדף הנוסחאות.)</div>
+
+  <p>למה זה שימושי? כשתנאי השפה הוא על <b>האורך הכולל</b> (ראשוני, חזקה, ריבוע):</p>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">{a<sup>m</sup> | m ראשוני}</span></h4>
+    <p>ניקח <span class="math">w = a<sup>p</sup></span> לראשוני <span class="math">p ≥ n</span>, חלוקה כלשהי
+      עם <span class="math">|y| = t ≥ 1</span>. נבחר <span class="math">i = p+1</span>:
+      האורך נעשה <span class="math">p + p·t = p(1+t)</span> — מכפלה של שני גורמים
+      <span class="math">≥ 2</span>... כמעט: צריך <span class="math">p ≥ 2</span> ו-<span class="math">1+t ≥ 2</span> ✓.
+      לא ראשוני — סתירה. הבחירה החכמה של <span class="math">i</span> הפכה את האורך למכפלה.</p>
+  </div>
+
+  <div class="note">אותו חשבון בדיוק משמש בגרסת הח"ה של הלמה (פרק 8) —
+    שם <span class="math">|uv<sup>i</sup>xy<sup>i</sup>z| = |w| + (i−1)(s+t)</span>.
+    שליטה באריתמטיקה הזו היא ההבדל בין "כמעט הוכחה" להוכחה.</div>
+</section>
+
+<section>
+  <h2 id="ch5-t9">הדרך העקיפה — סגירויות במקום ניפוח</h2>
+
+  <p>לפעמים ניפוח ישיר מסורבל, וסגירות מקצרת: מניחים ש-<span class="math">L</span> רגולרית,
+    בונים ממנה בפעולות סגורות שפה שכבר ידועה כלא-רגולרית — סתירה.</p>
+
+  <div class="ex-box">
+    <h4>שתי דוגמאות</h4>
+    <p><b>‏<span class="math">{w | #₀(w) = #₁(w)}</span>:</b> אילו הייתה רגולרית, גם
+      ‏<span class="math">L ∩ L(0<sup>*</sup>1<sup>*</sup>) = {0<sup>n</sup>1<sup>n</sup>}</span>
+      הייתה רגולרית (חיתוך עם רגולרית) — סתירה. שתי שורות!</p>
+    <p><b>‏<span class="math">{a<sup>p+1</sup> | p ראשוני}</span> (2023א ש3.4, בגרסת ח"ה):</b>
+      הצבה שמסמנת אות אחת, חיתוך עם <span class="math">a<sup>*</sup>a′a<sup>*</sup></span>,
+      והצבה שמוחקת את המסומנת — מחזירים את <span class="math">{a<sup>p</sup>}</span> הידועה. </p>
+  </div>
+
+  <div class="algo">
+    <h4>מתי מותר ומה חובה לציין</h4>
+    <ol>
+      <li>מותר — אלא אם השאלה דורשת במפורש "ע"י למת הניפוח" (כמו ב-2024א ש3.1!).</li>
+      <li>חובה לציין את שם הסגירות בכל צעד ("חיתוך עם רגולרית", "הצבה רגולרית").</li>
+      <li>חובה שהשפה שמגיעים אליה תהיה מוכרת כלא-רגולרית (מותר להסתמך על מה שהוכח בכיתה/בתרגול).</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch5-t10">טעויות קלאסיות סביב הלמה</h2>
+
+  <ul>
+    <li><b>הכיוון ההפוך:</b> הלמה היא תנאי <b>הכרחי</b> לרגולריות, לא מספיק. שפה שמקיימת את
+      תנאי הניפוח עדיין יכולה להיות לא-רגולרית — הלמה לעולם לא מוכיחה רגולריות!
+      (לרגולריות: בונים אוטומט/ביטוי. נקודה.)</li>
+    <li><b>בחירת n:</b> "יהי n המובטח" — לא "ניקח n גדול". המספר של היריב.</li>
+    <li><b>מילה שלא תלויה ב-n:</b> ‏<span class="math">w</span> קבועה (למשל 0011) לא עובדת —
+      אולי <span class="math">|w| &lt; n</span>. המילה חייבת "לגדול עם n".</li>
+    <li><b>חלוקה נבחרת:</b> לטפל רק ב-<span class="math">y</span> נוח = לא הוכחתם כלום. ממצים
+      את הצורה מהתנאים, או מפרקים לכל המקרים.</li>
+    <li><b>מילה מחוץ לשפה:</b> בדקו פעמיים ש-<span class="math">w ∈ L</span> (כולל תנאֵי קצה כמו
+      <span class="math">n</span> זוגי/אי-זוגי בהגדרת השפה!).</li>
+    <li><b>שאיבה שנשארת בשפה:</b> אחרי הבחירה, לאמת באמת ש-<span class="math">xy<sup>i</sup>z ∉ L</span>
+      — כולל המקרה שהמילה השאובה מקיימת את התנאי דרך פירוש אחר של ההגדרה (∃-הגדרות בוגדניות!).</li>
+  </ul>
+
+  <div class="note"><b>לב הפרק:</b> ניפוח = שובך יונים ממוסד. הכמתים קובעים מי בוחר מה;
+    תנאי 2 מצמצם את המשחק; ‏<span class="math">i=0</span> שובר תנאי "≥"; וכשמותר — סגירות מקצרת.
+    את הנוסח המלא תמצאו תמיד בדף הנוסחאות — את הדיוק בכמתים רק אצלכם.</div>
+</section>

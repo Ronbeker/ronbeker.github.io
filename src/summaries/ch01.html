@@ -101,3 +101,232 @@
     השרשור הריק תמיד קיים. זו נקודה שחוזרת בהמרות של ביטויים רגולריים
     (<span class="en">GNFA</span>‏) ובשאלות "נכון/לא נכון".</div>
 </section>
+
+<section>
+  <h2 id="ch1-t3">יסודות קבוצות והוכחת שוויון קבוצות</h2>
+
+  <p>שפות הן קבוצות, ולכן כמעט כל הוכחה בקורס היא בסופו של דבר הוכחה על קבוצות.
+    תרגול 1 מרכז את הכלים:</p>
+
+  <div class="def">
+    <span class="term">הכלה</span> — <span class="math">A ⊆ B</span> אם כל איבר של
+    <span class="math">A</span> שייך ל-<span class="math">B</span>.
+    <span class="term">שוויון קבוצות</span> — <span class="math">A = B</span> אם ורק אם
+    <span class="math">A ⊆ B</span> וגם <span class="math">B ⊆ A</span>.
+  </div>
+
+  <div class="algo">
+    <h4>התבנית להוכחת שוויון שפות (חוזרת בכל המבחן!)</h4>
+    <ol>
+      <li><b>כיוון ⊆:</b> "תהי <span class="math">w ∈ A</span>" — מפרקים את <span class="math">w</span> לפי הגדרת <span class="math">A</span>, ומראים שהיא מקיימת את הגדרת <span class="math">B</span>.</li>
+      <li><b>כיוון ⊇:</b> "תהי <span class="math">w ∈ B</span>" — ובונים ממנה את הצורה שדורשת <span class="math">A</span>.</li>
+    </ol>
+    <p class="small">כשמוכיחים ש-<span class="math">L(A) = L</span> עבור אוטומט — זה בדיוק אותו מבנה: ריצה מקבלת ⇔ תנאי השפה.</p>
+  </div>
+
+  <p>זהויות שימושיות שכדאי לשלוף בלי לחשוב: דה-מורגן
+    <span class="math">(<span class="comp">A ∪ B</span>) = <span class="comp">A</span> ∩ <span class="comp">B</span></span>,
+    פילוג, ו-<span class="math">A ∖ B = A ∩ <span class="comp">B</span></span> —
+    האחרונה הופכת כל "הפרש" לחיתוך, ולכן סגירות לחיתוך ולמשלים גוררת סגירות להפרש.</p>
+
+  <div class="warn">בכתיב <span class="math">{w | תנאי}</span> הקבוצה מכילה <em>כל</em> מילה שמקיימת את התנאי —
+    גם את אלה שלא "מרגישות טבעיות". למשל <span class="math">ε</span> מקיימת כמעט כל תנאי ריק
+    ("לכל תו…" מתקיים באופן ריק). בדקו תמיד את <span class="math">ε</span> ואת מילים באורך 1.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t4">DFA — ההגדרה הפורמלית</h2>
+
+  <div class="def">
+    <span class="term">אוטומט סופי דטרמיניסטי (DFA)</span> — חמישייה
+    <span class="math">A = (Q, Σ, δ, q<sub>s</sub>, F)</span>:
+    <ul>
+      <li><span class="math">Q</span> — קבוצה <b>סופית</b> של מצבים.</li>
+      <li><span class="math">Σ</span> — אלף־בית הקלט.</li>
+      <li><span class="math">δ: Q × Σ → Q</span> — פונקציית המעברים: לכל מצב ולכל אות — בדיוק מצב עוקב אחד.</li>
+      <li><span class="math">q<sub>s</sub> ∈ Q</span> — מצב התחלתי.</li>
+      <li><span class="math">F ⊆ Q</span> — מצבים מקבלים.</li>
+    </ul>
+  </div>
+
+  <p>"דטרמיניסטי" פירושו ש-<span class="math">δ</span> היא <b>פונקציה מלאה</b>: אין שתי אפשרויות,
+    ואין "אין מעבר" — מכל מצב יוצא בדיוק חץ אחד לכל אות. בציור: עיגול = מצב, עיגול כפול = מקבל,
+    חץ נכנס חופשי = המצב ההתחלתי.</p>
+
+  <div class="fsa"><svg viewBox="0 0 300 130" xmlns="http://www.w3.org/2000/svg">
+    <path class="tr" d="M10,65 L52,65" marker-end="url(#arr)"/>
+    <circle class="st st-acc" cx="80" cy="65" r="20"/>
+    <circle class="st st-acc" cx="80" cy="65" r="25"/>
+    <text class="slbl" x="80" y="65">q₀</text>
+    <circle class="st" cx="220" cy="65" r="25"/>
+    <text class="slbl" x="220" y="65">q₁</text>
+    <path class="tr" d="M100,53 C135,30 165,30 200,53" marker-end="url(#arr)"/>
+    <text class="lbl" x="150" y="32" text-anchor="middle">1</text>
+    <path class="tr" d="M200,77 C165,100 135,100 100,77" marker-end="url(#arr)"/>
+    <text class="lbl" x="150" y="112" text-anchor="middle">1</text>
+    <path class="tr" d="M68,44 C58,18 102,18 92,44" marker-end="url(#arr)"/>
+    <text class="lbl" x="80" y="14" text-anchor="middle">0</text>
+    <path class="tr" d="M208,44 C198,18 242,18 232,44" marker-end="url(#arr)"/>
+    <text class="lbl" x="220" y="14" text-anchor="middle">0</text>
+  </svg><div class="fsa-cap">‏DFA לשפה "מספר זוגי של 1-ים": שני מצבים, q₀ מקבל</div></div>
+
+  <p>ואותו אוטומט כטבלת מעברים (הצורה שנוחה לחישובי המשך — מינימיזציה, NFA→DFA):</p>
+  <table class="ttable">
+    <tr><th>δ</th><th>0</th><th>1</th></tr>
+    <tr><th>→ *q₀</th><td>q₀</td><td>q₁</td></tr>
+    <tr><th>q₁</th><td>q₁</td><td>q₀</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2 id="ch1-t5">ריצה של DFA: הרחבת המעברים וקבלה</h2>
+
+  <div class="def">
+    <span class="term">הרחבת פונקציית המעברים</span> — <span class="math">δ′: Q × Σ<sup>*</sup> → Q</span>
+    מוגדרת באינדוקציה: <span class="math">δ′(q, ε) = q</span>, ו-<span class="math">δ′(q, wσ) = δ(δ′(q, w), σ)</span>.<br>
+    <span class="term">קבלה</span> — <span class="math">A</span> מקבל את <span class="math">w</span> אם
+    <span class="math">δ′(q<sub>s</sub>, w) ∈ F</span>.
+    <span class="term">שפת האוטומט</span> — <span class="math">L(A) = {w | δ′(q<sub>s</sub>, w) ∈ F}</span>.
+  </div>
+
+  <div class="ex-box">
+    <h4>מעקב ריצה</h4>
+    <p>באוטומט הזוגיות למעלה, על הקלט <span class="math">w = 1011</span>:</p>
+    <div class="config-line">q₀ —1→ q₁ —0→ q₁ —1→ q₀ —1→ q₁</div>
+    <p>המצב הסופי <span class="math">q₁ ∉ F</span> — המילה נדחית (יש בה שלושה 1-ים). </p>
+  </div>
+
+  <div class="note"><b>שלוש עובדות שקל לשכוח:</b>
+    (1) ‏<span class="math">ε ∈ L(A)</span> אם ורק אם <span class="math">q<sub>s</sub> ∈ F</span>.
+    (2) ריצה של DFA <b>לעולם לא נתקעת</b> — תמיד יש בדיוק מסלול אחד לכל מילה.
+    (3) ‏<span class="math">L(A) = ∅</span> אמ"מ אין מצב מקבל <b>נגיש</b> מ-<span class="math">q<sub>s</sub></span>
+    — זו בדיקת הגישוּת שמאחורי <span class="math">E<sub>DFA</sub> ∈ R</span> בהמשך הקורס.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t6">בניית DFA — מונים, זוגיות ו־mod</h2>
+
+  <p>משפחת הבניות הראשונה: כשהתנאי הוא <b>ספירה עם שארית</b>, המצבים הם בדיוק השאריות.</p>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">L = {w | #₁(w) mod 3 = 0}</span></h4>
+    <p>שלושה מצבים <span class="math">q₀, q₁, q₂</span> = "כמה 1-ים ראינו, mod 3".
+      קריאת <span class="math">1</span> מקדמת את השארית; קריאת <span class="math">0</span> נשארת במקום.
+      מקבל: <span class="math">F = {q₀}</span>.</p>
+  </div>
+
+  <div class="ex-box">
+    <h4>שני מונים במקביל — מכפלת תנאים</h4>
+    <p>עבור <span class="math">L₃ = {0<sup>i</sup>1<sup>j</sup> | i mod 3 = 1 and j mod 2 = 1}</span> (מתרגול 2):
+      המצב זוכר גם את שלב הקריאה (עדיין ב-0-ים / עברנו ל-1-ים / שבור) וגם את שתי השאריות.
+      זו תבנית "מכפלת אוטומטים" ידנית — <span class="math">Q = שלבים × שאריות</span>.</p>
+  </div>
+
+  <div class="note"><b>כלל אצבע:</b> אם התנאי מדבר על "כמה", שאלו — האם הספירה <b>חסומה</b> (או מודולרית)?
+    אם כן — DFA עם מצב לכל ערך אפשרי. אם הספירה לא חסומה (למשל <span class="math">#₀ = #₁</span>) —
+    שום מספר סופי של מצבים לא יספיק, וזה בדיוק מה שנוכיח בפרק 5 עם למת הניפוח.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t7">בניית DFA — תבניות ותת־מחרוזות</h2>
+
+  <p>משפחת הבניות השנייה: תנאים על <b>מבנה</b> המילה — מתחילה ב-, מסתיימת ב-, מכילה.</p>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">L₁ = {w | w does not include 00 as a substring}</span> (מתרגול 2)</h4>
+    <p>המצבים זוכרים את "כמה מהתבנית כבר ראינו זה עתה":
+      <span class="math">q<sub>ε</sub></span> — התו האחרון אינו 0;
+      <span class="math">q₀</span> — התו האחרון 0;
+      <span class="math">q₀₀</span> — ראינו 00 (מלכודת, לא מקבל).
+      כל המצבים פרט למלכודת מקבלים.</p>
+    <div class="fsa"><svg viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
+      <path class="tr" d="M8,60 L32,60" marker-end="url(#arr)"/>
+      <circle class="st st-acc" cx="60" cy="60" r="20"/><circle class="st st-acc" cx="60" cy="60" r="25"/>
+      <text class="slbl" x="60" y="60">qε</text>
+      <circle class="st st-acc" cx="200" cy="60" r="20"/><circle class="st st-acc" cx="200" cy="60" r="25"/>
+      <text class="slbl" x="200" y="60">q₀</text>
+      <circle class="st" cx="345" cy="60" r="25"/>
+      <text class="slbl" x="345" y="60">q₀₀</text>
+      <path class="tr" d="M85,53 C120,35 145,35 176,53" marker-end="url(#arr)"/>
+      <text class="lbl" x="131" y="35" text-anchor="middle">0</text>
+      <path class="tr" d="M177,70 C148,86 116,86 86,69" marker-end="url(#arr)"/>
+      <text class="lbl" x="131" y="100" text-anchor="middle">1</text>
+      <path class="tr" d="M225,60 L317,60" marker-end="url(#arr)"/>
+      <text class="lbl" x="270" y="50" text-anchor="middle">0</text>
+      <path class="tr" d="M48,42 C38,16 82,16 72,42" marker-end="url(#arr)"/>
+      <text class="lbl" x="60" y="12" text-anchor="middle">1</text>
+      <path class="tr" d="M333,42 C323,16 367,16 357,42" marker-end="url(#arr)"/>
+      <text class="lbl" x="345" y="12" text-anchor="middle">0,1</text>
+    </svg><div class="fsa-cap">מצב = הרישא המסוכנת שנקראה זה עתה; q₀₀ — מצב מלכודת</div></div>
+  </div>
+
+  <div class="note"><b>מצב מלכודת (sink):</b> ברגע שהתנאי הופר סופית (או הובטח סופית) — עוברים למצב
+    שכל המעברים שלו לעצמו. אל תשכחו לצייר את הלולאות שלו: <span class="math">δ</span> חייבת להיות מלאה.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t8">מה מצב יכול "לזכור" — עקרון הזיכרון הסופי</h2>
+
+  <p>האינטואיציה המרכזית של כל חצי הקורס הראשון: <b>מצב = כל מה שהאוטומט יודע על העבר</b>.
+    ל-DFA יש מספר קבוע של מצבים, ולכן הוא זוכר רק <b>כמות חסומה של מידע</b>, לא תלויה באורך הקלט.</p>
+
+  <div class="ex-box">
+    <h4>"האות השמינית מהסוף" (בסיס לתרגול 4)</h4>
+    <p>‏<span class="math">L = {w = x1y | x,y ∈ Σ<sup>*</sup>, |y| = 7}</span> — האות במקום השמיני מהסוף היא 1.
+      DFA חייב לזכור את <b>8 האותיות האחרונות</b> — כי כל אחת מהן עלולה להתברר כ"שמינית מהסוף".
+      לכן דרושים <span class="math">2<sup>8</sup></span> מצבים (חלון הזזה), ואפשר להוכיח שאי אפשר עם פחות.
+      בפרק 3 נראה שה-NFA מסתדר עם 9 מצבים — זה המחיר/רווח של אי-דטרמיניזם.</p>
+  </div>
+
+  <div class="thm">כל מידע שנחוץ להכרעה ואפשר לתחום אותו מראש (שארית, חלון אחרון, דגלים) — ניתן לקידוד במצבים.
+    מידע שגדל עם הקלט (מונה לא חסום, השוואת שני חצאים) — לא. ההוכחה הפורמלית לכך: למת הניפוח (פרק 5)
+    ומחלקות שקילות (פרק 4).</div>
+</section>
+
+<section>
+  <h2 id="ch1-t9">הוכחת נכונות של DFA — אינווריאנטת מצבים</h2>
+
+  <p>במבחן (למשל 2024א ש1.2) תתבקשו "להוכיח בעזרת <span class="math">A</span>" — הכלי הוא
+    <b>משמעות מדויקת לכל מצב</b>:</p>
+
+  <div class="algo">
+    <h4>תבנית ההוכחה</h4>
+    <ol>
+      <li>לכל מצב <span class="math">q</span> מנסחים אינווריאנטה: <span class="math">δ′(q<sub>s</sub>, w) = q ⟺ P<sub>q</sub>(w)</span> — תכונה מדויקת של המילים שמגיעות אליו.</li>
+      <li>מוכיחים באינדוקציה על <span class="math">|w|</span>: בסיס — <span class="math">ε</span> מקיימת את <span class="math">P<sub>q_s</sub></span>; צעד — כל מעבר <span class="math">δ(q,σ)=p</span> משמר את התכונה.</li>
+      <li>מסכמים: <span class="math">L(A) = ⋃<sub>q∈F</sub> {w | P<sub>q</sub>(w)}</span> — בדיוק השפה הרצויה.</li>
+    </ol>
+  </div>
+
+  <div class="ex-box">
+    <h4>דוגמה קצרה</h4>
+    <p>באוטומט הזוגיות: <span class="math">P<sub>q₀</sub>(w) ⟺ #₁(w)</span> זוגי,
+      <span class="math">P<sub>q₁</sub>(w) ⟺ #₁(w)</span> אי-זוגי.
+      צעד האינדוקציה: קריאת 0 לא משנה את <span class="math">#₁</span>; קריאת 1 הופכת זוגיות — בדיוק המעברים.
+      לכן <span class="math">L(A) = {w | #₁(w) זוגי}</span>. <span class="qed">∎</span></p>
+  </div>
+
+  <div class="note">בקורס הזה מקובל ומותר לכתוב הוכחות כאלה בקצרה ("המצב סופר את... והמעברים משמרים")
+    — אבל חובה שהאינווריאנטה עצמה תהיה כתובה במדויק. רוב הנקודות יורדות על אינווריאנטה מעורפלת.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t10">שפה רגולרית — ההגדרה והתמונה הגדולה</h2>
+
+  <div class="def"><span class="term">שפה רגולרית</span> — שפה <span class="math">L</span> שקיים
+    אוטומט סופי (DFA) המזהה אותה: <span class="math">L(A) = L</span>.
+    את מחלקת כל השפות הרגולריות מסמנים לעיתים <span class="math">REG</span>.</div>
+
+  <p>בפרקים הבאים נצבור עוד שלוש דרכים שקולות להגדיר את אותה מחלקה בדיוק:</p>
+  <ul>
+    <li><b>NFA</b> — אוטומט לא-דטרמיניסטי (פרק 2–3): נוח פי כמה לבנייה.</li>
+    <li><b>ביטוי רגולרי</b> (פרק 3): נוח לתיאור.</li>
+    <li><b>דקדוק רגולרי</b> (בהמשך): הגשר לדקדוקים חסרי הקשר.</li>
+  </ul>
+  <p>שקילות ארבע ההגדרות היא בין התוצאות המרכזיות של הקורס, וההמרות ביניהן
+    (subset construction, GNFA, SRG) הן חומר מבחן קבוע — כולן מופיעות בדף הנוסחאות.</p>
+
+  <div class="note"><b>מה שווה לזכור מהפרק:</b> ההבחנה בין ספירה חסומה (רגולרי) ללא-חסומה (לא);
+    התבנית "מצב = משמעות + אינדוקציה" להוכחות; ושהמלכודות הקלאסיות במבחן הן כמעט תמיד
+    <span class="math">ε</span>, מצב מלכודת חסר, או <span class="math">δ</span> לא מלאה.</div>
+</section>

@@ -1,0 +1,219 @@
+<h1>ביטויים רגולריים והמרות</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 3 (הרצאה 3 + תרגול 3)</p>
+
+<section>
+  <h2 id="ch3-t0">ביטוי רגולרי — ההגדרה האינדוקטיבית</h2>
+
+  <div class="def">
+    <span class="term">ביטוי רגולרי (Regex)</span> מעל <span class="math">Σ</span> מוגדר באינדוקציה:
+    <ul>
+      <li><b>בסיס:</b> ‏<span class="math">∅</span>, ‏<span class="math">ε</span>, ו-<span class="math">σ</span> לכל <span class="math">σ ∈ Σ</span> — ביטויים רגולריים.</li>
+      <li><b>צעד:</b> אם <span class="math">r, s</span> ביטויים רגולריים אז גם
+        <span class="math">r + s</span> (איחוד; בספרים אחרים <span class="math">r|s</span> או <span class="math">r∪s</span>),
+        <span class="math">r·s</span> (שרשור, נכתב גם <span class="math">rs</span>),
+        ו-<span class="math">r<sup>*</sup></span> (כוכב).</li>
+    </ul>
+    השפה המתוארת: <span class="math">L(∅)=∅</span>, <span class="math">L(ε)={ε}</span>, <span class="math">L(σ)={σ}</span>,
+    <span class="math">L(r+s)=L(r)∪L(s)</span>, <span class="math">L(rs)=L(r)·L(s)</span>,
+    <span class="math">L(r<sup>*</sup>)=L(r)<sup>*</sup></span>.
+  </div>
+
+  <p><b>קדימויות:</b> כוכב לפני שרשור לפני איחוד — <span class="math">ab<sup>*</sup>+c</span> פירושו
+    <span class="math">(a(b<sup>*</sup>))+c</span>. סוגריים חופשי כשמסתבכים.</p>
+
+  <div class="note">קיצורים מקובלים: <span class="math">r<sup>+</sup> = rr<sup>*</sup></span> (לפחות פעם אחת),
+    ו-<span class="math">Σ</span> כקיצור ל-<span class="math">(σ₁+…+σ_k)</span>. מותר להשתמש בהם במבחן —
+    הם מתפרקים לביטוי חוקי.</div>
+</section>
+
+<section>
+  <h2 id="ch3-t1">קריאת ביטויים — מהשפה אל הביטוי ובחזרה</h2>
+
+  <p>ארבע הדוגמאות של תרגול 3, מעל <span class="math">Σ = {0,1}</span> — שווה לזכור אותן כתבניות:</p>
+
+  <table>
+    <tr><th>שפה</th><th>ביטוי</th><th>הרעיון</th></tr>
+    <tr><td>מסתיימת ב-00</td><td><span class="math">(0+1)<sup>*</sup>00</span></td><td>כל רישא, ואז התבנית</td></tr>
+    <tr><td><span class="math">#₁(w) = 2</span></td><td><span class="math">0<sup>*</sup>10<sup>*</sup>10<sup>*</sup></span></td><td>מקבעים את שני ה-1-ים, אפסים חופשיים ביניהם</td></tr>
+    <tr><td><span class="math">#₁(w)</span> זוגי</td><td><span class="math">0<sup>*</sup>(10<sup>*</sup>10<sup>*</sup>)<sup>*</sup></span></td><td>ה-1-ים באים בזוגות</td></tr>
+    <tr><td>מתחילה ב-1 ומסתיימת ב-10</td><td><span class="math">1(0+1)<sup>*</sup>10 + 110</span> וריאציות</td><td>זהירות בחפיפות קצרות!</td></tr>
+  </table>
+
+  <div class="warn">כשקוראים ביטוי, לבדוק תמיד: האם <span class="math">ε</span> בשפה?
+    (כל כוכב "תורם" ε.) ומה המילים הקצרות ביותר? שתי בדיקות אלה תופסות את רוב טעויות הקריאה —
+    ובשאלות "האם הביטויים שקולים" הן לרוב כל מה שצריך כדי להפריך.</div>
+</section>
+
+<section>
+  <h2 id="ch3-t2">טכניקות לכתיבת ביטוי לשפה נתונה</h2>
+
+  <ul>
+    <li><b>קיבוע עדים:</b> אם התנאי הוא "בדיוק k מופעים" — כותבים את המופעים במפורש ומרפדים:
+      <span class="math">0<sup>*</sup>10<sup>*</sup>10<sup>*</sup></span>.</li>
+    <li><b>פירוק למקרים:</b> תנאי "או" — מחברים ביטויים ב-<span class="math">+</span>. אין בעיה בחפיפה בין המקרים.</li>
+    <li><b>מבנה מחזורי:</b> ספירה מודולרית — הבלוק החוזר בכוכב:
+      זוגות <span class="math">(10<sup>*</sup>1)</span>, שלשות <span class="math">(bbb)</span>, וכד'.</li>
+    <li><b>מ-DFA:</b> אם רואים את האוטומט בקלות — עדיף לכתוב אותו ואז להמיר (GNFA), במקום לנחש ביטוי.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>מהמבחן (2023ב ש1.1ב)</h4>
+    <p>‏<span class="math">Op(L₁, L(a<sup>*</sup>))</span> עבור <span class="math">L₁ = {a<sup>i</sup>b<sup>j</sup> | (i+j) mod 3 = 0}</span>:
+      התשובה הרשמית <span class="math">a<sup>*</sup>(abb + aab + ε)(bbb)<sup>*</sup>a<sup>*</sup></span> —
+      רואים את שלוש הטכניקות ביחד: ריפוד <span class="math">a<sup>*</sup></span> משני הצדדים (ההכנסה),
+      מקרים לשארית ההתחלתית, ובלוק מחזורי <span class="math">(bbb)<sup>*</sup></span>.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch3-t3">משפט השקילות — מפת ההמרות</h2>
+
+  <div class="thm">שפה היא רגולרית <b>אם ורק אם</b> קיים ביטוי רגולרי שמתאר אותה.</div>
+
+  <p>ההוכחה — שתי המרות, שתיהן בדף הנוסחאות ושתיהן חומר מבחן:</p>
+  <div class="reduce">
+    <div class="rbox">Regex</div>
+    <span class="rarr">⇄</span>
+    <div class="rbox">NFA</div>
+    <span class="rarr">⇄</span>
+    <div class="rbox">DFA</div>
+    <div class="rcap">ימינה: הבנייה המדורגת (t4) ותת-הקבוצות (פרק 2); שמאלה: GNFA (t5–t7)</div>
+  </div>
+
+  <p>המעגל סוגר את התמונה מפרק 2: DFA ≡ NFA ≡ Regex — שלוש שפות תיאור לאותה מחלקה.
+    מכאן ואילך, "רגולרית" פירושו: תבחרו את הפורמליזם הנוח לשאלה.</p>
+</section>
+
+<section>
+  <h2 id="ch3-t4">רגקס ← NFA — הבנייה המדורגת</h2>
+
+  <div class="algo">
+    <h4>ההליך מדף הנוסחאות</h4>
+    <ol>
+      <li>מציירים NFA בן 2 מצבים: התחלה, סיום (מקבל), וחץ אחד ביניהם שמסומן בביטוי <span class="math">r</span> כולו.</li>
+      <li>מפרקים חץ <span class="math">r+s</span> לשני חיצים מקבילים <span class="math">r</span> ו-<span class="math">s</span>.</li>
+      <li>מפרקים חץ <span class="math">rs</span> לשני חיצים עוקבים דרך מצב ביניים חדש.</li>
+      <li>מפרקים חץ <span class="math">r<sup>*</sup></span>: ‏<span class="math">ε</span> פנימה למצב חדש, לולאת <span class="math">r</span> עליו, ו-<span class="math">ε</span> החוצה.</li>
+      <li>חוזרים עד שכל התוויות הן אותיות בודדות או <span class="math">ε</span>.</li>
+    </ol>
+  </div>
+
+  <p>זו אינדוקציה על מבנה הביטוי, מלמעלה למטה — בכל שלב מטפלים באופרטור החיצוני ביותר.
+    לחלופין אפשר לבנות מלמטה למעלה עם בניות האיחוד/שרשור/כוכב של פרק 2 — אותו דבר בדיוק.</p>
+
+  <div class="note">המסקנה החשובה: מספר המצבים ליניארי באורך הביטוי. ההמרה הזו זולה —
+    היקרה היא הדטרמיניזציה שאחריה (אם צריך DFA).</div>
+</section>
+
+<section>
+  <h2 id="ch3-t5">NFA ← GNFA — שלוש ההכנות</h2>
+
+  <div class="def"><span class="term">GNFA</span> — אוטומט מוכלל שבו כל חץ מסומן <b>בביטוי רגולרי</b>
+    (לא רק באות), עם התחלה יחידה בלי חיצים נכנסים, מקבל יחיד בלי חיצים יוצאים,
+    וחץ אחד בדיוק בין כל זוג מצבים.</div>
+
+  <div class="algo">
+    <h4>מ-NFA ל-GNFA תקני</h4>
+    <ol>
+      <li><b>התחלה חדשה</b> <span class="math">s</span> עם <span class="math">ε</span> אל
+        <span class="math">q<sub>s</sub></span> הישן (כדי שלא ייכנסו חיצים להתחלה).</li>
+      <li><b>מקבל יחיד חדש</b> <span class="math">f</span>: מכל <span class="math">q ∈ F</span> מוסיפים
+        <span class="math">ε</span> אל <span class="math">f</span>, וקובעים <span class="math">F = {f}</span>.</li>
+      <li><b>איחוד חיצים מקבילים:</b> כמה חיצים מ-<span class="math">i</span> ל-<span class="math">j</span> —
+        מתמזגים לחץ אחד עם סכום התוויות (<span class="math">+</span>);
+        אין חץ — מוסיפים חץ מסומן <span class="math">∅</span> (מושגית; בציור מדלגים).</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch3-t6">אלימינציית מצבים — הנוסחה ותהליך העבודה</h2>
+
+  <div class="algo">
+    <h4>סילוק מצב k</h4>
+    <p>בוחרים מצב <span class="math">k ∉ {s, f}</span>, מסלקים אותו, ולכל זוג
+      <span class="math">(i, j)</span> (כולל <span class="math">i = j</span>!) מעדכנים:</p>
+    <div class="lang-def">new(i,j) = old(i,j) + old(i,k)·old(k,k)<sup>*</sup>·old(k,j)</div>
+    <p>"כל מה שהיה קודם, ועוד: להיכנס ל-k, להסתובב בלולאה שלו כרצוננו, ולצאת".
+      חוזרים עד שנשארים רק <span class="math">s</span> ו-<span class="math">f</span> — התווית על החץ
+      <span class="math">s → f</span> היא הביטוי המבוקש.</p>
+  </div>
+
+  <div class="ex-box">
+    <h4>סדר עבודה שחוסך טעויות</h4>
+    <ul>
+      <li>מסלקים קודם מצבים "דלילים" (מעט חיצים) — הביטויים נשארים קטנים.</li>
+      <li>בכל סילוק עוברים <b>שיטתית</b> על כל הזוגות (נכנס × יוצא) של k — קל לפספס זוג.</li>
+      <li>לא לשכוח את הלולאות העצמיות: גם <span class="math">new(i,i)</span> מתעדכן.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch3-t7">∅ ,ε והמקרים המנוונים ב־GNFA</h2>
+
+  <p>שלושת הכללים שמצילים כשהנוסחה פוגשת חיצים חסרים:</p>
+  <ul>
+    <li><span class="math">r + ∅ = r</span> — חץ חסר לא מוסיף כלום באיחוד.</li>
+    <li><span class="math">r·∅ = ∅</span> — מסלול דרך חץ שלא קיים איננו מסלול.</li>
+    <li><span class="math">∅<sup>*</sup> = ε</span> — אין לולאה על k? אפשר "להסתובב אפס פעמים":
+      <span class="math">old(i,k)·ε·old(k,j)</span>.</li>
+  </ul>
+
+  <div class="warn">‏<span class="math">∅<sup>*</sup> = ε</span> (ולא ∅!) היא הנקודה שדף הנוסחאות טורח
+    להזכיר במפורש ("Reminder"). לשכוח אותה = לאבד את כל המסלולים דרך מצבים בלי לולאה עצמית.</div>
+
+  <div class="ex-box">
+    <h4>בדיקת שפיות אחרי כל סילוק</h4>
+    <p>בוחרים מילה קצרה שהאוטומט המקורי מקבל ואחת שהוא דוחה, ובודקים שהביטוי החלקי עדיין
+      מסכים. תופס את רוב שגיאות ההעתקה באמצע התהליך.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch3-t8">זהויות וכללי פישוט של ביטויים</h2>
+
+  <table>
+    <tr><th>זהות</th><th>הערה</th></tr>
+    <tr><td><span class="math">r + r = r</span>,&nbsp; <span class="math">r + s = s + r</span></td><td>איחוד אידמפוטנטי וחילופי</td></tr>
+    <tr><td><span class="math">r·ε = ε·r = r</span></td><td>ε יחידה לשרשור</td></tr>
+    <tr><td><span class="math">r·∅ = ∅·r = ∅</span></td><td>∅ מאפס שרשור</td></tr>
+    <tr><td><span class="math">(r<sup>*</sup>)<sup>*</sup> = r<sup>*</sup></span></td><td>כוכב כפול לא מוסיף</td></tr>
+    <tr><td><span class="math">(r + s)<sup>*</sup> = (r<sup>*</sup>s<sup>*</sup>)<sup>*</sup></span></td><td>שקילות שימושית ולא מובנת-מאליה</td></tr>
+    <tr><td><span class="math">r(sr)<sup>*</sup> = (rs)<sup>*</sup>r</span></td><td>"הזזת בלוק" — הטריק של L003/L025!</td></tr>
+    <tr><td><span class="math">ε + rr<sup>*</sup> = r<sup>*</sup></span></td><td>פירוק לפי מספר החזרות</td></tr>
+  </table>
+
+  <p><b>שקילות ביטויים</b> מוכיחים או בהכלה דו-כיוונית של השפות, או בהמרה לאוטומטים —
+    ומפריכים עם <b>מילה מבדילה</b> אחת. חפשו אותה קודם בין המילים הקצרות: ‏<span class="math">ε</span>,
+    אותיות בודדות, זוגות.</p>
+
+  <div class="note">הזהות <span class="math">r(sr)<sup>*</sup> = (rs)<sup>*</sup>r</span> היא בדיוק הסיבה
+    ש-<span class="math">(ab)<sup>k</sup>a(ba)<sup>k</sup> = a(ba)<sup>2k</sup></span> במאגר השפות —
+    מלכודת שחוזרת בשלושה מבחנים שונים.</div>
+</section>
+
+<section>
+  <h2 id="ch3-t9">שאלות רגקס במבחן — תבניות עבודה</h2>
+
+  <div class="algo">
+    <h4>שלושת סוגי השאלות</h4>
+    <ol>
+      <li><b>"כתבו ביטוי ל-…":</b> לפרק למקרים, לקבע עדים, לרפד. לבדוק ε ומילים קצרות. הסבר קצר נדרש (2023ב ש1.1: "הסבירו בקצרה").</li>
+      <li><b>"מהי השפה של הביטוי":</b> לקרוא מבחוץ פנימה, לרשום 3–4 מילים לדוגמה, לזהות את התבנית.</li>
+      <li><b>"המירו אוטומט לביטוי":</b> GNFA שיטתי. לרשום את הנוסחה בכל שלב — נותן נקודות חלקיות גם עם טעות חשבונית.</li>
+    </ol>
+  </div>
+
+  <div class="ex-box">
+    <h4>צ'ק-ליסט לפני שממשיכים הלאה</h4>
+    <ul>
+      <li>‏<span class="math">ε</span> — בפנים או בחוץ? (גם בשפה וגם בביטוי שכתבתם.)</li>
+      <li>אות בודדת מכל סוג — מסכימים?</li>
+      <li>אם השפה דורשת ספירה לא חסומה — עצרו: אין ביטוי רגולרי, וזו שאלה של פרק 5.</li>
+    </ul>
+  </div>
+
+  <div class="note"><b>לב הפרק:</b> ביטויים הם הדרך <em>לתאר</em>; אוטומטים הם הדרך <em>להריץ</em>;
+    GNFA וההבנייה המדורגת מוכיחים שאלה שני צדדים של אותו מטבע. במבחן — בחרו את הצד הנוח והמירו.</div>
+</section>
