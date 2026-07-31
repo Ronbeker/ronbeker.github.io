@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@@TITLE@@</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+@@APP_CSS@@
+@@CONTENT_CSS@@
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><span class="dot"></span>מערכות הפעלה — מרכז הכנה למבחן</div>
+    <div class="search">
+      <input id="q" type="search" placeholder="חיפוש בכל החומר…" autocomplete="off" dir="auto">
+      <span class="ico">⌕</span>
+      <div class="card" id="sres" hidden
+           style="position:absolute;top:calc(100% + 7px);inset-inline-start:0;width:min(560px,86vw);
+                  max-height:60vh;overflow:auto;z-index:60"></div>
+    </div>
+    <div class="grow"></div>
+    <div class="mini-prog">
+      <span class="pill n" id="sync" style="cursor:pointer" title="הגדרות סנכרון"
+            onclick="go('tools')">לא מחובר</span>
+      <span>התקדמות</span>
+      <span class="mini-bar" id="mini-bar"><i style="width:0%"></i></span>
+      <b id="mini-pct" class="num">0%</b>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+</header>
+
+<main class="wrap"><div id="app"></div></main>
+<div class="ov" id="ov" hidden></div>
+
+<script type="application/json" id="d-summaries">@@DATA_SUMMARIES@@</script>
+<script type="application/json" id="d-quiz">@@DATA_QUIZ@@</script>
+<script type="application/json" id="d-exams">@@DATA_EXAMS@@</script>
+<script type="application/json" id="d-langbank">@@DATA_LANGBANK@@</script>
+<script type="text/plain" id="d-defs">@@DEFS_HTML@@</script>
+<script>
+@@APP_JS@@
+</script>
+</body>
+</html>
