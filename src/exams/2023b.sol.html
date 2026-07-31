@@ -1,0 +1,150 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p><b>a.</b>&nbsp; <span class="math">ba + ab + abb + bab + bba</span></p>
+<p>Inserting the single letter <span class="math">a</span> at every possible position of <span class="math">b</span> (positions in <span class="math">b</span>: ab, ba) and of <span class="math">bb</span> (abb, bab, bba).</p>
+<p><b>b.</b>&nbsp; <span class="math">a<sup>*</sup>(abb + aab + ε)(bbb)<sup>*</sup>a<sup>*</sup></span></p>
+<p>A word of <span class="math">L₁</span> is inserted between a prefix and a suffix of a word of <span class="math">L(a<sup>*</sup>)</span> — so the result is <span class="math">a</span>'s, then a word of <span class="math">L₁</span>, then more <span class="math">a</span>'s; and <span class="math">L₁ = L((abb + aab + ε)(bbb)<sup>*</sup> + …)</span> restricted here to the forms that keep all <span class="math">a</span>'s before all <span class="math">b</span>'s inside the inserted word.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p><span class="math">L₂</span> is regular, so it has a DFA <span class="math">A = (Q_A, Σ, δ_A, q_{sA}, F_A)</span> with <span class="math">L(A) = L₂</span>.</p>
+<p>Note that <span class="math">x = uvw ∈ Op(L₁, L₂)</span> iff <span class="math">v ∈ L₁</span> and <span class="math">uw ∈ L(A)</span>, and that <span class="math">uw ∈ L(A)</span> iff <span class="math">∃p ∈ Q_A, ∃f ∈ F_A</span> such that <span class="math">u ∈ L<sup>A</sup><sub>q_{sA},p</sub></span> and <span class="math">w ∈ L<sup>A</sup><sub>p,f</sub></span>. That is:</p>
+<div class="lang-def">Op(L₁, L₂) = ⋃<sub>p∈Q_A, f∈F_A</sub> L<sup>A</sup><sub>q_{sA},p</sub> · L₁ · L<sup>A</sup><sub>p,f</sub></div>
+<p><span class="math">L<sup>A</sup><sub>q_{sA},p</sub></span>, <span class="math">L<sup>A</sup><sub>p,f</sub></span> and <span class="math">L₁</span> are regular (proved in class), concatenation of regular languages is regular, and a finite union of regular languages is regular — therefore <span class="math">Op(L₁, L₂)</span> is a regular language.</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p><b>a.</b></p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">A</span> | c<span class="nt">S</span>c | <span class="nt">S</span>cc | cc<span class="nt">S</span></div>
+<div class="rule"><span class="nt">A</span> → a<span class="nt">A</span>b | ε</div>
+</div>
+<p><span class="math">A</span> generates <span class="math">a<sup>n</sup>b<sup>n</sup></span> (the inserted <span class="math">v ∈ L₁</span>), and the <span class="math">S</span>-rules wrap it with <span class="math">c</span>'s in pairs — either around the middle or on the ends — generating every split of an even number of <span class="math">c</span>'s into a prefix and a suffix.</p>
+<p><b>b.</b>&nbsp; <span class="math">L₁ = L₂ = {a<sup>n</sup>b<sup>n</sup> | n ≥ 0}</span>.</p>
+</div>
+</section>
+<section data-ref="q1d">
+<div class="ltr-sol">
+<p><span class="math">L₁</span> is context-free, so it has a PDA <span class="math">A = (Q_A, Σ_A, Γ_A, δ_A, q_{sA}, F_A)</span> with <span class="math">L(A) = L₁</span>; <span class="math">L₂</span> is regular, so it has a DFA <span class="math">B = (Q_B, Σ_B, δ_B, q_{sB}, F_B)</span> with <span class="math">L(B) = L₂</span>.</p>
+<p>We construct <span class="math">P = (Q_P, Σ_P, Γ_P, δ_P, q_{sP}, F_P)</span>:</p>
+<p><span class="math">Q_P = Q_A ⊎ (Q_B × {1,2})</span>, <span class="math">Σ_P = Σ_A ∪ Σ_B</span>, <span class="math">Γ_P = Γ_A ⊎ Q_B</span>, <span class="math">q_{sP} = (q_{sB}, 1)</span>, <span class="math">F_P = F_B × {2}</span>.</p>
+<p><span class="math">δ_P</span> contains all the transitions of <span class="math">δ_A</span>, plus:</p>
+<ul>
+<li>For each <span class="math">δ_B(p, b) = q</span>: add <span class="math">δ_P((p,1), b, ε) = {((q,1), ε)}</span> and <span class="math">δ_P((p,2), b, ε) = {((q,2), ε)}</span> — simulating <span class="math">B</span> on <span class="math">u</span> (phase 1) and on <span class="math">w</span> (phase 2).</li>
+<li>For each <span class="math">p ∈ Q_B</span> and each <span class="math">f ∈ F_A</span>: add <span class="math">δ_P((p,1), ε, ε) = {(q_{sA}, p)}</span> and <span class="math">δ_P(f, ε, p) = {((p,2), ε)}</span>.</li>
+</ul>
+<p><b>How <span class="math">P</span> works:</b> it simulates <span class="math">B</span> on the prefix <span class="math">u</span>; at a nondeterministically chosen point it <b>pushes the current state <span class="math">p</span> of <span class="math">B</span> onto the stack</b> and jumps into the PDA <span class="math">A</span> to read <span class="math">v ∈ L₁</span>; when <span class="math">A</span> reaches an accepting state, <span class="math">P</span> pops the saved state <span class="math">p</span> and resumes the simulation of <span class="math">B</span> on <span class="math">w</span> exactly where it stopped. Acceptance requires finishing in <span class="math">F_B</span> — i.e. <span class="math">uw ∈ L₂</span> and <span class="math">v ∈ L₁</span>. (The transitions of <span class="math">A</span> never touch the saved state at the bottom, since <span class="math">A</span> only pops symbols it pushed itself.)</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מ-<span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">L ∈ RE</span> — בונים מזהה שמחפש קודם את המילה הקצרה ביותר ב-<span class="math">L(D)</span> ואז סופר קבלות של <span class="math">M</span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ coRE</span> — כי <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> ו-<span class="math">A<sub>TM</sub> ∉ coRE</span>.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∉ R</span>, <span class="math">L ∉ coRE</span>:</b> we show <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (<span class="math">A<sub>TM</sub> ∉ coRE</span>, therefore <span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨D, N_{M,w}⟩</span> where:</p>
+<pre>D: "On input x:
+1. If x = "1", accept.
+2. Otherwise, reject."
+
+N_{M,w}: "On input x: Run M on w and do as M does."</pre>
+<p><b>Correctness:</b> note that <span class="math">min{|w| : w ∈ L(D)} = 1</span> (and <span class="math">L(D) ≠ ∅</span>).</p>
+<ul>
+<li><span class="math">f</span> is a computable function (finite syntactic encoding).</li>
+<li><span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span>: <span class="math">L(N_{M,w}) = Σ<sup>*</sup></span>, so <span class="math">|L(N_{M,w})| ≥ 1</span> — therefore <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ A<sub>TM</sub></span>: <span class="math">L(N_{M,w}) = ∅</span>, so <span class="math">|L(N_{M,w})| = 0 &lt; 1</span> — therefore <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+<p><b><span class="math">L ∈ RE</span>:</b> we construct a recognizer <span class="math">M_L</span> for <span class="math">L</span>:</p>
+<pre>M_L: "On input ⟨D, M⟩:
+1. Define Length = 0
+2. For k = 0 to ∞:
+   2.1. For every x ∈ Σ^k in lexicographical order:
+      2.1.1. Run D on x.
+      2.1.2. If D accepted:
+         2.1.2.1. Length = k.
+         2.1.2.2. If k = 0, accept.
+         2.1.2.3. Otherwise, goto line 3.
+3. For i = 0 to ∞:
+   3.1. Define Counter = 0.
+   3.2. For j = 0 to i:
+      3.2.1. For every x ∈ Σ^j in lexicographical order:
+         3.2.1.1. Run M on x for i steps.
+         3.2.1.2. If M accepted:
+            3.2.1.2.1. Counter++.
+            3.2.1.2.2. If Counter = Length, accept."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨D,M⟩ ∈ L</span>: lines 1–2 find the shortest word of <span class="math">L(D)</span> (a DFA — every run halts), setting <span class="math">Length = min{|w| : w ∈ L(D)}</span>; if it is <span class="math">0</span> we accept at once. Otherwise <span class="math">|L(M)| ≥ Length</span>, so there exist <span class="math">Length</span> distinct words accepted by <span class="math">M</span>; let <span class="math">s</span> be the maximal number of steps needed to accept the "cheapest" such set. At iteration <span class="math">i = s</span>, all of them are accepted within the same sweep and <span class="math">Counter</span> reaches <span class="math">Length</span> — <span class="math">M_L</span> accepts.</li>
+<li><span class="math">⟨D,M⟩ ∉ L</span>: if <span class="math">L(D) = ∅</span> the loop in line 2 never finds an accepted word and <span class="math">M_L</span> runs forever. Otherwise <span class="math">|L(M)| &lt; Length</span>: no sweep can ever count <span class="math">Length</span> distinct accepted words, so the condition in 3.2.1.2.2 never holds and <span class="math">M_L</span> never halts.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p>Assume towards contradiction that <span class="math">L = {ww | w ∈ Σ<sup>*</sup>}</span> is regular; let <span class="math">n</span> be the number promised by the pumping lemma.</p>
+<p>We choose <span class="math">w = 0<sup>n</sup>10<sup>n</sup>1 ∈ L</span>, <span class="math">|w| ≥ n</span>. By the lemma <span class="math">w = xyz</span> with conditions 1–3; denote <span class="math">x = 0<sup>s</sup></span>, <span class="math">y = 0<sup>t</sup></span> with <span class="math">s + t ≤ n</span>, <span class="math">t &gt; 0</span>.</p>
+<p>Consider <span class="math">w₂ = xy²z = 0<sup>n+t</sup>10<sup>n</sup>1</span>.</p>
+<p>If <span class="math">t</span> is odd, <span class="math">|w₂|</span> is odd and cannot be split into two equal halves at all. If <span class="math">t</span> is even, the two halves are <span class="math">0<sup>n+t/2</sup>…</span> and <span class="math">…0<sup>n</sup>1</span> — the first half is all zeros (since <span class="math">n + t/2 ≥ n + 1</span> puts the first <span class="math">1</span> in the second half) while the second half ends with <span class="math">1</span> and contains the two <span class="math">1</span>'s — the halves differ. Either way <span class="math">w₂ ∉ L</span>, contradicting condition 3. Thus <span class="math">L</span> is not regular.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p><span class="math">w = ab</span>, with two distinct parse trees:</p>
+<div class="cols2">
+<div class="deriv"><ul><li><span class="nt">S</span><ul><li>a</li><li><span class="nt">S</span><ul><li>b</li></ul></li></ul></li></ul></div>
+<div class="deriv"><ul><li><span class="nt">S</span><ul><li><span class="nt">S</span><ul><li>a</li></ul></li><li>b</li></ul></li></ul></div>
+</div>
+<p><span class="math">S ⇒ aS ⇒ ab</span> (via <span class="math">S → aS</span>, then <span class="math">S → b</span>) versus <span class="math">S ⇒ Sb ⇒ ab</span> (via <span class="math">S → Sb</span>, then <span class="math">S → a</span>) — two different parse trees for the same word, so <span class="math">G</span> is ambiguous.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<p>Denote the language by <span class="math">L = {a<sup>2n²</sup> | n ≥ 0}</span> and assume towards contradiction that it is context-free.</p>
+<p>Define a regular substitution <span class="math">f</span> over <span class="math">{a}</span>: <span class="math">f(a) = {a, a′}</span>; <span class="math">f(L)</span> is context-free (closure under regular substitution).</p>
+<p>Define <span class="math">L′ = f(L) ∩ L((aa′)<sup>*</sup>)</span> — context-free (intersection with a regular language). In <span class="math">L′</span> the letters strictly alternate <span class="math">a, a′</span>, so a word of length <span class="math">2n²</span> has exactly <span class="math">n²</span> unmarked <span class="math">a</span>'s.</p>
+<p>Define a regular substitution <span class="math">g</span>: <span class="math">g(a) = {a}</span>, <span class="math">g(a′) = {ε}</span>; <span class="math">g(L′)</span> is context-free (closure under regular substitution).</p>
+<p>But <span class="math">g(L′) = {a<sup>n²</sup> | n ≥ 0}</span>, which is not context-free — a contradiction. Therefore <span class="math">L</span> is not a context-free language.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><span class="math">w = "a"</span>.</p>
+<ul>
+<li><span class="math">δ(q₁, a) = q₂</span> — not an accepting state, but <span class="math">δ(q₂, a) = q₀</span> — accepting: <span class="math">a</span> separates <span class="math">q₁</span> from <span class="math">q₂</span>.</li>
+<li><span class="math">δ(q₀, a) = q₁</span> — not accepting, but <span class="math">δ(q₂, a) = q₀</span> — accepting: <span class="math">a</span> separates <span class="math">q₂</span> from <span class="math">q₀</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>True.</b></p>
+<p><span class="math">L∞<sub>k</sub></span> is a finite language (all its members are words of length at most <span class="math">k</span>) and therefore <span class="math">L∞<sub>k</sub> ∈ R</span>, while <span class="math">L<sub>∞</sub> ∉ R</span>.</p>
+<p>If <span class="math">L<sub>∞</sub> ≤<sub>m</sub> L∞<sub>k</sub></span> held, then since membership in <span class="math">R</span> transfers from right to left along a mapping reduction, we would get <span class="math">L<sub>∞</sub> ∈ R</span> — a contradiction. Therefore <span class="math">L<sub>∞</sub> ≰<sub>m</sub> L∞<sub>k</sub></span> for every <span class="math">k</span>.</p>
+</div>
+</section>
+<section data-ref="q3f">
+<div class="ltr-sol">
+<p><b>True.</b></p>
+<p><span class="math">A</span> is a finite set, therefore both <span class="math">A ∖ L₁</span> and <span class="math">A ∩ L₁</span> are finite languages and hence decidable.</p>
+<p>Since <span class="math">L₂</span> is non-trivial, there exist <span class="math">w_{in} ∈ L₂</span> and <span class="math">w_{out} ∉ L₂</span>.</p>
+<p>We show <span class="math">L₁ ≤<sub>m</sub> L₂</span> by constructing a TM <span class="math">G</span> computing a mapping function <span class="math">g</span>:</p>
+<pre>G: "On input x:
+1. If x ∈ A ∖ L₁, return w_out.
+2. If x ∈ A ∩ L₁, return w_in.
+3. Otherwise, return f(x)."</pre>
+<p><span class="math">g</span> is computable — lines 1–2 run deciders of finite languages, line 3 runs the computable <span class="math">f</span>.</p>
+<ul>
+<li><span class="math">x ∈ L₁</span>: if <span class="math">x ∈ A ∩ L₁</span> we return <span class="math">w_{in} ∈ L₂</span>; if <span class="math">x ∈ L₁ ∖ A</span> we return <span class="math">f(x) ∈ L₂</span> (by the property of <span class="math">f</span> outside <span class="math">A</span>).</li>
+<li><span class="math">x ∉ L₁</span>: if <span class="math">x ∈ A ∖ L₁</span> we return <span class="math">w_{out} ∉ L₂</span>; otherwise <span class="math">x ∉ A</span> and we return <span class="math">f(x) ∉ L₂</span>.</li>
+</ul>
+<p>In every case <span class="math">x ∈ L₁ ⟺ g(x) ∈ L₂</span> — so <span class="math">L₁ ≤<sub>m</sub> L₂</span>.</p>
+</div>
+</section>

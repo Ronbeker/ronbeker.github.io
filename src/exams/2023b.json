@@ -1,0 +1,156 @@
+{
+  "id": "2023b",
+  "year": 2023,
+  "moed": "ב",
+  "label": "2023 — מועד ב'",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "אביב 2023",
+    "duration": "3 שעות",
+    "staff": "ד\"ר רעות לוי",
+    "totalPoints": 100,
+    "note": "אם לא מצוין אחרת: תיאורים של מכונות טיורינג צריכים להיות ב-high-level, ומותר להסתמך ללא הוכחה על כל טענה שהוצגה בכיתה, בתרגול או בשיעורי הבית. רשימת הגדרות (דף נוסחאות) מצורפת למבחן."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">עבור שפות <span class=\"math\">L₁, L₂ ⊆ Σ<sup>*</sup></span>, נגדיר:</p><div class=\"lang-def\">Op(L₁, L₂) = {uvw | v ∈ L₁ and uw ∈ L₂}</div><p dir=\"auto\">לדוגמה: <span class=\"math\">Op({c}, {ab, ba}) = {cab, cba, acb, bca, abc, bac}</span>.</p>",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "1",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">בהינתן השפות הבאות, <span class=\"math\">L₁, L₂ ⊆ {a,b}<sup>*</sup></span>, <b>כתבו ביטוי רגולרי</b> ל-<span class=\"math\">Op(L₁, L₂)</span>:</p><p dir=\"auto\"><b>א.</b> ‏<span class=\"math\">L₁ = {a}</span> ו-<span class=\"math\">L₂ = {b, bb}</span>.</p><p dir=\"auto\"><b>ב.</b> ‏<span class=\"math\">L₁ = {a<sup>i</sup>b<sup>j</sup> | (i+j) mod 3 = 0}</span> ו-<span class=\"math\">L₂ = L(a<sup>*</sup>)</span>.</p><p dir=\"auto\">הסבירו בקצרה את תשובתכם.</p>",
+          "tags": { "subj": "regex", "qt": "construction" }
+        },
+        {
+          "pid": "q1b",
+          "label": "2",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">תהיינה <span class=\"math\">L₁, L₂ ⊆ Σ<sup>*</sup></span> שפות רגולריות.</p><p dir=\"auto\"><b>הוכיחו</b> ש-<span class=\"math\">Op(L₁, L₂)</span> היא שפה רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1c",
+          "label": "3",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\"><b>א.</b> בהינתן השפות <span class=\"math\">L₁ = {a<sup>n</sup>b<sup>n</sup> | n ≥ 0}</span> ו-<span class=\"math\">L₂ = {c<sup>n</sup> | n is even}</span>.</p><p dir=\"auto\"><b>כתבו דקדוק חסר הקשר</b> <span class=\"math\">G</span> כך ש-<span class=\"math\">L(G) = Op(L₁, L₂)</span>. מספיק לכתוב רק את כללי הגזירה. הסבירו את תשובתכם בקצרה.</p><p dir=\"auto\"><b>ב.</b> ספקו שפות חסרות הקשר ולא רגולריות <span class=\"math\">L₁, L₂</span> כך ש-<span class=\"math\">Op(L₁, L₂)</span> חסרת הקשר (ללא הוכחה).</p>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q1d",
+          "label": "4",
+          "kind": "open",
+          "rows": 12,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו:</b> אם <span class=\"math\">L₁</span> היא שפה חסרת הקשר ו-<span class=\"math\">L₂</span> היא שפה רגולרית אזי <span class=\"math\">Op(L₁, L₂)</span> היא שפה חסרת הקשר, ע\"י הצגת <span class=\"en\">PDA</span>‏ <span class=\"math\">P</span> כך ש-<span class=\"math\">L(P) = Op(L₁, L₂)</span>.</p><p dir=\"auto\">הסבירו בקצרה את הפתרון שלכם / את דרך הפעולה של <span class=\"math\">P</span>.</p>",
+          "tags": { "subj": "pda", "qt": "construction" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (30 נקודות)",
+      "points": 30,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">L = {⟨D, M⟩ | D is a DFA, M is a TM, L(D) ≠ ∅ and |L(M)| ≥ min{|w| : w ∈ L(D)}}</div>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ RE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ coRE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 18,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם <b>לכל</b> הסעיפים (1 עד 3).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (5 × 6 נקודות)",
+      "points": 30,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "1",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו</b> ש-<span class=\"math\">{ww | w ∈ Σ<sup>*</sup>}</span> היא לא שפה רגולרית ע\"י שימוש ב<b>למת הניפוח לשפות רגולריות</b>.</p>",
+          "tags": { "subj": "pump-reg", "qt": "pumping" }
+        },
+        {
+          "pid": "q3b",
+          "label": "2",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">G = (V, Σ, S, R)</span> דקדוק חסר הקשר כך ש-<span class=\"math\">V = {S}</span>, <span class=\"math\">Σ = {a,b}</span> ו-<span class=\"math\">R = {S → aS | Sb | a | b | ε}</span>.</p><p dir=\"auto\"><b>הוכיחו</b> ש-<span class=\"math\">G</span> הוא דקדוק <b>עמום</b> ע\"י הצגת מחרוזת <span class=\"math\">w ∈ L(G)</span> כך שקיימים יותר מעץ גזירה אחד של <span class=\"math\">G</span> עבור <span class=\"math\">w</span> (הראו בנוסף שניים מעצי הגזירה).</p>",
+          "tags": { "subj": "cfg", "qt": "proof" }
+        },
+        {
+          "pid": "q3c",
+          "label": "3",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו:</b> ‏<span class=\"math\">{a<sup>2n²</sup> | n ≥ 0}</span> היא לא שפה חסרת הקשר.</p><p dir=\"auto\">אתם רשאים להשתמש בעובדה ש-<span class=\"math\">{a<sup>n²</sup> | n ≥ 0}</span> היא לא שפה חסרת הקשר.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q3d",
+          "label": "4",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">בהינתן ה-<span class=\"en\">DFA</span>‏ הבא:</p><div class=\"fsa\"><svg viewBox=\"0 0 300 210\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"st st-acc\" cx=\"75\" cy=\"60\" r=\"20\"/><circle class=\"st st-acc\" cx=\"75\" cy=\"60\" r=\"25\"/><text class=\"slbl\" x=\"75\" y=\"60\">q₀</text><circle class=\"st\" cx=\"225\" cy=\"60\" r=\"25\"/><text class=\"slbl\" x=\"225\" y=\"60\">q₁</text><circle class=\"st\" cx=\"150\" cy=\"165\" r=\"25\"/><text class=\"slbl\" x=\"150\" y=\"165\">q₂</text><path class=\"tr\" d=\"M100,60 L197,60\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"148\" y=\"48\" text-anchor=\"middle\">a</text><path class=\"tr\" d=\"M213,82 L166,146\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"203\" y=\"122\" text-anchor=\"middle\">a</text><path class=\"tr\" d=\"M133,146 L86,84\" marker-end=\"url(#arr)\"/><text class=\"lbl\" x=\"96\" y=\"122\" text-anchor=\"middle\">a</text></svg></div><p dir=\"auto\">הציגו <b>מילה בודדת</b>, <span class=\"math\">w ∈ L(a<sup>*</sup>)</span>, שמפרידה גם בין <span class=\"math\">q₁</span> ל-<span class=\"math\">q₂</span> וגם בין <span class=\"math\">q₂</span> ל-<span class=\"math\">q₀</span>. הסבירו את תשובתכם.</p>",
+          "tags": { "subj": "minimize", "qt": "short" }
+        },
+        {
+          "pid": "q3e",
+          "label": "5",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\">בהינתן <span class=\"math\">k ∈ ℕ</span>. נגדיר:</p><div class=\"lang-def\">L∞<sub>k</sub> = {⟨M⟩ | M is a TM, L(M) is infinite and ⟨M⟩ ∈ ⋃<sub>i=0..k</sub> Σ<sup>i</sup>}</div><p dir=\"auto\"><b>נכון או לא נכון:</b> לכל <span class=\"math\">k</span>, ‏<span class=\"math\">L<sub>∞</sub></span> לא ניתנת לרדוקציית מיפוי ל-<span class=\"math\">L∞<sub>k</sub></span> ‏(<span class=\"math\">L<sub>∞</sub> ≰<sub>m</sub> L∞<sub>k</sub></span>). נמקו את תשובתכם.</p>",
+          "tags": { "subj": "reduction", "qt": "claim" }
+        },
+        {
+          "pid": "q3f",
+          "label": "6",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">A</span> תת-קבוצה לא טריוויאלית <b>סופית</b> של <span class=\"math\">Σ<sup>*</sup></span> ותהיינה <span class=\"math\">L₁</span> ו-<span class=\"math\">L₂</span> שפות לא טריוויאליות.</p><p dir=\"auto\"><b>נכון או לא נכון:</b> אם קיימת פונקציה ניתנת לחישוב <span class=\"math\">f: Σ<sup>*</sup> → Σ<sup>*</sup></span> כך של-<span class=\"math\">∀w ∈ Σ<sup>*</sup> ∖ A</span> מתקיים ש-<span class=\"math\">w ∈ L₁</span> אמ\"מ <span class=\"math\">f(w) ∈ L₂</span>, אזי בהכרח <span class=\"math\">L₁ ≤<sub>m</sub> L₂</span>. הוכיחו את תשובתכם.</p>",
+          "tags": { "subj": "reduction", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

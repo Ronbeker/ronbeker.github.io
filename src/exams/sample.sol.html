@@ -1,0 +1,120 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p><b>True.</b>&nbsp; <span class="math">L = {0<sup>n</sup>10<sup>n</sup>1 | n is odd}</span>.</p>
+<p><b><span class="math">L</span> is not regular:</b> define a substitution <span class="math">h(0) = a + b</span>, <span class="math">h(1) = 1</span>. Then <span class="math">h(L) ∩ L(a<sup>*</sup>1b<sup>*</sup>1) = {a<sup>n</sup>1b<sup>n</sup>1}</span>. Define <span class="math">g(a) = a</span>, <span class="math">g(b) = b</span>, <span class="math">g(1) = ε</span> and obtain <span class="math">g({a<sup>n</sup>1b<sup>n</sup>1}) = {a<sup>n</sup>b<sup>n</sup>}</span> — a non-regular language. Since regular languages are closed under substitution and intersection, if <span class="math">L</span> were regular so would <span class="math">{a<sup>n</sup>b<sup>n</sup>}</span> be — contradiction.</p>
+<p><b><span class="math">L</span> is a CFL:</b></p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → 0<span class="nt">A</span>01</div>
+<div class="rule"><span class="nt">A</span> → 00<span class="nt">A</span>00 | 1</div>
+</div>
+<p><b>And:</b> <span class="math">dropEven(L) = {0<sup>n</sup> | n ≥ 2 and n is even}</span> — a regular language (in <span class="math">0<sup>n</sup>10<sup>n</sup>1</span> with odd <span class="math">n</span>, both <span class="math">1</span>'s sit at even positions and are dropped, and exactly <span class="math">n+1</span> zeros survive).</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p><b>False.</b>&nbsp; <span class="math">L = Σ<sup>+</sup></span>: every word is the dropEven-image of some word (e.g. pad each letter), so <span class="math">dropEven(Σ<sup>+</sup>) = Σ<sup>+</sup></span>, and <span class="math">Σ<sup>+</sup></span> is certainly context-free.</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p><b>Sketch:</b> create two copies of the states of the DFA — the sets <span class="math">Q_A</span> and <span class="math">Q_B</span> — while accepting states are only in the copy <span class="math">Q_A</span>.</p>
+<ul>
+<li>Move from <span class="math">Q_A</span> to <span class="math">Q_B</span> according to the transitions defined by <span class="math">δ</span> (reading the "kept" letter <span class="math">σ_i</span>).</li>
+<li>For each transition from <span class="math">q</span> to <span class="math">p</span> (on any letter), move from <span class="math">q_B</span> to <span class="math">p_A</span> using an <span class="math">ε</span>-transition (guessing the dropped letter <span class="math">μ_i</span>).</li>
+</ul>
+<p>A run of the NFA on <span class="math">σ₁…σ_n</span> corresponds exactly to a run of the DFA on some <span class="math">σ₁μ₁…σ_nμ_n</span>, so the NFA recognizes <span class="math">dropEven(L)</span>.</p>
+</div>
+</section>
+<section data-ref="q1d">
+<div class="ltr-sol">
+<p>Consider <span class="math">w = 0<sup>p</sup>1<sup>p</sup>1<sup>p</sup>0<sup>p</sup></span> and let <span class="math">uvxyz</span> be a partition of <span class="math">w</span> such that <span class="math">|vy| &gt; 0</span> and <span class="math">|vxy| ≤ p</span>.</p>
+<ul>
+<li><b>Case 1 — <span class="math">vy</span> homogeneous:</b> after pumping, the number of zeros does not equal the number of ones, while <span class="math">#₀(w) = #₁(w)</span> implies <span class="math">#₀(ww<sup>R</sup>) = #₁(ww<sup>R</sup>)</span> for every member of the language — so the pumped word leaves the language.</li>
+<li><b>Case 2 — <span class="math">vy</span> heterogeneous:</b>
+  <ul>
+  <li><b>2.1</b> — <span class="math">vy</span> contains an unequal number of zeros and ones: after pumping the zero/one counts differ, as in case 1.</li>
+  <li><b>2.2</b> — <span class="math">vy</span> contains an equal number of zeros and ones (so it straddles a 0-1 border; note <span class="math">|vxy| ≤ p</span> keeps it inside one half):
+    <ul>
+    <li><b>2.2.1</b> — <span class="math">vy</span> lies in the first half: it starts with <span class="math">0</span>; after pumping, the number of leading zeros exceeds <span class="math">p</span> while the number of trailing zeros remains <span class="math">p</span> — the word is no longer of the form <span class="math">ww<sup>R</sup></span>.</li>
+    <li><b>2.2.2</b> — <span class="math">vy</span> lies in the second half: analogous to 2.2.1.</li>
+    </ul></li>
+  </ul></li>
+</ul>
+<p>All cases contradict condition 3 of the lemma — <span class="math">L</span> is not context-free.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">A ∉ R</span> — נובע מכך ש-<span class="math">A ∉ RE</span>.</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">A ∉ RE</span> — כי <span class="math"><span class="comp">HALT<sub>TM</sub></span> ≤<sub>m</sub> A</span>.</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">A ∈ coRE ∖ R</span> — בונים מזהה ל-<span class="math"><span class="comp">A</span></span>, ו-<span class="math">A ∉ R</span> כי <span class="math">A ∉ RE</span>.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">A ∉ RE</span>:</b> we reduce <span class="math"><span class="comp">HALT<sub>TM</sub></span> ≤<sub>m</sub> A</span>:</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N⟩</span>, where:</p>
+<pre>N: "On input x:
+1. Run M on w.
+2. Reject."</pre>
+<p><span class="math">f</span> is clearly computable as it only writes the encoding of <span class="math">N</span> on the tape.</p>
+<ul>
+<li><span class="math">⟨M,w⟩ ∈ <span class="comp">HALT<sub>TM</sub></span></span> ⟹ <span class="math">M</span> does not halt on <span class="math">w</span> ⟹ <span class="math">N</span> does not halt on any input ⟹ <span class="math">N</span> does not reject any input ⟹ <span class="math">⟨N⟩ ∈ A</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ <span class="comp">HALT<sub>TM</sub></span></span> ⟹ <span class="math">M</span> halts on <span class="math">w</span> ⟹ <span class="math">N</span> rejects all inputs (in particular <span class="math">w′·w′</span> for palindromes <span class="math">w′</span>) ⟹ <span class="math">⟨N⟩ ∉ A</span>.</li>
+</ul>
+<p>Since <span class="math"><span class="comp">HALT<sub>TM</sub></span> ∉ RE</span>, also <span class="math">A ∉ RE</span> (and in particular <span class="math">A ∉ R</span>).</p>
+<p><b><span class="math">A ∈ coRE</span>:</b> we build a recognizer <span class="math">S</span> for <span class="math"><span class="comp">A</span> = {⟨M⟩ | M is a TM and ∃w ∈ PAL s.t. M rejects w·w}</span>:</p>
+<pre>S: "On input ⟨M⟩:
+1. For i = 1, 2, …:
+   1.1. For j = 0, 1, …, i:
+      1.1.1. For every x ∈ Σ^j in lexicographical order:
+         1.1.1.1. If x = x^R:
+            1.1.1.1.1. Run M on xx for i steps.
+            1.1.1.1.2. If M rejected, accept."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨M⟩ ∉ <span class="comp">A</span></span>: for every palindrome <span class="math">w</span>, <span class="math">M</span> does not reject <span class="math">ww</span>. Hence <span class="math">S</span> never accepts in line 1.1.1.1.2 — and since that is the only accepting line, <span class="math">S</span> does not accept <span class="math">⟨M⟩</span> (it never halts).</li>
+<li><span class="math">⟨M⟩ ∈ <span class="comp">A</span></span>: there exists <span class="math">w ∈ PAL</span> such that <span class="math">M</span> rejects <span class="math">ww</span> in some number <span class="math">k</span> of steps. Each execution of line 1.1.1.1.1 terminates in finite time, and the sets iterated in lines 1.1 and 1.1.1 are finite — so each iteration of the outer loop terminates. Hence <span class="math">S</span> accepts <span class="math">⟨M⟩</span> at the latest when <span class="math">i = max{|w|, k}</span>, <span class="math">j = |w|</span> and <span class="math">x = w</span>.</li>
+</ul>
+<div class="note" dir="rtl"><b>הערת המרצה (מהפתרון הרשמי):</b> ההוכחה כאן שונה מזו שראיתם בתרגול. בתרגול בחרנו מילה ספציפית <span class="math">w</span> (לפי מספר צעדים, אורך וסדר לקסיקוגרפי) והראינו שהמזהה מגיע אליה באיטרציה <span class="math">i = k</span>; כאן הראינו שקבלה מתרחשת <b>לכל המאוחר</b> באיטרציה <span class="math">i = max{|w|, k}</span>. שתי ההוכחות שונות — ושתיהן קבילות. בשתיהן חשוב להוכיח שהמזהה <b>מגיע</b> למילה שמקיימת את התנאי ואז מקבל — כלומר שהוא לא נתקע בלולאה אינסופית לפני כן.</div>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p><b>False.</b> Counter example: <span class="math">L₁ = {a<sup>n</sup>b<sup>n</sup> | n ≥ 0}</span>, <span class="math">L = L(a<sup>*</sup>b<sup>*</sup>)</span>, <span class="math">L₂ = L(a<sup>*</sup>b<sup>*</sup>) ∪ {b<sup>n</sup>a<sup>n</sup>}</span>.</p>
+<p><span class="math">L₁</span> and <span class="math">L₂</span> are non-regular, <span class="math">L₁ ⊆ L ⊆ L₂</span>, and yet <span class="math">L = a<sup>*</sup>b<sup>*</sup></span> is regular.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p><b>False.</b> Counter example: <span class="math">L = {a<sup>p</sup> | p is a prime number} ∪ {a}</span>.</p>
+<p><span class="math">L</span> is not context-free (removing one word from a non-CFL keeps it non-CFL — {a<sup>p</sup>} is not CFL), but since <span class="math">a ∈ L</span>, the star contains every power: <span class="math">L<sup>*</sup> = L(a<sup>*</sup>)</span> — regular, and in particular context-free.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → a<span class="nt">S</span>b | b<span class="nt">S</span>a | ε</div>
+</div>
+<p>In <span class="math">uv<sup>R</sup></span>, position <span class="math">i</span> of <span class="math">u</span> is matched against position <span class="math">i</span> of <span class="math">v</span> — which sits mirrored in <span class="math">v<sup>R</sup></span>. Each rule generates one such mirrored pair with <b>different</b> letters (<span class="math">a…b</span> or <span class="math">b…a</span>), exactly the condition <span class="math">u_i ≠ v_i</span> for all <span class="math">i</span>.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><b>Disproof.</b> Assume the statement were correct. Let <span class="math">L₁</span> be any CFL and take <span class="math">L₂ = Σ<sup>*</sup></span> (regular). Then:</p>
+<div class="lang-def">L₁ XOR Σ<sup>*</sup> = <span class="comp">L₁</span></div>
+<p>So the complement of every CFL would be a CFL — but CFLs are <b>not</b> closed under complement. Contradiction, hence the statement is incorrect.</p>
+</div>
+</section>
+<section data-ref="q4a">
+<div class="ltr-sol">
+<p><b>True.</b> ‏<span class="math">L(M) = Σ<sup>*</sup></span> means <span class="math">M</span> accepts — and in particular halts on — all inputs. A machine that halts on every input and accepts exactly <span class="math">Σ<sup>*</sup></span> is by definition a decider of <span class="math">Σ<sup>*</sup></span>.</p>
+</div>
+</section>
+<section data-ref="q4b">
+<div class="ltr-sol">
+<p><b>False.</b> Let <span class="math">M</span> be a TM which loops on all inputs. There certainly exists a word on which <span class="math">M</span> does not halt — yet <span class="math">L(M) = ∅</span>, which is decidable (and in particular regular). So the "only if" direction fails.</p>
+</div>
+</section>

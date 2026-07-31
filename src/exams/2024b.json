@@ -1,0 +1,140 @@
+{
+  "id": "2024b",
+  "year": 2024,
+  "moed": "ב",
+  "label": "2024 — מועד ב'",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "אביב 2024",
+    "duration": "3 שעות",
+    "staff": "ד\"ר רעות לוי",
+    "totalPoints": 100,
+    "note": "אם לא מצוין אחרת: תיאורים של מכונות טיורינג צריכים להיות ב-high-level, ומותר להסתמך ללא הוכחה על כל טענה שהוצגה בכיתה, בתרגול או בשיעורי הבית. רשימת הגדרות (דף נוסחאות) מצורפת למבחן."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (5, 15, 15 נקודות)",
+      "points": 35,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "1",
+          "kind": "open",
+          "rows": 5,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">Σ = {0,1}</span>.</p><p dir=\"auto\"><b>הגדר הצבה רגולרית</b> <span class=\"math\">f</span> ל-<span class=\"math\">Σ</span> כך שלכל <span class=\"math\">L ⊆ Σ<sup>*</sup></span> יתקיים ש-</p><div class=\"lang-def\">f(L) = {ε}&nbsp; if L ≠ ∅&nbsp;&nbsp;;&nbsp;&nbsp; f(L) = ∅&nbsp; otherwise</div>",
+          "tags": { "subj": "closure", "qt": "construction" }
+        },
+        {
+          "pid": "q1b",
+          "label": "2",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">בהינתן שפה <span class=\"math\">L</span> מעל <span class=\"math\">Σ = {0,1}</span>, תהי:</p><div class=\"lang-def\">Op₁(L) = {z<sup>R</sup>x | xyz ∈ L}&nbsp;,&nbsp; x, y, z ∈ Σ<sup>*</sup></div><p dir=\"auto\"><b>הוכיחו:</b> אם <span class=\"math\">L</span> שפה רגולרית אזי <span class=\"math\">Op₁(L)</span> היא שפה רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1c",
+          "label": "3",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">בהינתן שפה <span class=\"math\">L</span> מעל <span class=\"math\">Σ = {0,1}</span>, תהי:</p><div class=\"lang-def\">Op₂(L) = {xyzy<sup>R</sup> | xyz ∈ L}&nbsp;,&nbsp; x, y, z ∈ Σ<sup>*</sup></div><p dir=\"auto\"><b>הוכיחו:</b> אם <span class=\"math\">L</span> היא שפה רגולרית אזי <span class=\"math\">Op₂(L)</span> היא שפה <b>חסרת הקשר</b>.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">L = {⟨M, N⟩ | M and N are TMs, ∃x ∈ Σ<sup>*</sup> s.t. M accepts x&nbsp; <b>or</b>&nbsp; N accepts all inputs}</div>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ RE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ coRE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 18,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם <b>לכל</b> הסעיפים (1 עד 3).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (5 × 5 נקודות)",
+      "points": 25,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "1",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">Σ = {0,1}</span>. בהינתן מחרוזת <span class=\"math\">w ∈ Σ<sup>*</sup></span>, נגדיר ב-<span class=\"math\">w<sub>i</sub></span> את התו ה-<span class=\"math\">i</span> של <span class=\"math\">w</span>. תהי:</p><div class=\"lang-def\">L = {ww<sup>R</sup> | w ∈ Σ<sup>+</sup> and w₁ ≠ 1}</div><p dir=\"auto\"><b>הוכיחו:</b> ‏<span class=\"math\">L</span> שפה <b>חסרת הקשר</b>.</p>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q3b",
+          "label": "2",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {a<sup>i</sup>b<sup>j</sup>c<sup>k</sup> | i ≥ min{j,k}}</span>.</p><p dir=\"auto\"><b>הוכיחו:</b> ‏<span class=\"math\">L</span> <b>איננה</b> שפה רגולרית.</p>",
+          "tags": { "subj": "pump-reg", "qt": "pumping" }
+        },
+        {
+          "pid": "q3c",
+          "label": "3",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\"><b>בנו <span class=\"en\">PDA</span>‏, ע\"י ציור של דיאגרמת מצבים,</b> שמזהה את השפה הבאה:</p><div class=\"lang-def\">L = {x ∈ {0,1}<sup>*</sup> | #₀(x) = #₁(x)}</div>",
+          "tags": { "subj": "pda", "qt": "construction" }
+        },
+        {
+          "pid": "q3d",
+          "label": "4",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L ⊆ Σ<sup>*</sup></span> שפה כלשהי.</p><p dir=\"auto\"><b>הוכיחו או הפריכו:</b> אם <span class=\"math\">L ≤<sub>m</sub> <span class=\"comp\">L</span></span> אזי מתקיים ש-<span class=\"math\">L</span> שפה סופית או ש-<span class=\"math\">L ∉ R</span>.</p>",
+          "tags": { "subj": "reduction", "qt": "claim" }
+        },
+        {
+          "pid": "q3e",
+          "label": "5",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {⟨M⟩ | M is a TM and L(M) ≠ PAL<sub>TM</sub>}</span>.</p><p dir=\"auto\"><b>הוכיחו או הפריכו:</b> לפי משפט <span class=\"en\">Rice</span>‏ השפה <span class=\"math\">L</span> איננה כריעה.</p>",
+          "tags": { "subj": "rice", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

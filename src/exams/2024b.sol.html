@@ -1,0 +1,164 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p><span class="math">f(0) = {ε}</span>,&nbsp; <span class="math">f(1) = {ε}</span>.</p>
+<p>Every letter is replaced by the language <span class="math">{ε}</span>, so every word of <span class="math">L</span> is mapped to <span class="math">ε</span>: if <span class="math">L ≠ ∅</span> then <span class="math">f(L) = {ε}</span>, and if <span class="math">L = ∅</span> there is nothing to substitute, so <span class="math">f(L) = ∅</span>.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p>Since <span class="math">L</span> is a regular language there exists a DFA <span class="math">A = (Q_A, Σ, δ_A, q_s, F)</span> such that <span class="math">L(A) = L</span>.</p>
+<p>For every <span class="math">p, q ∈ Q_A</span>, define <span class="math">L<sup>A</sup><sub>p,q</sub> = {w | δ′_A(p,w) = q}</span> — a regular language (take <span class="math">p</span> as initial state and <span class="math">q</span> as the only accepting state).</p>
+<p>Note that <span class="math">L = ⋃<sub>p,q∈Q, f∈F</sub> L<sup>A</sup><sub>q_s,p</sub> · L<sup>A</sup><sub>p,q</sub> · L<sup>A</sup><sub>q,f</sub></span>.</p>
+<p>Since <span class="math">L<sup>A</sup><sub>q,f</sub></span> is regular, <span class="math">(L<sup>A</sup><sub>q,f</sub>)<sup>R</sup> = {w | w<sup>R</sup> ∈ L<sup>A</sup><sub>q,f</sub>}</span> is also regular (closure under reverse).</p>
+<p>Note that <span class="math">f(L<sup>A</sup><sub>p,q</sub>) = {ε}</span> if <span class="math">L<sup>A</sup><sub>p,q</sub> ≠ ∅</span> and <span class="math">∅</span> otherwise, where <span class="math">f</span> is the regular substitution from section 1.1; <span class="math">f(L<sup>A</sup><sub>p,q</sub>)</span> is regular (closure under regular substitution).</p>
+<p>Note that:</p>
+<div class="lang-def">Op₁(L) = ⋃<sub>p,q∈Q, f∈F</sub> (L<sup>A</sup><sub>q,f</sub>)<sup>R</sup> · L<sup>A</sup><sub>q_s,p</sub> · f(L<sup>A</sup><sub>p,q</sub>)</div>
+<p>which is a regular language (finite union of concatenations of regular languages).</p>
+<p>The concatenation with <span class="math">f(L<sup>A</sup><sub>p,q</sub>)</span> is needed to handle the case that <span class="math">A</span> has no path from <span class="math">p</span> to <span class="math">q</span> (concatenating with <span class="math">{ε}</span> keeps the language; concatenating with <span class="math">∅</span> empties it). For example, in the following DFA:</p>
+<div class="fsa"><svg viewBox="0 0 450 110" xmlns="http://www.w3.org/2000/svg">
+  <circle class="st" cx="55" cy="55" r="24"/><text class="slbl" x="55" y="55">q_s</text>
+  <circle class="st" cx="180" cy="55" r="24"/><text class="slbl" x="180" y="55">p</text>
+  <path class="tr" d="M79,55 L152,55" marker-end="url(#arr)"/>
+  <text class="lbl" x="115" y="45" text-anchor="middle">0,1</text>
+  <circle class="st" cx="285" cy="55" r="24"/><text class="slbl" x="285" y="55">q</text>
+  <circle class="st st-acc" cx="405" cy="55" r="20"/>
+  <circle class="st st-acc" cx="405" cy="55" r="25"/><text class="slbl" x="405" y="55">f</text>
+  <path class="tr" d="M309,55 L376,55" marker-end="url(#arr)"/>
+  <text class="lbl" x="342" y="45" text-anchor="middle">0,1</text>
+</svg><div class="fsa-cap">‏L(A) = ∅, ואין מסלול מ-p ל-q</div></div>
+<p><span class="math">L(A) = ∅</span> but <span class="math">⋃ (L<sup>A</sup><sub>q,f</sub>)<sup>R</sup> · L<sup>A</sup><sub>q_s,p</sub> = {00,01,10,11} ≠ Op₁(L(A))</span>, while with the extra factor <span class="math">⋃ (L<sup>A</sup><sub>q,f</sub>)<sup>R</sup> · L<sup>A</sup><sub>q_s,p</sub> · f(L<sup>A</sup><sub>p,q</sub>) = ∅ = Op₁(L(A))</span>.</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p><b>Solution 1 (PDA):</b></p>
+<p>Let DFA <span class="math">A = (Q_A, Σ, δ_A, q_{sA}, F_A)</span> such that <span class="math">L(A) = L</span>.</p>
+<p>Define PDA <span class="math">P = (Q_P, Σ_P, Γ_P, δ_P, q_{sP}, F_P)</span>:</p>
+<p><span class="math">Q_P = Q_A × {1,2,3} ⊎ {q_{sP}, q′, f_P}</span>, <span class="math">Σ_P = {0,1}</span>, <span class="math">Γ = {0,1,$}</span>, <span class="math">F_P = {f_P}</span>.</p>
+<ul>
+<li><span class="math">δ_P(q_{sP}, ε, ε) = {((q_{sA},1), $)}</span> — push a bottom marker.</li>
+<li>Phase 1 (<span class="math">×1</span>): simulate <span class="math">A</span> on <span class="math">x</span> without touching the stack: <span class="math">δ_P((p,1), σ, ε) = {((q,1), ε)}</span> for every <span class="math">δ_A(p,σ)=q</span>.</li>
+<li>Phase 2 (<span class="math">×2</span>): simulate <span class="math">A</span> on <span class="math">y</span> while <b>pushing</b> each letter: <span class="math">δ_P((p,2), σ, ε) = {((q,2), σ)}</span>.</li>
+<li>Phase 3 (<span class="math">×3</span>): simulate <span class="math">A</span> on <span class="math">z</span> without stack: <span class="math">δ_P((p,3), σ, ε) = {((q,3), ε)}</span>.</li>
+<li>Phase changes: <span class="math">∀q ∈ Q_A</span>: <span class="math">δ_P((q,1), ε, ε) = {((q,2), ε)}</span> and <span class="math">δ_P((q,2), ε, ε) = {((q,3), ε)}</span>.</li>
+<li><span class="math">∀f ∈ F_A × {3}</span>: <span class="math">δ_P(f, ε, ε) = {(q′, ε)}</span> — after <span class="math">xyz ∈ L</span> was verified, match the suffix: <span class="math">δ_P(q′, 0, 0) = {(q′, ε)}</span>, <span class="math">δ_P(q′, 1, 1) = {(q′, ε)}</span> (reading <span class="math">y<sup>R</sup></span> against the pushed <span class="math">y</span>), and <span class="math">δ_P(q′, ε, $) = {(f_P, ε)}</span>.</li>
+</ul>
+<p><b>Solution 2 (closures):</b></p>
+<p>Define a regular substitution <span class="math">f</span> over <span class="math">{0,1}</span>: <span class="math">f(0) = {0, 0′}</span>, <span class="math">f(1) = {1, 1′}</span>. <span class="math">f(L)</span> is regular.</p>
+<p>Let <span class="math">Σ′ = {0′, 1′}</span>, <span class="math">L′ = L(Σ<sup>*</sup> · Σ′<sup>*</sup> · Σ<sup>*</sup>)</span> (regex), and <span class="math">L″ = f(L) ∩ L′</span> — regular (intersection); the marked block is exactly the <span class="math">y</span> part.</p>
+<p>Let <span class="math">L‴ = L(Σ′<sup>*</sup>)</span> and <span class="math">L<sup>#</sup> = L″ · L‴</span> — regular (concatenation).</p>
+<p>Construct a CFG <span class="math">G = (V, Σ̂, S, R)</span> for <span class="math">{uvwv<sup>R</sup> | u, w ∈ Σ<sup>*</sup> and v ∈ Σ′<sup>*</sup>}</span>:</p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">A</span><span class="nt">B</span></div>
+<div class="rule"><span class="nt">A</span> → <span class="nt">C</span><span class="nt">A</span> | ε&nbsp;&nbsp;(= Σ<sup>*</sup>)</div>
+<div class="rule"><span class="nt">B</span> → 0′<span class="nt">B</span>0′ | 1′<span class="nt">B</span>1′ | <span class="nt">A</span></div>
+<div class="rule"><span class="nt">C</span> → 0 | 1</div>
+</div>
+<p><span class="math">V = {S,A,B,C}</span>, <span class="math">Σ̂ = {0,1,0′,1′}</span>.</p>
+<p>Define <span class="math">L<sup>##</sup> = L<sup>#</sup> ∩ L(G)</span> — context-free (intersection of a CFL with a regular language).</p>
+<p>Define a regular substitution <span class="math">g</span> over <span class="math">Σ̂</span>: <span class="math">g(0) = g(0′) = {0}</span>, <span class="math">g(1) = g(1′) = {1}</span> (erase the marks).</p>
+<p>Note that <span class="math">Op₂(L) = g(L<sup>##</sup>)</span> — context-free (closure of CFL under substitution).</p>
+<p><b>Example:</b> for <span class="math">L = {010, 110}</span>: <span class="math">f(L)</span> marks any subset of positions; <span class="math">L″</span> keeps only words where the marked positions are one contiguous block; <span class="math">L<sup>#</sup></span> appends a marked tail; <span class="math">L<sup>##</sup></span> forces the tail to be the reverse of the marked block; and <span class="math">g</span> erases the marks — leaving exactly <span class="math">Op₂(L) ⊇ {010, 0100, 0101, 01010, 01001, 010010, …}</span>.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מ-<span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ RE</span> — כי <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> ו-<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>.</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ coRE</span> — כי <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> ו-<span class="math">A<sub>TM</sub> ∉ coRE</span>.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>:</b> we show <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (<span class="math">A<sub>TM</sub> ∉ coRE</span>, therefore <span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_∅, N_{M,w}⟩</span> where:</p>
+<pre>N_∅: "On input x: Reject."
+
+N_{M,w}: "On input x: Run M on w and do as M does."</pre>
+<p><b>Correctness:</b> note that <span class="math">L(N_∅) = ∅</span>, that is <span class="math">∄x ∈ Σ<sup>*</sup></span> such that <span class="math">N_∅</span> accepts <span class="math">x</span>.</p>
+<ul>
+<li><span class="math">f</span> is a computable function: encoding the two fixed-form machines is a finite-time syntactic operation.</li>
+<li><span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span>: <span class="math">M</span> accepts <span class="math">w</span>, so <span class="math">N_{M,w}</span> accepts every <span class="math">x ∈ Σ<sup>*</sup></span> — the second condition holds, so <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ A<sub>TM</sub></span>: <span class="math">N_{M,w}</span> does not accept every <span class="math">x</span> (it never accepts), and no <span class="math">x</span> is accepted by <span class="math">N_∅</span> — neither condition holds, so <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+<p><b><span class="math">L ∉ RE</span>:</b> we show <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> (<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>, therefore <span class="math">L ∉ RE</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_∅, N_{M,w}⟩</span> where:</p>
+<pre>N_∅: "On input x: Reject."
+
+N_{M,w}: "On input x:
+1. Run M on w for |x| steps.
+2. If M didn't accept w during these steps, accept.
+3. Otherwise, reject."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨M,w⟩ ∈ <span class="comp">A<sub>TM</sub></span></span>: <span class="math">M</span> doesn't accept <span class="math">w</span>, so for every <span class="math">x</span>, <span class="math">M</span> doesn't accept <span class="math">w</span> within <span class="math">|x|</span> steps, and <span class="math">N_{M,w}</span> accepts <span class="math">x</span> in line 2. Hence <span class="math">N_{M,w}</span> accepts all inputs and <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span>: <span class="math">M</span> accepts <span class="math">w</span> within some finite <span class="math">k</span> steps. For <span class="math">|x| &lt; k</span>, <span class="math">N_{M,w}</span> accepts <span class="math">x</span>; for <span class="math">|x| ≥ k</span> it rejects. Therefore <span class="math">L(N_{M,w}) = ⋃<sub>n&lt;k</sub> Σ<sup>n</sup> ≠ Σ<sup>*</sup></span> — it does not accept all inputs. In addition <span class="math">∄x</span> accepted by <span class="math">N_∅</span>. So <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p>We construct a context-free grammar <span class="math">G = (V, Σ, S, R)</span> such that <span class="math">L(G) = L</span>:</p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → 0<span class="nt">A</span>0</div>
+<div class="rule"><span class="nt">A</span> → 0<span class="nt">A</span>0 | 1<span class="nt">A</span>1 | ε</div>
+</div>
+<p><span class="math">V = {S,A}</span>, <span class="math">Σ = {0,1}</span>.</p>
+<p>The first character is forced to be <span class="math">0</span> (i.e. <span class="math">w₁ ≠ 1</span>), and every letter is mirrored around the center — exactly the even palindromes <span class="math">ww<sup>R</sup></span> with <span class="math">w ∈ Σ<sup>+</sup></span> starting with <span class="math">0</span>.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p>Assume towards contradiction that <span class="math">L</span> is regular, and thus the pumping lemma for regular languages holds for <span class="math">L</span>. Let <span class="math">n</span> be the number promised by the lemma.</p>
+<p>We choose the string <span class="math">w = a<sup>n</sup>b<sup>n</sup>c<sup>n</sup></span> (here <span class="math">i = n ≥ min{n,n}</span>, so <span class="math">w ∈ L</span>, and <span class="math">|w| ≥ n</span>).</p>
+<p>By the lemma <span class="math">w = xyz</span> with conditions 1–3. Denote <span class="math">x = a<sup>s</sup></span>, <span class="math">y = a<sup>t</sup></span>, where <span class="math">s + t ≤ n</span> and <span class="math">t &gt; 0</span>.</p>
+<p>Consider <span class="math">w₀ = xy<sup>0</sup>z = a<sup>n−t</sup>b<sup>n</sup>c<sup>n</sup></span>.</p>
+<p>As <span class="math">t &gt; 0</span> we have <span class="math">n − t &lt; n = min{j,k}</span>, therefore <span class="math">w₀ ∉ L</span> — contradicting condition 3. Thus <span class="math">L</span> is not a regular language.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<div class="fsa"><svg viewBox="0 0 470 300" xmlns="http://www.w3.org/2000/svg">
+  <path class="tr" d="M10,150 L38,150" marker-end="url(#arr)"/>
+  <circle class="st" cx="65" cy="150" r="25"/><text class="slbl" x="65" y="150">q_s</text>
+  <circle class="st" cx="205" cy="150" r="25"/><text class="slbl" x="205" y="150">q₁</text>
+  <circle class="st" cx="385" cy="150" r="25"/><text class="slbl" x="385" y="150">q₂</text>
+  <circle class="st st-acc" cx="295" cy="255" r="20"/>
+  <circle class="st st-acc" cx="295" cy="255" r="25"/><text class="slbl" x="295" y="255">q₃</text>
+  <path class="tr" d="M90,150 L177,150" marker-end="url(#arr)"/>
+  <text class="lbl" x="133" y="140" text-anchor="middle">ε,ε→$</text>
+  <path class="tr" d="M193,127 C178,88 232,88 217,127" marker-end="url(#arr)"/>
+  <text class="lbl" x="205" y="80" text-anchor="middle">0,ε→x</text>
+  <text class="lbl" x="205" y="97" text-anchor="middle">1,x→ε</text>
+  <path class="tr" d="M373,127 C358,88 412,88 397,127" marker-end="url(#arr)"/>
+  <text class="lbl" x="385" y="80" text-anchor="middle">1,ε→x</text>
+  <text class="lbl" x="385" y="97" text-anchor="middle">0,x→ε</text>
+  <path class="tr" d="M230,143 C280,128 310,128 360,143" marker-end="url(#arr)"/>
+  <text class="lbl" x="295" y="125" text-anchor="middle">ε,$→$</text>
+  <path class="tr" d="M360,160 C310,178 280,178 230,160" marker-end="url(#arr)"/>
+  <text class="lbl" x="295" y="190" text-anchor="middle">ε,$→$</text>
+  <path class="tr" d="M222,170 C240,205 255,225 272,240" marker-end="url(#arr)"/>
+  <text class="lbl" x="222" y="225" text-anchor="middle">ε,$→ε</text>
+  <path class="tr" d="M368,170 C350,205 335,225 318,240" marker-end="url(#arr)"/>
+  <text class="lbl" x="368" y="225" text-anchor="middle">ε,$→ε</text>
+</svg><div class="fsa-cap">‏q₁ — עודף זמני של אפסים במחסנית; q₂ — עודף זמני של אחדות; קבלה רק כשהמחסנית חזרה ל-$ בלבד</div></div>
+<p>The stack keeps the current surplus: in <span class="math">q₁</span> each <span class="math">0</span> pushes <span class="math">x</span> and each <span class="math">1</span> pops; in <span class="math">q₂</span> the roles are reversed. The <span class="math">ε,$→$</span> moves switch sides only when the surplus is empty, and <span class="math">ε,$→ε</span> accepts exactly when <span class="math">#₀(x) = #₁(x)</span>.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><b>False.</b></p>
+<p><b>Option 1:</b> as we proved in exercise 10, there is always a mapping reduction from any decidable language to any non-trivial language. Hence any infinite, non-trivial, decidable language <span class="math">L</span> is a counter example.</p>
+<p><b>Option 2 (explicit counter example):</b> <span class="math">L = {w ∈ Σ<sup>*</sup> | |w| is even}</span> — an infinite decidable language (accept iff <span class="math">|x|</span> is even). Then <span class="math"><span class="comp">L</span> = {w | |w| is odd}</span>, and <span class="math">L ≤<sub>m</sub> <span class="comp">L</span></span> via <span class="math">f(w) = 1w</span> (appending a letter flips the parity: <span class="math">w ∈ L ⟺ 1w ∈ <span class="comp">L</span></span>).</p>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>False.</b> <span class="math">L ∈ R</span>.</p>
+<p>Since <span class="math">PAL<sub>TM</sub> ∉ RE</span> (we showed in the recitation <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> PAL<sub>TM</sub></span> and <span class="math">E<sub>TM</sub> ≤<sub>m</sub> PAL<sub>TM</sub></span>), it holds for <b>every</b> TM <span class="math">M</span> that <span class="math">L(M) ≠ PAL<sub>TM</sub></span> — because <span class="math">L(M) ∈ RE</span> by definition.</p>
+<p>Therefore <span class="math">L</span> can be rewritten as <span class="math">L = {⟨M⟩ | M is a TM}</span>, which is obviously in <span class="math">R</span>.</p>
+<p>(The claim "by Rice's theorem" fails: the property <span class="math">L(M) ≠ PAL<sub>TM</sub></span> is <b>trivial</b> over RE — it holds for all recognizable languages — so Rice's theorem does not apply.)</p>
+</div>
+</section>

@@ -1,0 +1,160 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p><b>Construction:</b></p>
+<ul>
+<li>For each transition <span class="math">δ_A(q, σ) = p</span> in the transition function of <span class="math">A</span> such that <span class="math">σ ∈ {b, c}</span>, we add the same transition <span class="math">δ_B(q, σ) = p</span> to <span class="math">B</span>.</li>
+<li>For each <span class="math">p ∈ Q</span>, we add the self-loop <span class="math">δ_B(p, a) = p</span>.</li>
+</ul>
+<p><b>Explanation:</b> if <span class="math">w ∈ L<sup>B</sup><sub>p,q</sub></span> then every <span class="math">a</span> in <span class="math">w</span> keeps <span class="math">B</span> in the same state (self-loop), so removing all the <span class="math">a</span>'s leaves exactly the same path — and since the <span class="math">b,c</span> transitions are unchanged, that path is also a path of <span class="math">A</span>: <span class="math">Drop_all_a(w) ∈ L<sup>A</sup><sub>p,q</sub></span>.</p>
+<p>Conversely, if <span class="math">Drop_all_a(w) = σ₁…σ_n ∈ L<sup>A</sup><sub>p,q</sub></span> then <span class="math">w ∈ L(a<sup>*</sup>σ₁a<sup>*</sup>σ₂…a<sup>*</sup>σ_na<sup>*</sup>)</span>, and in <span class="math">B</span> the same path exists where every state carries its own <span class="math">a</span>-loop, so <span class="math">w ∈ L<sup>B</sup><sub>p,q</sub></span>.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p><span class="math">L</span> is regular, so there exists a DFA <span class="math">A = (Q, Σ, δ_A, q_s, F)</span> with <span class="math">L(A) = L</span>. Let <span class="math">B</span> be the automaton from the previous section (built from <span class="math">A</span>).</p>
+<p>Note that <span class="math">w ∈ L′</span> iff <span class="math">∃p ∈ Q, ∃f ∈ F</span> such that <span class="math">w ∈ L<sup>A</sup><sub>q_s,p</sub></span> and <span class="math">Drop_all_a(w) ∈ L<sup>A</sup><sub>p,f</sub></span> (the run on <span class="math">w · Drop_all_a(w)</span> passes through some intermediate state <span class="math">p</span>).</p>
+<p>From the previous question, <span class="math">Drop_all_a(w) ∈ L<sup>A</sup><sub>p,f</sub></span> iff <span class="math">w ∈ L<sup>B</sup><sub>p,f</sub></span>.</p>
+<p>Therefore:</p>
+<div class="lang-def">L′ = ⋃<sub>p∈Q, f∈F</sub> (L<sup>A</sup><sub>q_s,p</sub> ∩ L<sup>B</sup><sub>p,f</sub>)</div>
+<p>Each <span class="math">L<sup>A</sup><sub>q_s,p</sub></span> and <span class="math">L<sup>B</sup><sub>p,f</sub></span> is regular (a DFA with adjusted initial/accepting states), the intersection of two regular languages is regular, and a finite union of regular languages is regular — so <span class="math">L′</span> is a regular language.</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p>We define <span class="math">Q_P = Q_A ⊎ {q_{sP}, s, f_P}</span>, <span class="math">Σ_P = {a, b, #}</span>, <span class="math">Γ_P = {b, $}</span>, <span class="math">F = {f_P}</span>.</p>
+<ul>
+<li><span class="math">δ_P(q_{sP}, ε, ε) = {(q_{sA}, $)}</span> — push a bottom marker and move to <span class="math">A</span>'s initial state.</li>
+<li>For each transition <span class="math">δ_A(p, b) = q</span>: add <span class="math">δ_P(p, b, ε) = {(q, b)}</span> — simulate <span class="math">A</span> and <b>push</b> every <span class="math">b</span>.</li>
+<li>For each transition <span class="math">δ_A(p, a) = q</span>: add <span class="math">δ_P(p, a, ε) = {(q, ε)}</span> — simulate <span class="math">A</span> without pushing (the <span class="math">a</span>'s are dropped).</li>
+<li>For each <span class="math">f_A ∈ F_A</span>: add <span class="math">δ_P(f_A, #, ε) = {(s, ε)}</span> — after reading <span class="math">w ∈ L′</span>, cross the <span class="math">#</span>.</li>
+<li>Add <span class="math">δ_P(s, b, b) = {(s, ε)}</span> and <span class="math">δ_P(s, ε, $) = {(f_P, ε)}</span> — match the suffix against the pushed <span class="math">b</span>'s and accept when the stack is empty.</li>
+</ul>
+<div class="note" dir="rtl"><b>שימו לב לדקות:</b> הבנייה הזו נכונה כי ב-<span class="math">Σ = {a,b}</span> המחרוזת <span class="math">Drop_all_a(w)</span> היא <span class="math">b<sup>#_b(w)</sup></span> — כל ה-b-ים באותו סדר; לכן מספיק מונה במחסנית, למרות שהמחסנית הפוכה.</div>
+</div>
+</section>
+<section data-ref="q1d">
+<div class="ltr-sol">
+<p><span class="math">L = {b<sup>n</sup>a<sup>n</sup> | n ∈ ℕ}</span> — we saw that this is a context-free language.</p>
+<p><span class="math">Oper(L) = {b<sup>n</sup>a<sup>n</sup>#b<sup>n</sup> | n ∈ ℕ}</span>. We prove with the pumping lemma for context-free languages that it is not context-free.</p>
+<p>Assume towards contradiction that <span class="math">Oper(L)</span> is context-free; let <span class="math">p</span> be the promised constant. Choose <span class="math">w = b<sup>p</sup>a<sup>p</sup>#b<sup>p</sup> ∈ Oper(L)</span>, <span class="math">|w| ≥ p</span>; so <span class="math">w = uvxyz</span> satisfying the three conditions.</p>
+<p><b>Case 1 — <span class="math">vy</span> homogeneous</b> (<span class="math">v = b<sup>s</sup>, y = b<sup>t</sup></span> or <span class="math">v = a<sup>s</sup>, y = a<sup>t</sup></span>, with <span class="math">0 &lt; s+t ≤ p</span>): pumping up gives</p>
+<div class="lang-def">w₂ = uv²xy²z ∈ {b<sup>p+s+t</sup>a<sup>p</sup>#b<sup>p</sup>,&nbsp; b<sup>p</sup>a<sup>p+s+t</sup>#b<sup>p</sup>,&nbsp; b<sup>p</sup>a<sup>p</sup>#b<sup>p+s+t</sup>}</div>
+<p>Since <span class="math">s+t &gt; 0</span>, one block count differs from <span class="math">p</span>, so <span class="math">w₂ ∉ Oper(L)</span>.</p>
+<p><b>Case 2 — <span class="math">vy</span> heterogeneous</b> (with <span class="math">|vxy| ≤ p</span>, so <span class="math">v, y</span> touch two adjacent blocks):</p>
+<ul>
+<li><span class="math">vy = b<sup>s</sup>a<sup>t</sup></span> with <span class="math">s, t ≠ 0</span>: <span class="math">w₂ = b<sup>p+s</sup>a<sup>p+t</sup>#b<sup>p</sup></span> — both first blocks differ from the third, <span class="math">w₂ ∉ Oper(L)</span>.</li>
+<li><span class="math">vy = a<sup>s</sup>b<sup>t</sup></span> with <span class="math">s, t ≠ 0</span>: <span class="math">w₂ = b<sup>p</sup>a<sup>p+s</sup>#b<sup>p+t</sup></span> — again <span class="math">w₂ ∉ Oper(L)</span>.</li>
+</ul>
+<p>Note: if <span class="math">v</span> or <span class="math">y</span> contained the <span class="math">#</span>, then <span class="math">w₂</span> would contain two <span class="math">#</span>'s and again <span class="math">w₂ ∉ Oper(L)</span>; therefore <span class="math">x</span> contains the <span class="math">#</span> in the heterogeneous case.</p>
+<p>All cases contradict condition 3 — so <span class="math">Oper(L)</span> is not context-free.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מ-<span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ RE</span> — כי <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> ו-<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>.</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">L ∈ coRE</span> — בונים מזהה ל-<span class="math"><span class="comp">L</span></span> (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∈ coRE</span>:</b> note that</p>
+<div class="lang-def"><span class="comp">L</span> = {⟨M,D⟩ | M is a TM, D is a DFA, L(D) = ∅ or ∃w ∈ L(M) s.t. w ∉ L(D)·L(D)}</div>
+<p>We construct a recognizer <span class="math">M_L</span> for <span class="math"><span class="comp">L</span></span>:</p>
+<pre>M_L: "On input ⟨M, D⟩:
+1. If L(D) = ∅, accept   (E_DFA ∈ R).
+2. For i from 0 to ∞:
+   2.1. For j from 0 to i:
+      2.1.1. For every x ∈ Σ^j (x = x_1…x_j) in lexicographical order:
+         2.1.1.1. Run M on x for i steps.
+         2.1.1.2. If M accepted:
+            2.1.1.2.1. For m from 0 to j:
+               2.1.1.2.1.1. Run D on u = x_1…x_m   (if m = 0, run on ε)
+               2.1.1.2.1.2. If D accepted:
+                  2.1.1.2.1.2.1. Run D on v = x_{m+1}…x_j   (if m = j, run on ε)
+                  2.1.1.2.1.2.2. If D accepted, move to the next x (line 2.1.1).
+            2.1.1.2.2. Accept."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">⟨M,D⟩ ∈ <span class="comp">L</span></span>: if <span class="math">L(D) = ∅</span> we accept in line 1. Otherwise there exists <span class="math">w ∈ L(M)</span> with <span class="math">w ∉ L(D)·L(D)</span>, i.e. for every split <span class="math">w = uv</span>, <span class="math">D</span> rejects <span class="math">u</span> or rejects <span class="math">v</span>. Take the <span class="math">w</span> accepted by <span class="math">M</span> in the fewest steps <span class="math">k</span> (ties by length + lexicographic order). Every earlier iteration fails at least one condition for every candidate; at iteration <span class="math">i = k</span> the machine sees <span class="math">M</span> accept <span class="math">w</span>, finds no split accepted twice by <span class="math">D</span>, and accepts in line 2.1.1.2.2.</li>
+<li><span class="math">⟨M,D⟩ ∉ <span class="comp">L</span></span>: ‏<span class="math">L(D) ≠ ∅</span> so line 1 does not accept, and for every <span class="math">w</span> either <span class="math">M</span> does not accept it or some split <span class="math">w = uv</span> has both halves in <span class="math">L(D)</span> — so the "Accept" line is never reached and <span class="math">M_L</span> runs forever.</li>
+</ul>
+<p><b><span class="math">L ∉ RE</span> and <span class="math">L ∉ R</span>:</b> we show <span class="math"><span class="comp">A<sub>TM</sub></span> ≤<sub>m</sub> L</span> (<span class="math"><span class="comp">A<sub>TM</sub></span> ∉ RE</span>, therefore <span class="math">L ∉ RE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_{M,w}, D⟩</span> where:</p>
+<pre>D: "On input x:
+1. If x = "0", accept.
+2. Otherwise, reject."
+
+N_{M,w}: "On input x: Run M on w and do as M does."</pre>
+<p><b>Correctness:</b> note that <span class="math">L(D) = {0}</span>, therefore <span class="math">L(D) ≠ ∅</span> and <span class="math">L(D)·L(D) = {00}</span>.</p>
+<ul>
+<li><span class="math">f</span> is a computable function (finite syntactic encoding).</li>
+<li><span class="math">⟨M,w⟩ ∈ <span class="comp">A<sub>TM</sub></span></span>: <span class="math">M</span> does not accept <span class="math">w</span>, so <span class="math">L(N_{M,w}) = ∅ ⊆ {00}</span> — therefore <span class="math">f(⟨M,w⟩) ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ <span class="comp">A<sub>TM</sub></span></span>: <span class="math">M</span> accepts <span class="math">w</span>, so <span class="math">L(N_{M,w}) = Σ<sup>*</sup> ⊈ {00}</span> — therefore <span class="math">f(⟨M,w⟩) ∉ L</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → ε | a<span class="nt">S</span>bb | aa<span class="nt">S</span>b | aaa<span class="nt">S</span> | <span class="nt">S</span>bbb</div>
+</div>
+<p>Every rule adds letters in multiples of 3 (1+2, 2+1, 3+0, 0+3) while keeping all <span class="math">a</span>'s before all <span class="math">b</span>'s, so exactly <span class="math">(i+j) mod 3 = 0</span> is generated.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p><b>True.</b></p>
+<p>Let <span class="math">A′</span> be the minimal automaton equivalent to <span class="math">A</span>. From the given data, <span class="math">A′</span> has <span class="math">n</span> states (each state is its own equivalence class).</p>
+<p>If there exists <span class="math">w ∈ L(A)</span> with <span class="math">|w| = n</span> then <span class="math">w ∈ L(A′)</span> (equivalent automata). The accepting run on <span class="math">w</span> is a path with <span class="math">|w| = n</span> edges, i.e. <span class="math">n+1</span> state-visits — by the pigeonhole principle some state of <span class="math">A′</span> is visited twice. That gives a loop on an accepting path, which can be pumped any number of times — so <span class="math">L(A′) = L(A)</span> is an infinite language.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<p><b>False.</b> Counter example: <span class="math">V = {S}</span>, <span class="math">Σ = {a}</span> and the single rule:</p>
+<div class="gram"><div class="rule"><span class="nt">S</span> → aa</div></div>
+<p><span class="math">w = aa ∈ L(G)</span>, <span class="math">|w| = 2 &gt; 1 = |V|</span>, and yet <span class="math">L(G) = {aa}</span> — a finite language.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p>Denote the language by <span class="math">L</span> and assume towards contradiction that <span class="math">L</span> is context-free.</p>
+<p>Define a regular substitution <span class="math">f</span> over <span class="math">{a}</span>: <span class="math">f(a) = {a, a′}</span>. Then <span class="math">f(L)</span> is context-free (closure under regular substitution).</p>
+<p>Define <span class="math">L′ = f(L) ∩ L(a<sup>*</sup>a′a<sup>*</sup>)</span> — context-free (intersection with a regular language). In <span class="math">L′</span>, exactly one letter is marked.</p>
+<p>Define a regular substitution <span class="math">g</span>: <span class="math">g(a) = {a}</span>, <span class="math">g(a′) = {ε}</span> — erasing the marked letter. <span class="math">g(L′)</span> is context-free (closure under regular substitution).</p>
+<p>But <span class="math">g(L′) = {a<sup>p</sup> | p is prime}</span>, which is known not to be context-free — a contradiction.</p>
+<p>Therefore <span class="math">L = {a<sup>p+1</sup> | p is prime}</span> is not a context-free language.</p>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>True.</b></p>
+<p>Since <span class="math">A</span> is finite, <span class="math">L = REG<sub>TM</sub> ∪ A ≠ Σ<sup>*</sup></span>, so there exists a word <span class="math">w_{out} ∉ L</span>.</p>
+<p>Since <span class="math">A</span> is finite, <span class="math">A′ = A ∖ REG<sub>TM</sub></span> is a finite language, therefore <span class="math">A′ ∈ R</span>.</p>
+<p>We construct a TM <span class="math">F</span> computing the mapping function from <span class="math">REG<sub>TM</sub></span> to <span class="math">L</span>:</p>
+<pre>F: "On input ⟨M⟩:
+1. If ⟨M⟩ ∈ A'   (A' ∈ R), return w_out.
+2. Otherwise, return ⟨M⟩."</pre>
+<p><b>Correctness:</b></p>
+<ul>
+<li><span class="math">f</span> is computable: it runs the (always-halting) decider of <span class="math">A′</span> and returns one of two values.</li>
+<li><span class="math">⟨M⟩ ∈ REG<sub>TM</sub></span>: then <span class="math">⟨M⟩ ∉ A′</span>, so <span class="math">f(⟨M⟩) = ⟨M⟩ ∈ REG<sub>TM</sub> ⊆ L</span>.</li>
+<li><span class="math">⟨M⟩ ∉ REG<sub>TM</sub></span>: if <span class="math">⟨M⟩ ∈ A′</span> then <span class="math">f(⟨M⟩) = w_{out} ∉ L</span>; otherwise <span class="math">f(⟨M⟩) = ⟨M⟩</span>, which is in neither <span class="math">REG<sub>TM</sub></span> nor <span class="math">A′</span> (nor <span class="math">A ∩ REG<sub>TM</sub></span>) — so <span class="math">f(⟨M⟩) ∉ L</span>.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3f">
+<div class="ltr-sol">
+<p><b>True.</b> Define the semantic property:</p>
+<div class="lang-def">C = {L | L ∈ RE and L ≠ Σ<sup>*</sup>}</div>
+<p>Then <span class="math">L = L_C = {⟨M⟩ | M is a TM and L(M) ∈ C}</span> — a machine has some non-accepted word iff its language is not <span class="math">Σ<sup>*</sup></span>.</p>
+<ul>
+<li><span class="math">C ⊆ RE</span>: by definition.</li>
+<li><span class="math">C ≠ RE</span> (not all of RE): <span class="math">Σ<sup>*</sup> ∈ RE</span> but <span class="math">Σ<sup>*</sup> ∉ C</span>.</li>
+<li><span class="math">C ≠ ∅</span>: <span class="math">A<sub>TM</sub> ∈ C</span>.</li>
+</ul>
+<p>The property is non-trivial, so by Rice's theorem <span class="math">L_C ∉ R</span> — the claim is true.</p>
+</div>
+</section>

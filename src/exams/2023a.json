@@ -1,0 +1,156 @@
+{
+  "id": "2023a",
+  "year": 2023,
+  "moed": "א",
+  "label": "2023 — מועד א'",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "אביב 2023",
+    "duration": "3 שעות",
+    "staff": "ד\"ר רעות לוי",
+    "totalPoints": 100,
+    "note": "אם לא מצוין אחרת: תיאורים של מכונות טיורינג צריכים להיות ב-high-level, ומותר להסתמך ללא הוכחה על כל טענה שהוצגה בכיתה, בתרגול או בשיעורי הבית. רשימת הגדרות (דף נוסחאות) מצורפת למבחן."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">עבור מחרוזת <span class=\"math\">w ∈ Σ<sup>*</sup></span> כך ש-<span class=\"math\">a ∈ Σ</span>, נגדיר <span class=\"math\">Drop_all_a(w)</span> להיות שווה למחרוזת <span class=\"math\">w</span> לאחר שהסרנו ממנה את כל המופעים של <span class=\"math\">\"a\"</span>.</p><p dir=\"auto\">לדוגמה: <span class=\"math\">Drop_all_a(aab) = b</span> ו-<span class=\"math\">Drop_all_a(aa) = ε</span>.</p><p dir=\"auto\">עבור שפה <span class=\"math\">L ⊆ Σ<sup>*</sup></span> כך ש-<span class=\"math\">a ∈ Σ</span>, נגדיר <span class=\"math\">Drop_all_a(L) = {Drop_all_a(w) | w ∈ L}</span>. לדוגמה: <span class=\"math\">Drop_all_a({aab, aa}) = {b, ε}</span>.</p><p dir=\"auto\">עבור <span class=\"en\">DFA</span>‏ <span class=\"math\">D = (Q_D, Σ_D, δ_D, q_{sD}, F_D)</span> ועבור <span class=\"math\">p, q ∈ Q_D</span>, נגדיר <span class=\"math\">L<sup>D</sup><sub>p,q</sub> = {w | δ′_D(p,w) = q}</span>.</p>",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "1",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\">בהינתן <span class=\"en\">DFA</span>‏ <span class=\"math\">A = (Q, Σ, δ_A, q_s, F)</span>, כך ש-<span class=\"math\">Σ = {a,b,c}</span>.</p><p dir=\"auto\"><b>בנו <span class=\"en\">DFA</span>‏</b> <span class=\"math\">B = (Q, Σ, δ_B, q_s, F)</span> כך ש-<span class=\"math\">∀w ∈ Σ<sup>*</sup></span> ולכל <span class=\"math\">p, q ∈ Q</span> מתקיים ש-<span class=\"math\">w ∈ L<sup>B</sup><sub>p,q</sub></span> אם ורק אם <span class=\"math\">Drop_all_a(w) ∈ L<sup>A</sup><sub>p,q</sub></span>.</p><p dir=\"auto\">כלומר, עליכם לשנות את <span class=\"math\">δ_A</span> ל-<span class=\"math\">δ_B</span>. שימו לב של-<span class=\"math\">A</span> ול-<span class=\"math\">B</span> יש את אותה ה-<span class=\"math\">Σ</span> ואת אותם מצבים (כולל המצב ההתחלתי והמצבים המקבלים).</p><p dir=\"auto\">הראו את הבנייה יחד עם הסבר. אתם לא צריכים להראות הוכחת נכונות.</p>",
+          "tags": { "subj": "automata", "qt": "construction" }
+        },
+        {
+          "pid": "q1b",
+          "label": "2",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L</span> שפה רגולרית מעל <span class=\"math\">Σ = {a,b,c}</span>. תהי:</p><div class=\"lang-def\">L′ = {w | w · Drop_all_a(w) ∈ L}</div><p dir=\"auto\"><b>הוכיחו</b> ש-<span class=\"math\">L′</span> היא שפה רגולרית.</p><p dir=\"auto\" class=\"small\"><b>רמז:</b> השתמשו בשאלה הקודמת (אתם רשאים להשתמש בשאלה הקודמת גם אם לא פתרתם אותה).</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q1c",
+          "label": "3",
+          "kind": "open",
+          "rows": 10,
+          "prompt": "<p dir=\"auto\">עבור שפה <span class=\"math\">L ⊆ Σ<sup>*</sup></span> כך ש-<span class=\"math\">a ∈ Σ</span>, נגדיר:</p><div class=\"lang-def\">Oper(L) = {w#Drop_all_a(w) | w ∈ L}</div><p dir=\"auto\">תהי <span class=\"math\">L′ ⊆ {a,b}<sup>*</sup></span> שפה רגולרית ויהי <span class=\"math\">A = (Q_A, Σ_A, δ_A, q_{sA}, F_A)</span> ‏<span class=\"en\">DFA</span>‏ כך ש-<span class=\"math\">L(A) = L′</span>.</p><p dir=\"auto\"><b>הראו</b> ש-<span class=\"math\">Oper(L′)</span> היא שפה חסרת הקשר ע\"י <b>בנייה של <span class=\"en\">PDA</span>‏</b> <span class=\"math\">P = (Q_P, Σ_P, Γ_P, δ_P, q_{sP}, F)</span>, שמתבסס על <span class=\"math\">A</span>, כך ש-<span class=\"math\">L(P) = Oper(L′)</span>.</p><p dir=\"auto\">כלומר, הגדירו כל אחד מהרכיבים של השישייה של <span class=\"math\">P</span> בהתבסס על החמישייה של <span class=\"math\">A</span>.</p>",
+          "tags": { "subj": "pda", "qt": "construction" }
+        },
+        {
+          "pid": "q1d",
+          "label": "4",
+          "kind": "open",
+          "rows": 12,
+          "prompt": "<p dir=\"auto\"><b>הראו שפה</b> <span class=\"math\">L ⊆ {a,b}<sup>*</sup></span> שהיא שפה חסרת הקשר, עבורה <span class=\"math\">Oper(L)</span> <b>איננה</b> שפה חסרת הקשר.</p><p dir=\"auto\">הוכיחו את תשובתכם בעזרת שימוש ב<b>למת הניפוח לשפות חסרות הקשר</b>.</p>",
+          "tags": { "subj": "pump-cfl", "qt": "pumping" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (30 נקודות)",
+      "points": 30,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">L = {⟨M, D⟩ | M is a TM, D is a DFA, L(D) ≠ ∅ and L(M) ⊆ L(D) ∘ L(D)}</div>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ RE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">L ∈ coRE</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 18,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם <b>לכל</b> הסעיפים (1 עד 3).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (5 × 6 נקודות)",
+      "points": 30,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "1",
+          "kind": "open",
+          "rows": 5,
+          "prompt": "<p dir=\"auto\"><b>בנו דקדוק חסר הקשר</b> לשפה הבאה:</p><div class=\"lang-def\">L = {a<sup>i</sup>b<sup>j</sup> | (i+j) mod 3 = 0}</div>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q3b",
+          "label": "2",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">A</span> ‏<span class=\"en\">DFA</span>‏ עם <span class=\"math\">n</span> מחלקות שקילות על המצבים של <span class=\"math\">A</span>.</p><p dir=\"auto\"><b>הוכח או הפרך:</b> אם קיימת מילה <span class=\"math\">w ∈ L(A)</span> כך ש-<span class=\"math\">|w| = n</span> אזי <span class=\"math\">L(A)</span> היא שפה אינסופית.</p>",
+          "tags": { "subj": "minimize", "qt": "claim" }
+        },
+        {
+          "pid": "q3c",
+          "label": "3",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L</span> שפה חסרת הקשר ויהי <span class=\"math\">G = (V, Σ, S, R)</span> דקדוק חסר הקשר כך ש-<span class=\"math\">L(G) = L</span>.</p><p dir=\"auto\"><b>הוכח או הפרך:</b> אם <span class=\"math\">w ∈ L</span> ו-<span class=\"math\">|w| &gt; |V|</span> אזי <span class=\"math\">L</span> שפה אינסופית.</p>",
+          "tags": { "subj": "cfg", "qt": "claim" }
+        },
+        {
+          "pid": "q3d",
+          "label": "4",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\"><b>הוכח:</b> ‏<span class=\"math\">{a<sup>p+1</sup> | p is prime}</span> היא לא שפה חסרת הקשר.</p><p dir=\"auto\">אתם רשאים להשתמש בעובדה ש-<span class=\"math\">{a<sup>p</sup> | p is prime}</span> איננה שפה חסרת הקשר.</p>",
+          "tags": { "subj": "closure", "qt": "proof" }
+        },
+        {
+          "pid": "q3e",
+          "label": "5",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">A</span> שפה סופית כלשהי ותהי <span class=\"math\">L = REG<sub>TM</sub> ∪ A</span>.</p><p dir=\"auto\"><b>הוכח או הפרך:</b> מתקיים ש-<span class=\"math\">REG<sub>TM</sub> ≤<sub>m</sub> L</span>, כלומר, קיימת רדוקציית מיפוי מ-<span class=\"math\">REG<sub>TM</sub></span> ל-<span class=\"math\">L</span>.</p>",
+          "tags": { "subj": "reduction", "qt": "claim" }
+        },
+        {
+          "pid": "q3f",
+          "label": "6",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">תהי <span class=\"math\">L = {⟨M⟩ | M is a TM and ∃w ∈ Σ<sup>*</sup> s.t. M does not accept w}</span>.</p><p dir=\"auto\"><b>הוכח או הפרך:</b> לפי משפט <span class=\"en\">Rice</span>‏ השפה <span class=\"math\">L</span> איננה כריעה.</p>",
+          "tags": { "subj": "rice", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

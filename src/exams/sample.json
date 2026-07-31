@@ -1,0 +1,164 @@
+{
+  "id": "sample",
+  "year": 2023,
+  "moed": "ס",
+  "label": "מבחן לדוגמה רשמי (2023)",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "2023",
+    "duration": "3 שעות",
+    "staff": "ד\"ר רעות לוי — Sample Exam, Term A",
+    "totalPoints": 100,
+    "note": "המבחן לדוגמה הרשמי של הקורס (תורגם מאנגלית; ההגדרות הפורמליות נשמרו כלשונן). פתרונות המרצה כוללים הערות פדגוגיות."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (40 נקודות)",
+      "points": 40,
+      "intro": "<p dir=\"auto\">עבור שפה <span class=\"math\">L</span> מעל <span class=\"math\">Σ</span>, נגדיר:</p><div class=\"lang-def\">dropEven(L) ≝ {σ₁σ₂…σ<sub>n</sub> | ∃μ₁,…,μ<sub>n</sub> s.t. σ₁μ₁σ₂μ₂…σ<sub>n</sub>μ<sub>n</sub> ∈ L}</div><p dir=\"auto\">כלומר — האותיות שבמקומות האי-זוגיים של מילה מהשפה (מילה מקורית באורך זוגי).</p>",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "א",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> קיימת שפה <span class=\"math\">L</span> שהיא חסרת הקשר ולא רגולרית, כך ש-<span class=\"math\">dropEven(L)</span> היא שפה רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        },
+        {
+          "pid": "q1b",
+          "label": "ב",
+          "kind": "open",
+          "rows": 5,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> אם <span class=\"math\">dropEven(L) = L</span> אזי <span class=\"math\">L</span> איננה חסרת הקשר.</p>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        },
+        {
+          "pid": "q1c",
+          "label": "ג",
+          "kind": "open",
+          "rows": 9,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו, ע\"י בנייה,</b> שלכל שפה רגולרית <span class=\"math\">L</span>, גם <span class=\"math\">dropEven(L)</span> רגולרית. ליתר דיוק: בהינתן <span class=\"en\">DFA</span>‏ שמזהה את <span class=\"math\">L</span>, הראו איך להמיר אותו ל-<span class=\"en\">NFA</span>‏ שמזהה את <span class=\"math\">dropEven(L)</span>.</p>",
+          "tags": { "subj": "automata", "qt": "construction" }
+        },
+        {
+          "pid": "q1d",
+          "label": "ד",
+          "kind": "open",
+          "rows": 12,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו, בעזרת למת הניפוח,</b> שהשפה הבאה איננה חסרת הקשר:</p><div class=\"lang-def\">L = {ww<sup>R</sup> | w ∈ {0,1}<sup>*</sup> and #₀(w) = #₁(w)}</div>",
+          "tags": { "subj": "pump-cfl", "qt": "pumping" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (30 נקודות)",
+      "points": 30,
+      "intro": "<p dir=\"auto\">תהי,</p><div class=\"lang-def\">A = {⟨M⟩ | M is a TM and ∀w ∈ PAL, M doesn't reject w·w}</div><p dir=\"auto\">(‏<span class=\"math\">PAL</span> — שפת הפלינדרומים.)</p>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "1",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">A ∈ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2b",
+          "label": "2",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">A ∈ RE ∖ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2c",
+          "label": "3",
+          "kind": "mc",
+          "rows": 2,
+          "choices": ["כן", "לא"],
+          "prompt": "<p dir=\"auto\">האם <span class=\"math\">A ∈ coRE ∖ R</span>?</p>",
+          "tags": { "subj": "r-re-core", "qt": "r-re-core" }
+        },
+        {
+          "pid": "q2d",
+          "label": "הוכחה",
+          "kind": "open",
+          "rows": 16,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם (הוכחה מלאה).</p>",
+          "tags": { "subj": "r-re-core", "qt": "proof" }
+        }
+      ]
+    },
+    {
+      "n": "3",
+      "heading": "שאלה 3 (20 נקודות)",
+      "points": 20,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q3a",
+          "label": "א",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\"><b>הראו דוגמה נגדית</b> לטענה הבאה: תהיינה <span class=\"math\">L₁, L₂</span> שתי שפות לא רגולריות. אם <span class=\"math\">L₁ ⊆ L ⊆ L₂</span> אזי <span class=\"math\">L</span> בהכרח לא רגולרית.</p>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        },
+        {
+          "pid": "q3b",
+          "label": "ב",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> אם <span class=\"math\">L</span> איננה חסרת הקשר אזי <span class=\"math\">L<sup>*</sup></span> איננה חסרת הקשר.</p>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        },
+        {
+          "pid": "q3c",
+          "label": "ג",
+          "kind": "open",
+          "rows": 5,
+          "prompt": "<p dir=\"auto\"><b>ספקו דקדוק חסר הקשר</b> לשפה:</p><div class=\"lang-def\">L = {uv<sup>R</sup> | |u| = |v| and ∀i: u<sub>i</sub> ≠ v<sub>i</sub>}&nbsp;&nbsp;(Σ = {a,b})</div>",
+          "tags": { "subj": "cfg", "qt": "construction" }
+        },
+        {
+          "pid": "q3d",
+          "label": "ד",
+          "kind": "open",
+          "rows": 7,
+          "prompt": "<p dir=\"auto\"><b>הפריכו</b> את הטענה הבאה: אם <span class=\"math\">L₁</span> חסרת הקשר ו-<span class=\"math\">L₂</span> רגולרית, אז <span class=\"math\">L₁ XOR L₂</span> חסרת הקשר.</p><div class=\"lang-def\">L₁ XOR L₂ = {w | (w ∈ L₁ or w ∈ L₂) and w ∉ L₁ ∩ L₂}</div>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        }
+      ]
+    },
+    {
+      "n": "4",
+      "heading": "שאלה 4 (10 נקודות)",
+      "points": 10,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q4a",
+          "label": "א",
+          "kind": "open",
+          "rows": 4,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> תהי <span class=\"math\">M</span> מכונת טיורינג. אם <span class=\"math\">L(M) = Σ<sup>*</sup></span> אזי <span class=\"math\">M</span> בהכרח <b>מכריעה</b> את השפה <span class=\"math\">Σ<sup>*</sup></span>.</p>",
+          "tags": { "subj": "tm", "qt": "claim" }
+        },
+        {
+          "pid": "q4b",
+          "label": "ב",
+          "kind": "open",
+          "rows": 5,
+          "prompt": "<p dir=\"auto\"><b>הוכיחו או הפריכו:</b> תהי <span class=\"math\">M</span> מכונת טיורינג. ‏<span class=\"math\">L(M)</span> איננה כריעה אם ורק אם קיימת מילה <span class=\"math\">w</span> כך ש-<span class=\"math\">M</span> לא עוצרת על <span class=\"math\">w</span>.</p>",
+          "tags": { "subj": "tm", "qt": "claim" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+<section data-ref="q1a">
+<div class="ltr-sol">
+<p>Define a regular substitution <span class="math">f</span> over <span class="math">{0,1}</span>: <span class="math">f(0) = {0, 0̂}</span> and <span class="math">f(1) = {1, 1̂}</span>.</p>
+<p><span class="math">f(L)</span> is a regular language (closure under regular substitution).</p>
+<p>Let <span class="math">Σ̂ = {0̂, 1̂}</span>.</p>
+<p>Define <span class="math">L′ = L(Σ<sup>*</sup> · Σ̂<sup>*</sup> · Σ<sup>*</sup>)</span>, a regular language (regex).</p>
+<p>Define <span class="math">L″ = f(L) ∩ L′</span>, a regular language (closure under intersection).</p>
+<p>Note that <span class="math">L₁ = L″</span>.</p>
+</div>
+</section>
+<section data-ref="q1b">
+<div class="ltr-sol">
+<p>For every <span class="math">p, q ∈ Q_A</span>, define <span class="math">L<sup>A</sup><sub>p,q</sub> = {w | δ′_A(p, w) = q}</span>. We note that <span class="math">L<sup>A</sup><sub>p,q</sub></span> is a regular language: we define <span class="math">p</span> as an initial state and <span class="math">q</span> as an accepting state and we get a DFA whose language is <span class="math">L<sup>A</sup><sub>p,q</sub></span>.</p>
+<p>Note that <span class="math">L = ⋃<sub>p,q∈Q, f∈F</sub> L<sup>A</sup><sub>q_s,p</sub> · L<sup>A</sup><sub>p,q</sub> · L<sup>A</sup><sub>q,f</sub></span>.</p>
+<p>For every <span class="math">p, q ∈ Q</span> define <span class="math">L̂<sup>A</sup><sub>p,q</sub> = L<sup>A</sup><sub>p,q</sub> ∩ L</span>, a regular language (intersection of two regular languages).</p>
+<p>Note that for every <span class="math">p, q ∈ Q</span> it holds that <span class="math">L<sup>A</sup><sub>p,q</sub> ∖ {ε}</span> is also regular (set difference of two regular languages).</p>
+<p>Note that <span class="math">L₂ = ⋃<sub>p,q∈Q, f∈F</sub> (L<sup>A</sup><sub>q_s,p</sub> ∖ {ε}) · L̂<sup>A</sup><sub>p,q</sub> · (L<sup>A</sup><sub>q,f</sub> ∖ {ε})</span>, which is also a regular language (finite union of concatenation of regular languages).</p>
+</div>
+</section>
+<section data-ref="q1c">
+<div class="ltr-sol">
+<p><b>Solution 1:</b></p>
+<p>Define <span class="math">L′ = {xŷz | |x| = |y|}</span> and note that <span class="math">L₃ = L′ ∩ L₁</span>. Since <span class="math">L₁</span> is regular (section 1.1), if we prove that <span class="math">L′</span> is a context-free language then we prove that <span class="math">L₃</span> is also a context-free language (intersection between a regular language and a context-free language).</p>
+<p>Define a context-free grammar <span class="math">G = (V, Σ, S, R)</span> for <span class="math">L′</span>:</p>
+<p><span class="math">V = {S, A, B, C, D}</span>, <span class="math">Σ = {0, 1, 0̂, 1̂}</span></p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">A</span><span class="nt">B</span></div>
+<div class="rule"><span class="nt">A</span> → <span class="nt">C</span><span class="nt">A</span><span class="nt">D</span> | ε</div>
+<div class="rule"><span class="nt">B</span> → <span class="nt">C</span><span class="nt">B</span> | ε</div>
+<div class="rule"><span class="nt">C</span> → 0 | 1</div>
+<div class="rule"><span class="nt">D</span> → 0̂ | 1̂</div>
+</div>
+<p>Therefore <span class="math">L′</span> is a context-free language and <span class="math">L₃ = L′ ∩ L₁</span> is also a context-free language.</p>
+<p><b>Solution 2:</b></p>
+<p>Let DFA <span class="math">A = (Q_A, Σ, δ_A, q_{sA}, F_A)</span> such that <span class="math">L(A) = L</span> (<span class="math">L</span> is a regular language).</p>
+<p>Define PDA <span class="math">P = (Q_P, Σ_P, Γ_P, δ_P, q_{sP}, F_P)</span> as follows:</p>
+<p><span class="math">Q_P = Q_A × {1,2,3} ⊎ {q_{sP}, f_P}</span>, <span class="math">Σ_P = {0,1,0̂,1̂}</span>, <span class="math">Γ = {x, $}</span> and <span class="math">F_P = {f_P}</span>.</p>
+<ul>
+<li>We add the transition <span class="math">δ_P(q_{sP}, ε, ε) = {((q_{sA},1), $)}</span> to the transition function of <span class="math">P</span>.</li>
+<li><span class="math">∀f ∈ F_A × {3}</span> we add the transition <span class="math">δ_P(f, ε, $) = {(f_P, ε)}</span>.</li>
+<li><span class="math">∀q ∈ Q_A</span> we add the transitions <span class="math">δ_P((q,1), ε, ε) = {((q,2), ε)}</span> and <span class="math">δ_P((q,2), ε, ε) = {((q,3), ε)}</span>.</li>
+<li>For each transition <span class="math">δ_A(p, σ) = q</span> of <span class="math">A</span> (with <span class="math">p,q ∈ Q_A</span>, <span class="math">σ ∈ Σ</span>) we add the transitions <span class="math">δ_P((p,1), σ, ε) = {((q,1), x)}</span>, <span class="math">δ_P((p,2), σ̂, x) = {((q,2), ε)}</span> and <span class="math">δ_P((p,3), σ, ε) = {((q,3), ε)}</span>.</li>
+</ul>
+<p>Phase 1 reads <span class="math">x</span> and pushes a counter symbol per letter; phase 2 reads <span class="math">ŷ</span> and pops one symbol per letter (so <span class="math">|x| = |y|</span>); phase 3 reads <span class="math">z</span>. All three phases simulate <span class="math">A</span> on the underlying word <span class="math">xyz</span>, and acceptance requires ending in <span class="math">F_A</span> with an empty stack marker.</p>
+</div>
+</section>
+<section data-ref="q2a">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ R</span> — נובע מכך ש-<span class="math">L ∉ coRE</span> (ראו ההוכחה המלאה בסעיף ההוכחה).</p>
+</section>
+<section data-ref="q2b">
+<p dir="auto"><span class="verdict v-true">כן</span> ‏<span class="math">L ∈ RE</span> — בונים מזהה בשיטת ה-dovetailing (ראו ההוכחה המלאה).</p>
+</section>
+<section data-ref="q2c">
+<p dir="auto"><span class="verdict v-false">לא</span> ‏<span class="math">L ∉ coRE</span> — כי <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> ו-<span class="math">A<sub>TM</sub> ∉ coRE</span>.</p>
+</section>
+<section data-ref="q2d">
+<div class="ltr-sol">
+<p><b><span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>:</b> we show <span class="math">A<sub>TM</sub> ≤<sub>m</sub> L</span> (<span class="math">A<sub>TM</sub> ∉ coRE</span>, therefore <span class="math">L ∉ coRE</span> and <span class="math">L ∉ R</span>):</p>
+<p><span class="math">f(⟨M, w⟩) = ⟨N_{M,w}, D⟩</span> where:</p>
+<pre>D: "On input x:
+1. If x = "00", accept.
+2. Otherwise, reject."
+
+N_{M,w}: "On input x:
+1. Run M on w.
+2. If M accepts, reject.
+3. Otherwise, loop."</pre>
+<p><b>Correctness:</b> note that <span class="math">L(D) = {00}</span>.</p>
+<ul>
+<li><span class="math">f</span> is a computable function: to compute <span class="math">f</span> all that needs to be done is to encode the description (string) of the TM <span class="math">N_{M,w}</span> and the DFA <span class="math">D</span>. The strings are of finite length and the encoding process takes finite time, and eventually the TM halts with the output <span class="math">⟨N_{M,w}, D⟩</span>.</li>
+<li><span class="math">⟨M,w⟩ ∈ A<sub>TM</sub></span>: <span class="math">M</span> accepts <span class="math">w</span>, therefore <span class="math">N_{M,w}</span> rejects (and halts) on every <span class="math">x, y ∈ Σ<sup>*</sup></span>; in particular <span class="math">N_{M,w}</span> halts on <span class="math">x = 0</span> and rejects <span class="math">y = 0</span>, and <span class="math">xy = 00 ∈ L(D)</span>. Therefore <span class="math">f(⟨M,w⟩) = ⟨N_{M,w}, D⟩ ∈ L</span>.</li>
+<li><span class="math">⟨M,w⟩ ∉ A<sub>TM</sub></span>: <span class="math">M</span> does not accept <span class="math">w</span>, therefore <span class="math">N_{M,w}</span> does not halt on any <span class="math">x ∈ Σ<sup>*</sup></span>. Therefore <span class="math">∄x ∈ Σ<sup>*</sup></span> such that <span class="math">N_{M,w}</span> halts on <span class="math">x</span>, and <span class="math">f(⟨M,w⟩) = ⟨N_{M,w}, D⟩ ∉ L</span>.</li>
+</ul>
+<p><b><span class="math">L ∈ RE</span>:</b> we construct a recognizer <span class="math">M_L</span> for <span class="math">L</span>.</p>
+<pre>M_L: "On input ⟨M, D⟩:
+1. For i from 0 to ∞:
+   1.1. For j from 0 to i:
+      1.1.1. For every x ∈ Σ^j in lexicographical order:
+         1.1.1.1. Run M on x for i steps.
+         1.1.1.2. If M accepted or rejected (halted) x:
+            1.1.1.2.1. For h from 0 to i:
+               1.1.1.2.1.1. For every y ∈ Σ^h in lexicographical order:
+                  1.1.1.2.1.1.1. Run M on y for i steps.
+                  1.1.1.2.1.1.2. If M rejected y:
+                     1.1.1.2.1.1.2.1. Run D on xy.
+                     1.1.1.2.1.1.2.2. If D accepted xy, accept."</pre>
+<ul>
+<li><span class="math">⟨M,D⟩ ∈ L</span>: there exist words <span class="math">x, y ∈ Σ<sup>*</sup></span> such that <span class="math">M</span> halts on <span class="math">x</span> and rejects <span class="math">y</span>, and <span class="math">D</span> accepts <span class="math">xy</span>. Among all such pairs consider the one minimizing <span class="math">k = max{k_x, k_y}</span>, where <span class="math">k_x, k_y</span> are the number of steps in which <span class="math">M</span> halts on <span class="math">x</span> and rejects <span class="math">y</span> respectively (ties broken by length and lexicographic order of <span class="math">x</span>, then of <span class="math">y</span>). For every iteration <span class="math">i &lt; k</span>, every candidate pair fails at least one of the three conditions, so nothing is accepted early; at iteration <span class="math">i = k</span> the machine runs <span class="math">M</span> on <span class="math">x</span> and on <span class="math">y</span> for <span class="math">k</span> steps, sees the halt and the rejection, runs <span class="math">D</span> on <span class="math">xy</span> and accepts. Therefore after a finite number of steps <span class="math">M_L</span> accepts <span class="math">⟨M,D⟩</span>.</li>
+<li><span class="math">⟨M,D⟩ ∉ L</span>: for every pair <span class="math">x, y ∈ Σ<sup>*</sup></span> one of the following holds — <span class="math">M</span> does not halt on <span class="math">x</span>, <span class="math">M</span> does not reject <span class="math">y</span>, or <span class="math">D</span> does not accept <span class="math">xy</span>. Therefore <span class="math">M_L</span> never reaches an accepting iteration.</li>
+</ul>
+</div>
+</section>
+<section data-ref="q3a">
+<div class="ltr-sol">
+<p>Assume towards contradiction that <span class="math">L</span> is regular, and thus the pumping lemma for regular languages holds for <span class="math">L</span>. Let <span class="math">n</span> be the number promised by the lemma.</p>
+<p>We choose the word <span class="math">w = a<sup>2n</sup>ba<sup>n</sup>b</span>. We have <span class="math">w ∈ L</span> and <span class="math">|w| ≥ n</span>, so by the lemma <span class="math">w = xyz</span> such that conditions 1, 2, 3 hold.</p>
+<p>Denote <span class="math">x = a<sup>s</sup></span>, <span class="math">y = a<sup>t</sup></span>, where <span class="math">s + t ≤ n</span> and <span class="math">t &gt; 0</span> (conditions 1 and 2 — <span class="math">xy</span> lies inside the first block of <span class="math">a</span>'s).</p>
+<p>Consider <span class="math">w₀ = xy<sup>0</sup>z = a<sup>2n−t</sup>ba<sup>n</sup>b</span>.</p>
+<p>As <span class="math">t &gt; 0</span> we have <span class="math">2n − t &lt; 2n</span>, therefore <span class="math">w₀ ∉ L</span> — in contradiction to condition 3 of the lemma. Thus <span class="math">L</span> is nonregular.</p>
+</div>
+</section>
+<section data-ref="q3b">
+<div class="ltr-sol">
+<p><span class="math">G = (V, Σ, S, R)</span> with <span class="math">V = {S, A, B, C, D}</span>, <span class="math">Σ = {a, b, c}</span>:</p>
+<div class="gram">
+<div class="rule"><span class="nt">S</span> → <span class="nt">A</span><span class="nt">C</span> | <span class="nt">D</span></div>
+<div class="rule"><span class="nt">A</span> → a<span class="nt">A</span>b | a<span class="nt">A</span> | ε</div>
+<div class="rule"><span class="nt">B</span> → b<span class="nt">B</span> | ε</div>
+<div class="rule"><span class="nt">C</span> → c<span class="nt">C</span> | ε</div>
+<div class="rule"><span class="nt">D</span> → a<span class="nt">D</span>c | a<span class="nt">D</span> | <span class="nt">B</span></div>
+</div>
+<p>The branch <span class="math">S → AC</span> generates words with <span class="math">i ≥ j</span> (every <span class="math">b</span> is matched by an <span class="math">a</span>), and the branch <span class="math">S → D</span> generates words with <span class="math">i ≥ k</span> (every <span class="math">c</span> is matched by an <span class="math">a</span>, with the free <span class="math">b</span>-block in the middle) — together exactly <span class="math">i ≥ min{j,k}</span>.</p>
+</div>
+</section>
+<section data-ref="q3c">
+<div class="ltr-sol">
+<p>Let <span class="math">w = abc ∈ L</span>. It has two different parse trees (equivalently, two different leftmost derivations), one through each branch of <span class="math">S</span>:</p>
+<div class="cols2">
+<div class="deriv"><ul><li><span class="nt">S</span><ul>
+  <li><span class="nt">A</span><ul><li>a</li><li><span class="nt">A</span><ul><li>ε</li></ul></li><li>b</li></ul></li>
+  <li><span class="nt">C</span><ul><li>c</li><li><span class="nt">C</span><ul><li>ε</li></ul></li></ul></li>
+</ul></li></ul></div>
+<div class="deriv"><ul><li><span class="nt">S</span><ul>
+  <li><span class="nt">D</span><ul><li>a</li><li><span class="nt">D</span><ul><li><span class="nt">B</span><ul><li>b</li><li><span class="nt">B</span><ul><li>ε</li></ul></li></ul></li></ul></li><li>c</li></ul></li>
+</ul></li></ul></div>
+</div>
+<p><span class="math">S ⇒ AC ⇒ aAbC ⇒ abC ⇒ abcC ⇒ abc</span> &nbsp;versus&nbsp; <span class="math">S ⇒ D ⇒ aDc ⇒ aBc ⇒ abBc ⇒ abc</span>.</p>
+<p>Two distinct parse trees for the same word — the grammar is ambiguous.</p>
+</div>
+</section>
+<section data-ref="q3d">
+<div class="ltr-sol">
+<p><b>False.</b> Counter example:</p>
+<p>Let <span class="math">M_{loop}</span> be the following machine — <span class="math">M_{loop}</span>: “On input <span class="math">x</span>: loop.”</p>
+<p>Then <span class="math">A = {⟨M, w⟩ | M is a TM, ⟨M⟩ = ⟨M_{loop}⟩ and w ∈ Σ<sup>*</sup>}</span> is an infinite language, <span class="math">A ⊆ <span class="comp">HALT<sub>TM</sub></span></span> (the machine <span class="math">M_{loop}</span> halts on no input), and <span class="math">A ∈ R</span> — a decider only needs to check that the input is of the form <span class="math">⟨M, w⟩</span> and that <span class="math">⟨M⟩ = ⟨M_{loop}⟩</span>, a syntactic check.</p>
+</div>
+</section>
+<section data-ref="q3e">
+<div class="ltr-sol">
+<p><b>False.</b> <span class="math">L ∈ R</span>.</p>
+<p>Note that <span class="math">∀L′ ∈ RE</span> it holds that <span class="math">L′ ≤<sub>m</sub> <span class="comp">E<sub>TM</sub></span></span>: take <span class="math">f(w) = ⟨N⟩</span> where:</p>
+<pre>N: "On input x:
+Run M_{L'} (the recognizer of L') on w, and answer as M_{L'} does."</pre>
+<p><span class="math">f</span> is a computable function: to compute <span class="math">f</span> all that needs to be done is to encode the description (string) of the TM <span class="math">N</span> — a finite string produced in finite time.</p>
+<p><span class="math">w ∈ L′</span> iff <span class="math">M_{L′}</span> accepts <span class="math">w</span> iff <span class="math">L(N) = Σ<sup>*</sup></span> iff <span class="math">⟨N⟩ ∈ <span class="comp">E<sub>TM</sub></span></span> (and when <span class="math">w ∉ L′</span>, <span class="math">N</span> accepts nothing and <span class="math">L(N) = ∅</span>).</p>
+<p>Now, since for every TM <span class="math">M</span> the language <span class="math">L(M)</span> is in <span class="math">RE</span>, it holds that <span class="math">L(M) ≤<sub>m</sub> <span class="comp">E<sub>TM</sub></span></span> for <b>every</b> TM <span class="math">M</span>.</p>
+<p>Therefore <span class="math">L = {⟨M⟩ | M is a TM and L(M) ≤<sub>m</sub> <span class="comp">E<sub>TM</sub></span>} = {⟨M⟩ | M is a TM}</span>, which we know is in <span class="math">R</span> (a syntactic check of a valid TM encoding). In particular <span class="math">L ∉ RE ∖ R</span>.</p>
+</div>
+</section>

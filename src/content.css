@@ -138,6 +138,10 @@
 :is(.summary-body,.qbody) .pump-steps>li[data-who]::after{content:attr(data-who);position:absolute;inset-inline-end:10px;top:8px;
   font-size:.74rem;font-weight:800;color:var(--c-muted)}
 
+/* --- English official-solution blocks inside Hebrew exams --- */
+.qbody .ltr-sol{direction:ltr;text-align:left;unicode-bidi:isolate}
+.qbody .ltr-sol ul,.qbody .ltr-sol ol{padding-right:0;padding-left:24px}
+
 /* --- defs page --- */
 :is(.summary-body,.qbody) .major-langs{padding-right:6px;list-style:none}
 :is(.summary-body,.qbody) .major-langs li{padding:3px 0;border-bottom:1px dashed var(--c-line)}
