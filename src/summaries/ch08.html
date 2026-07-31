@@ -1,0 +1,232 @@
+<h1>‏PDA ⇄ CFG ולמת הניפוח לח"ה</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 8 (הרצאה 8 + תרגול 8)</p>
+
+<section>
+  <h2 id="ch8-t0">PDA מפושט</h2>
+
+  <div class="def"><span class="term">PDA מפושט (Simplified)</span> — ‏PDA שמקיים שלושה תנאים:
+    <ul>
+      <li>מצב מקבל <b>יחיד</b> <span class="math">q<sub>f</sub></span>.</li>
+      <li>לפני קבלה המחסנית חייבת להיות <b>ריקה</b>.</li>
+      <li>כל מעבר או מוציא סמל (pop) או מכניס סמל (push) — <b>לא שניהם ולא אף אחד</b>.</li>
+    </ul>
+  </div>
+
+  <p>למה הצורה הזו? היא הופכת כל ריצה לרצף מאוזן של push-ים ו-pop-ים — כמו סוגריים מאוזנים —
+    וזה בדיוק המבנה שהבנייה של הכיוון הקשה (PDA → CFG) יודעת לתרגם לדקדוק.</p>
+
+  <div class="note">כל PDA ניתן להמרה למפושט שקול: מוסיפים סמל תחתית ומרוקנים לפני קבלה, מאחדים
+    מקבלים עם מעברי ε, ומפצלים מעבר שגם קורא-וגם-דוחף לשני צעדים דרך מצב ביניים.
+    במבחן מותר להניח את זה — ההמרה טכנית.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t1">השפות L_{p,q} — הרעיון</h2>
+
+  <div class="def">בהינתן PDA מפושט <span class="math">P</span>, לכל זוג מצבים
+    <span class="math">p, q</span> מגדירים:
+    <div class="lang-def">L<sub>p,q</sub> = {w | ריצה על w מ-p עם מחסנית ריקה מסתיימת ב-q עם מחסנית ריקה}</div>
+    ומתקיים <span class="math">L(P) = L<sub>q_s,q_f</sub></span> (זו בדיוק הגדרת הקבלה של מפושט).</div>
+
+  <p>זהו המקביל המחסניתי של <span class="math">L<sup>A</sup><sub>p,q</sub></span> מהעולם הרגולרי —
+    אבל עם דרישת "ריק אל ריק", שהיא המפתח: ריצה כזו היא <b>יחידה מאוזנת</b> שאפשר לפרק רקורסיבית.</p>
+
+  <div class="ex-box">
+    <h4>שני אופני הפירוק של ריצה מאוזנת</h4>
+    <ul>
+      <li><b>המחסנית מתרוקנת באמצע</b> — במצב ביניים <span class="math">r</span>: הריצה היא
+        שרשור של שתי ריצות מאוזנות: ‏<span class="math">L<sub>p,r</sub> · L<sub>r,q</sub></span>.</li>
+      <li><b>המחסנית לא מתרוקנת באמצע</b> — אז הסמל שנדחף בצעד הראשון יורד רק בצעד האחרון:
+        הריצה היא push, ריצה מאוזנת פנימית, pop — עטיפה.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch8-t2">CFG ← PDA — המשתנים A_{p,q} והכללים</h2>
+
+  <div class="algo">
+    <h4>הבנייה מדף הנוסחאות</h4>
+    <p>משתנה <span class="math">A<sub>p,q</sub></span> לכל זוג מצבים ("ייצור כל מילות
+      <span class="math">L<sub>p,q</sub></span>"), התחלה <span class="math">S = A<sub>q_s,q_f</sub></span>, וכללים:</p>
+    <ul>
+      <li><b>(a) פיצול:</b> לכל <span class="math">p,q,r</span>: ‏
+        <span class="math">A<sub>p,q</sub> → A<sub>p,r</sub>A<sub>r,q</sub></span> — התרוקנות באמצע.</li>
+      <li><b>(b) בסיס:</b> לכל <span class="math">p</span>: ‏<span class="math">A<sub>p,p</sub> → ε</span> —
+        ריצה ריקה.</li>
+      <li><b>(c) עטיפה:</b> לכל <span class="math">p,q,r,s</span>, ‏<span class="math">γ ∈ Γ</span>,
+        ‏<span class="math">σ′,σ″ ∈ Σ<sub>ε</sub></span> כך ש-<span class="math">(r, γ) ∈ δ(p, σ′, ε)</span>
+        (‏push) ו-<span class="math">(q, ε) ∈ δ(s, σ″, γ)</span> (‏pop):
+        ‏<span class="math">A<sub>p,q</sub> → σ′A<sub>r,s</sub>σ″</span> —
+        האות הראשונה דוחפת את γ, האחרונה מוציאה אותו, ובאמצע ריצה מאוזנת.</li>
+    </ul>
+  </div>
+
+  <div class="note">הבנייה נראית מפחידה אבל היא בדיוק שני אופני הפירוק מהנושא הקודם, ככללי דקדוק.
+    במבחן צריך לדעת <b>לצטט ולהסביר</b> אותה (היא בדף הנוסחאות) — לא לבצע אותה על אוטומט גדול:
+    מספר המשתנים <span class="math">|Q|²</span> מתפוצץ מהר.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t3">משפט השקילות ומסקנותיו</h2>
+
+  <div class="thm">שפה היא חסרת הקשר <b>אם ורק אם</b> קיים PDA שמזהה אותה.
+    (‏CFG → PDA: פרק 7; ‏PDA → CFG: הבנייה שלמעלה.)</div>
+
+  <p>מה זה קונה לנו בפועל:</p>
+  <ul>
+    <li><b>חופש בחירה בשאלות:</b> "הוכיחו ח"ה" = או דקדוק או PDA — מה שנוח.
+      ‏2024א ש1.3 פורסם עם שני הפתרונות זה-לצד-זה.</li>
+    <li><b>חיתוך ח"ה עם רגולרית:</b> מריצים PDA ו-DFA במקביל (מכפלת מצבים, המחסנית של ה-PDA בלבד) —
+      התוצאה PDA. הסגירות שכל שאלה שנייה משתמשת בה!</li>
+    <li><b>סגירויות דרך הצד הנוח:</b> איחוד/שרשור/כוכב — קלים בדקדוק; חיתוך-עם-רגולרית —
+      קל ב-PDA. המשפט מרשה לקפוץ בין הייצוגים באמצע הוכחה.</li>
+  </ul>
+
+  <div class="warn">שימו לב לאסימטריה: מכפלת PDA×DFA עובדת כי יש <b>מחסנית אחת</b>.
+    מכפלת PDA×PDA הייתה דורשת שתי מחסניות — וזה כבר כוח של מכונת טיורינג. לכן חיתוך שתי ח"ה
+    נופל (ראו t7).</div>
+</section>
+
+<section>
+  <h2 id="ch8-t4">למת הניפוח לח"ה — הנוסח</h2>
+
+  <div class="thm">
+    אם <span class="math">L</span> חסרת הקשר, אז קיים <span class="math">p ∈ ℕ</span> כך שלכל
+    <span class="math">w ∈ L</span> עם <span class="math">|w| ≥ p</span> קיימת חלוקה
+    <b>לחמישה</b> חלקים <span class="math">w = uvxyz</span> המקיימת:
+    <ol>
+      <li><span class="math">|vy| &gt; 0</span> — שני החלקים הנשאבים לא שניהם ריקים.</li>
+      <li><span class="math">|vxy| ≤ p</span> — החלון הנשאב קצר.</li>
+      <li>לכל <span class="math">i ≥ 0</span>: ‏<span class="math">uv<sup>i</sup>xy<sup>i</sup>z ∈ L</span> —
+        ‏<span class="math">v</span> ו-<span class="math">y</span> נשאבים <b>יחד, באותו מספר עותקים</b>.</li>
+    </ol>
+  </div>
+
+  <p>ההבדלים מהגרסה הרגולרית: שואבים <b>שני</b> חלקים מתואמים (משני צידי <span class="math">x</span>),
+    והחלון <span class="math">|vxy| ≤ p</span> יכול לשבת <b>בכל מקום</b> במילה — לא בהכרח בהתחלה!
+    והערת האורך: ‏<span class="math">|uv<sup>i</sup>xy<sup>i</sup>z| = |w| + (i−1)(|v|+|y|)</span>.</p>
+</section>
+
+<section>
+  <h2 id="ch8-t5">מאיפה הלמה — משתנה חוזר בעץ גבוה</h2>
+
+  <div class="proof">
+    ניקח דקדוק (נוח: CNF) לשפה. מילה ארוכה מספיק ⇒ עץ הגזירה גבוה ⇒ קיים <b>מסלול שורש-עלה</b>
+    שעליו משתנה <span class="math">A</span> מופיע פעמיים. נסמן את שני המופעים: החיצוני גוזר
+    <span class="math">vxy</span>, הפנימי גוזר <span class="math">x</span>. עכשיו אפשר:
+    <b>לשכפל</b> — להדביק את תת-העץ החיצוני במקום הפנימי (מקבלים <span class="math">uv²xy²z</span>),
+    או <b>לקצץ</b> — להדביק את הפנימי במקום החיצוני (מקבלים <span class="math">uxz</span>).
+    התיאום בין <span class="math">v</span> ל-<span class="math">y</span> נובע מכך ששניהם באים
+    מאותו עותק של <span class="math">A</span>. <span class="qed">∎</span>
+  </div>
+
+  <p>מכאן גם התנאים: ‏<span class="math">|vy| &gt; 0</span> — בוחרים מופעים שתורמים משהו
+    (ב-CNF תמיד אפשר); ‏<span class="math">|vxy| ≤ p</span> — בוחרים את החזרה הנמוכה בעץ,
+    בתחתית שבה תת-העץ קטן.</p>
+
+  <div class="note">האנלוגיה: ברגולרית — מצב חוזר בריצה; בח"ה — משתנה חוזר במסלול בעץ.
+    אותו שובך יונים, מבנה עשיר יותר.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t6">מבנה הוכחת ניפוח לח"ה — המקרים</h2>
+
+  <p>המשחק זהה לפרק 5 (אנחנו: מילה ו-<span class="math">i</span>; היריב: החלוקה) — אבל מיצוי
+    החלוקות מפורט יותר, כי <span class="math">v</span> ו-<span class="math">y</span> יכולים לשבת
+    בכל מקום. התבנית הרשמית (כך כתובים הפתרונות של 2023א ש1.4 ומבחן-לדוגמה ש1ד):</p>
+
+  <div class="algo">
+    <h4>פירוק סטנדרטי למקרים</h4>
+    <ol>
+      <li><b>‏vy הומוגני</b> — שניהם מאות אחת (אולי מבלוקים שונים): השאיבה משנה בלוק אחד/שניים
+        ומפרה את האיזון מול בלוק שלישי שלא נגעו בו.</li>
+      <li><b>‏vy הטרוגני</b> — ‏<span class="math">v</span> או <span class="math">y</span> חוצה גבול
+        בלוקים, או ששניהם מבלוקים שונים: בזכות <span class="math">|vxy| ≤ p</span> מדובר בשני
+        בלוקים <b>סמוכים</b> לכל היותר — והשאיבה מקלקלת סדר או איזון מול הבלוקים הרחוקים.</li>
+      <li><b>סימנים מיוחדים (#):</b> אם <span class="math">v</span> או <span class="math">y</span>
+        מכילים את הסימן — שכפול נותן שני סימנים ⇒ מחוץ לשפה מיד (ההערה הרשמית ב-2023א ש1.4).</li>
+    </ol>
+  </div>
+
+  <div class="warn">הטעות הגדולה בגרסת הח"ה: לשכוח ש-<span class="math">v</span> חוצה-גבול הוא מקרה
+    לגיטימי (למשל <span class="math">v = ab</span>) — שכפולו מייצר סדר מקולקל
+    (‏<span class="math">abab</span>) שלפעמים כבר מפיל את המילה מחוץ לצורה. לכסות, לא להתעלם.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t7">הוכחה מלאה: {aⁿbⁿcⁿ}</h2>
+
+  <div class="ex-box">
+    <h4>העד הקלאסי ל-R ∖ CFL</h4>
+    <p>נניח בשלילה ש-<span class="math">L = {a<sup>n</sup>b<sup>n</sup>c<sup>n</sup>}</span> ח"ה,
+      ויהי <span class="math">p</span> קבוע הניפוח. נבחר
+      <span class="math">w = a<sup>p</sup>b<sup>p</sup>c<sup>p</sup> ∈ L</span>,
+      ‏<span class="math">|w| ≥ p</span>. תהי <span class="math">w = uvxyz</span> חלוקה חוקית.</p>
+    <p><b>מקרה 1 — ‏vy הומוגני:</b> השאיבה (למשל <span class="math">i=2</span>) מגדילה בלוק אחד
+      או שניים, אבל בזכות <span class="math">|vxy| ≤ p</span> אי אפשר לגעת בכל שלושת הבלוקים —
+      נשאר בלוק שלא גדל ⇒ האיזון המשולש נשבר ⇒ ‏<span class="math">uv²xy²z ∉ L</span>.</p>
+    <p><b>מקרה 2 — ‏v או y הטרוגני:</b> שכפול מייצר ערבוב סדר (כמו <span class="math">…ab…ab…</span>)
+      — המילה כבר לא מהצורה <span class="math">a<sup>*</sup>b<sup>*</sup>c<sup>*</sup></span> ⇒ מחוץ לשפה.</p>
+    <p>בכל המקרים סתירה לתנאי 3 — ‏<span class="math">L</span> איננה חסרת הקשר. <span class="qed">∎</span></p>
+  </div>
+
+  <div class="note">אותו שלד בדיוק שירת את 2023א ש1.4 (‏<span class="math">b<sup>n</sup>a<sup>n</sup>#b<sup>n</sup></span>)
+    ואת מבחן-לדוגמה ש1ד (‏<span class="math">0<sup>p</sup>1<sup>p</sup>1<sup>p</sup>0<sup>p</sup></span>).
+    שלושת בלוקי-התלות ± סימן # — תבנית שחוזרת כמעט מילה במילה.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t8">סגירויות בשירות אי־ח"ה</h2>
+
+  <p>כמו בפרק 5 — כשלא נדרש ניפוח מפורש, הדרך העקיפה מהירה. הכלים הסגורים בח"ה:
+    איחוד, שרשור, כוכב, היפוך, <b>הצבה רגולרית</b>, <b>חיתוך עם רגולרית</b>.</p>
+
+  <div class="ex-box">
+    <h4>התבנית סמן-חתוך-מחק (2023א ש3.4, 2023ב ש3.3)</h4>
+    <p>להוכיח ש-<span class="math">{a<sup>2n²</sup>}</span> לא ח"ה בעזרת
+      <span class="math">{a<sup>n²</sup>}</span>:</p>
+    <ol>
+      <li><b>סמן:</b> הצבה <span class="math">f(a) = {a, a′}</span> — ‏<span class="math">f(L)</span> ח"ה.</li>
+      <li><b>חתוך:</b> ‏<span class="math">∩ L((aa′)<sup>*</sup>)</span> — כופה סירוג מדויק;
+        עדיין ח"ה (חיתוך עם רגולרית). נשארו בדיוק חצי מהאותיות מסומנות.</li>
+      <li><b>מחק:</b> הצבה <span class="math">g(a)={a}, g(a′)={ε}</span> — מוחקת את המסומנות;
+        מתקבלת <span class="math">{a<sup>n²</sup>}</span> הידועה כלא-ח"ה ⇒ סתירה.</li>
+    </ol>
+  </div>
+
+  <div class="warn">אסור בדרך העקיפה: משלים, חיתוך שתי ח"ה, הפרש — אלה לא סגורים בח"ה!
+    שרשרת שמשתמשת באחד מהם — פסולה. בדקו כל צעד מול טבלת הסגירויות.</div>
+</section>
+
+<section>
+  <h2 id="ch8-t9">מפת ההכרעה: רגולרית / ח"ה / אף אחת</h2>
+
+  <p>הצ'ק-ליסט למאגר השפות (ולשאלה 3 של המבחן) — שואלים לפי הסדר:</p>
+
+  <ol class="pump-steps">
+    <li data-who="שלב 1"><b>האם יש מלכודת קריסה?</b> משתנה חופשי שבולע הכול
+      (‏<span class="math">u ∈ Σ<sup>*</sup></span>, ‏<span class="math">w=ε</span> מותר), זהות אלגברית
+      (‏<span class="math">(ab)<sup>k</sup>a=a(ba)<sup>k</sup></span>), חסם שסוגר לסופיות, תנאי ריק —
+      אם כן: כנראה <b>רגולרית</b>.</li>
+    <li data-who="שלב 2"><b>כמה השוואות לא-חסומות נדרשות, ובאיזה סדר?</b> השוואה אחת
+      (או כמה שמסתדרות בסדר מחסנית — קינון/היפוך): <b>ח"ה</b>. ‏<span class="math">v<sup>R</sup></span>
+      במקום <span class="math">v</span> = ידידותי למחסנית!</li>
+    <li data-who="שלב 3"><b>התאמה באותו סדר / שתי השוואות / מכפלות?</b> ‏<span class="math">{ww}</span>-דמויות,
+      ‏<span class="math">u#u</span>, ‏<span class="math">min/max</span> משני צדדים,
+      ‏<span class="math">j = i·k</span> — <b>אף אחת</b> (לא ח"ה).</li>
+  </ol>
+
+  <table>
+    <tr><th>אות מזהה</th><th>נטייה</th></tr>
+    <tr><td>היפוך (<span class="math">v<sup>R</sup></span>) מול המקור</td><td>ח"ה (מחסנית אוהבת היפוך)</td></tr>
+    <tr><td>העתק ישר (<span class="math">ww</span>, ‏<span class="math">u#u</span>)</td><td>אף אחת</td></tr>
+    <tr><td>אי-שוויון יחיד / "או"</td><td>ח"ה (איחוד מקרים)</td></tr>
+    <tr><td>"וגם" של שתי השוואות</td><td>אף אחת</td></tr>
+    <tr><td>הכול-בולע / חסום / סופי</td><td>רגולרית</td></tr>
+  </table>
+
+  <div class="note"><b>לב הפרק:</b> ‏PDA ⟺ CFG דרך <span class="math">A<sub>p,q</sub></span>;
+    הלמה החדשה שואבת זוג מתואם בחלון נודד; מבנה המקרים הומוגני/הטרוגני הוא הפורמט הרשמי;
+    ומפת ההכרעה בת שלושת השלבים היא הדרך המהירה דרך 101 שפות המאגר.</div>
+</section>

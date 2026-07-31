@@ -1,0 +1,247 @@
+<h1>דקדוקים חסרי הקשר</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 6 (הרצאה 6 + תרגול 6)</p>
+
+<section>
+  <h2 id="ch6-t0">CFG — ההגדרה הפורמלית</h2>
+
+  <div class="def">
+    <span class="term">דקדוק חסר הקשר (CFG)</span> — רביעייה <span class="math">G = (V, Σ, S, R)</span>:
+    <ul>
+      <li><span class="math">V</span> — קבוצה סופית של <b>משתנים</b> (Variables, אותיות גדולות).</li>
+      <li><span class="math">Σ</span> — <b>טרמינלים</b> (אותיות השפה), <span class="math">V ∩ Σ = ∅</span>.</li>
+      <li><span class="math">S ∈ V</span> — משתנה ההתחלה.</li>
+      <li><span class="math">R</span> — קבוצה סופית של <b>כללי גזירה</b> מהצורה <span class="math">A → α</span>,
+        כאשר <span class="math">A ∈ V</span> ו-<span class="math">α ∈ (V ∪ Σ)<sup>*</sup></span>.</li>
+    </ul>
+  </div>
+
+  <p>"חסר הקשר" = בצד שמאל של כלל עומד משתנה <b>יחיד</b>: מותר להחליף אותו בלי להסתכל על שכניו.
+    כמה כללים לאותו משתנה מקצרים עם קו: <span class="math">A → α | β</span>.</p>
+
+  <div class="ex-box">
+    <h4>הדקדוק הראשון שכולם פוגשים</h4>
+    <div class="gram"><div class="rule"><span class="nt">S</span> → a<span class="nt">S</span>b | ε</div></div>
+    <p>יוצר בדיוק את <span class="math">{a<sup>n</sup>b<sup>n</sup> | n ≥ 0}</span> — כל הפעלת הכלל
+      הראשון עוטפת בזוג מתואם אחד. השפה שלא הצליחה להיות רגולרית — נכנעת לשני כללים.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch6-t1">גזירה ושפת הדקדוק</h2>
+
+  <div class="def">
+    <span class="term">צעד גזירה</span> — <span class="math">uAv ⇒ uαv</span> אם
+    <span class="math">A → α ∈ R</span> (מחליפים מופע אחד של משתנה).
+    <span class="term">גזירה</span> — סדרת צעדים; <span class="math">α ⇒<sup>*</sup> β</span> = אפס או יותר צעדים.<br>
+    <span class="term">שפת הדקדוק</span> — <span class="math">L(G) = {w ∈ Σ<sup>*</sup> | S ⇒<sup>*</sup> w}</span>:
+    כל מילות הטרמינלים שנגזרות מ-<span class="math">S</span>.
+  </div>
+
+  <div class="ex-box">
+    <h4>גזירה לדוגמה</h4>
+    <div class="config-line">S ⇒ aSb ⇒ aaSbb ⇒ aabb</div>
+    <p>שני שימושים בכלל העוטף ואחד ב-<span class="math">S → ε</span>. שימו לב:
+      <b>צורות ביניים</b> (עם משתנים) אינן בשפה — רק מילות טרמינלים טהורות.</p>
+  </div>
+
+  <div class="def"><span class="term">שפה חסרת הקשר (CFL)</span> — שפה שנוצרת ע"י CFG כלשהו.
+    בפרק 8 נראה: זו בדיוק המחלקה שמזוהה ע"י אוטומטי מחסנית.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t2">עצי גזירה וגזירה שמאלית</h2>
+
+  <p><b>עץ גזירה</b> מציג את המבנה בלי סדר הצעדים: השורש <span class="math">S</span>, כל צומת-משתנה
+    מסתעף לפי הכלל שהופעל עליו, והעלים (משמאל לימין) הם המילה.</p>
+
+  <div class="deriv"><ul><li><span class="nt">S</span><ul>
+    <li>a</li>
+    <li><span class="nt">S</span><ul><li>a</li><li><span class="nt">S</span><ul><li>ε</li></ul></li><li>b</li></ul></li>
+    <li>b</li>
+  </ul></li></ul></div>
+
+  <div class="def"><span class="term">גזירה שמאלית</span> — בכל צעד מחליפים את המשתנה השמאלי ביותר.
+    לכל עץ גזירה מתאימה בדיוק גזירה שמאלית אחת — ולכן "שני עצים שונים" ⟺ "שתי גזירות שמאליות שונות".</div>
+
+  <div class="note">גזירות שונות באותו עץ (סדר החלפות שונה) — לא מעניינות; מה שמבחין מבנית הוא
+    ה<b>עץ</b>. זו בדיוק ההבחנה שנדרשת בהגדרת העמימות.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t3">עמימות (Ambiguity)</h2>
+
+  <div class="def"><span class="term">דקדוק עמום</span> — קיימת מילה <span class="math">w ∈ L(G)</span>
+    עם <b>שני עצי גזירה שונים</b> (שקול: שתי גזירות שמאליות שונות).</div>
+
+  <div class="algo">
+    <h4>איך מוכיחים עמימות במבחן (2024א ש3.3, 2023ב ש3.2)</h4>
+    <ol>
+      <li>בוחרים מילה קצרה שנגזרת בשתי "דרכים רעיוניות" (שני ענפים של S, או שתי דרכי קיבוץ).</li>
+      <li><b>מציירים את שני העצים</b> (או כותבים את שתי הגזירות השמאליות) במלואם.</li>
+      <li>מציינים במשפט שהעצים שונים — די בכך.</li>
+    </ol>
+  </div>
+
+  <div class="ex-box">
+    <h4>שתי הדוגמאות מהמבחנים</h4>
+    <p>‏<b>‏2023ב:</b> ‏<span class="math">S → aS | Sb | a | b | ε</span> עם <span class="math">w = ab</span>:
+      פעם דרך <span class="math">S ⇒ aS ⇒ ab</span> ופעם דרך <span class="math">S ⇒ Sb ⇒ ab</span>.<br>
+      <b>‏2024א:</b> בדקדוק עם <span class="math">S → AC | D</span> — המילה <span class="math">abc</span>
+      נגזרת דרך שני הענפים (כשהתנאי <span class="math">i ≥ min{j,k}</span> מתקיים בשתי הדרכים).
+      מילה שנופלת בחפיפה של שני מקרים — המועמדת הטבעית לעמימות.</p>
+  </div>
+
+  <div class="note">עמימות היא תכונה של <b>הדקדוק</b>, לא של השפה (לשפה יכולים להיות גם דקדוק עמום
+    וגם חד-משמעי). לצורך המבחן: מזהים חפיפת ענפים ובוחרים בה את המילה.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t4">תכנון דקדוקים — זוגות, שיקוף וקינון</h2>
+
+  <p>המשתנה הוא "מונה מבני": כל כלל רקורסיבי מוסיף כמות מתואמת משני צדדים. תבניות היסוד:</p>
+
+  <table>
+    <tr><th>תבנית</th><th>כללים</th><th>שפה</th></tr>
+    <tr><td>זוגות מתואמים</td><td><span class="math">S → aSb | ε</span></td><td><span class="math">{a<sup>n</sup>b<sup>n</sup>}</span></td></tr>
+    <tr><td>שיקוף (פלינדרום)</td><td><span class="math">S → aSa | bSb | a | b | ε</span></td><td><span class="math">{w = w<sup>R</sup>}</span></td></tr>
+    <tr><td>שיקוף בתנאי</td><td><span class="math">S → 0A0, A → 0A0 | 1A1 | ε</span></td><td><span class="math">{ww<sup>R</sup> | w₁ ≠ 1}</span> (2024ב ש3.1!)</td></tr>
+    <tr><td>אנטי-שיקוף</td><td><span class="math">S → aSb | bSa | ε</span></td><td><span class="math">{uv<sup>R</sup> | ∀i: u<sub>i</sub>≠v<sub>i</sub>}</span> (מבחן לדוגמה ש3.3!)</td></tr>
+    <tr><td>קינון סביב תוכן</td><td><span class="math">S → aSb | T</span></td><td>‏<span class="math">a<sup>n</sup>·L(T)·b<sup>n</sup></span> — עוטפים שפה פנימית</td></tr>
+  </table>
+
+  <div class="note">תבנית הקינון היא הפואנטה של L023 במאגר: ‏<span class="math">{a<sup>n</sup>ub<sup>n</sup> | u ∈ L}</span>
+    ח"ה לכל <span class="math">L</span> ח"ה — פשוט שותלים את משתנה ההתחלה של <span class="math">L</span> בבסיס הרקורסיה.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t5">תכנון דקדוקים — פירוק למקרים ושרשור</h2>
+
+  <ul>
+    <li><b>איחוד/מקרים:</b> ‏<span class="math">S → S₁ | S₂</span> — כל מקרה מקבל משתנה משלו.
+      כך נבנה הדקדוק של 2024א ש3.2 ל-<span class="math">{a<sup>i</sup>b<sup>j</sup>c<sup>k</sup> | i ≥ min{j,k}}</span>:
+      ענף ל-<span class="math">i ≥ j</span> וענף ל-<span class="math">i ≥ k</span>.</li>
+    <li><b>שרשור:</b> ‏<span class="math">S → S₁S₂</span> — שני חלקים עצמאיים זה אחר זה.
+      ‏<span class="math">{a<sup>i</sup>b<sup>i</sup>c<sup>j</sup>} = {a<sup>i</sup>b<sup>i</sup>}·c<sup>*</sup></span>:
+      ‏<span class="math">S → AC, A → aAb|ε, C → cC|ε</span>.</li>
+    <li><b>הכנסה באמצע:</b> ‏<span class="math">S → cSc | Scc | ccS | A</span> — הפיזור של
+      2023ב ש1.3 (‏<span class="en">Op</span>‏): מוסיפים סימנים בזוגות בכל מיקום יחסי.</li>
+  </ul>
+
+  <div class="warn">מלכודת השרשור: תלות <b>בין</b> החלקים אינה ניתנת לשרשור.
+    ‏<span class="math">{a<sup>i</sup>b<sup>i</sup>a<sup>i</sup>}</span> אינו
+    <span class="math">{a<sup>i</sup>b<sup>i</sup>}·{a<sup>i</sup>}</span> — המונה לא עובר בין המשתנים
+    (ולמעשה השפה כלל לא ח"ה). כל משתנה חי לבד — "חסר הקשר" פשוטו כמשמעו.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t6">אי־שוויונות בדקדוק — לפחות ולכל היותר</h2>
+
+  <p>איך מקודדים <span class="math">i ≥ j</span> (יותר <span class="math">a</span>-ים מ-<span class="math">b</span>-ים)?
+    מפרקים כל <span class="math">b</span> עם בן-זוג <span class="math">a</span>, ומרשים
+    <span class="math">a</span>-ים חופשיים:</p>
+
+  <div class="gram">
+    <div class="rule"><span class="nt">A</span> → a<span class="nt">A</span>b | a<span class="nt">A</span> | ε</div>
+  </div>
+
+  <p>זה בדיוק הכלל מהפתרון הרשמי של 2024א ש3.2. וריאציות:
+    ‏<span class="math">i &gt; j</span> — מחייבים עודף: ‏<span class="math">A → aA′ , A′ → aA′b | aA′ | ε</span>
+    (או מוסיפים <span class="math">a</span> חובה בבסיס); ‏<span class="math">i ≤ j</span> — משקפים:
+    ‏<span class="math">A → aAb | Ab | ε</span>.</p>
+
+  <div class="ex-box">
+    <h4>תרגיל שליטה: <span class="math">{a<sup>i</sup>b<sup>j</sup> | (i+j) mod 3 = 0}</span> — ‏2023א ש3.1</h4>
+    <div class="gram"><div class="rule"><span class="nt">S</span> → ε | a<span class="nt">S</span>bb | aa<span class="nt">S</span>b | aaa<span class="nt">S</span> | <span class="nt">S</span>bbb</div></div>
+    <p>כל כלל תורם 3 לסכום תוך שמירה על הסדר (a-ים משמאל, b-ים מימין). דקדוק יכול לספור
+      מודולרית <b>וגם</b> לתאם — שני הכוחות ביחד.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch6-t7">כל שפה רגולרית היא חסרת הקשר</h2>
+
+  <div class="thm">‏<span class="math">REG ⊊ CFL</span>: כל רגולרית — חסרת הקשר, וההכלה ממש
+    (‏<span class="math">{a<sup>n</sup>b<sup>n</sup>}</span> מפרידה).</div>
+
+  <div class="algo">
+    <h4>שתי הוכחות, שתיהן שוות היכרות</h4>
+    <ol>
+      <li><b>דקדוק רגולרי מ-DFA</b> (דף הנוסחאות): משתנה לכל מצב; לכל מעבר
+        <span class="math">δ(A,σ)=B</span> כלל <span class="math">A → σB</span>; לכל מצב מקבל
+        <span class="math">A → ε</span>. כללים "ליניאריים ימניים" — מקרה פרטי של CFG.</li>
+      <li><b>PDA שמתעלם מהמחסנית</b> (פרק 8): ‏DFA הוא PDA שלא נוגע במחסנית.</li>
+    </ol>
+  </div>
+
+  <div class="note">המסקנה המבצעית במבחן (2024א ש1.3): כדי להראות ששפה היא ח"ה מותר להראות
+    שהיא רגולרית — או לערבב: חיתוך של ח"ה עם רגולרית, שרשור שלהן וכד' (הסגירויות של t9).</div>
+</section>
+
+<section>
+  <h2 id="ch6-t8">הוכחת נכונות של דקדוק</h2>
+
+  <div class="algo">
+    <h4>‏<span class="math">L(G) = L</span> — שני כיווני ההכלה</h4>
+    <ol>
+      <li><b>‏<span class="math">L(G) ⊆ L</span>:</b> אינדוקציה על <b>אורך הגזירה</b> — כל כלל משמר
+        אינווריאנטה (למשל: "מ-<span class="math">A</span> נגזרות בדיוק מילים עם <span class="math">#a ≥ #b</span>").</li>
+      <li><b>‏<span class="math">L ⊆ L(G)</span>:</b> אינדוקציה על <b>אורך המילה</b> — מראים איך לגזור
+        כל מילה חוקית (מקלפים זוג/אות ומפעילים את הנחת האינדוקציה).</li>
+    </ol>
+  </div>
+
+  <p>בפועל, במבחני הקורס מסתפקים כמעט תמיד ב<b>הסבר קצר</b> ("הענף הראשון מייצר…, השני…,
+    ולכן ביחד בדיוק…") — כפי שמנוסח בפתרונות הרשמיים. אבל ההסבר חייב לכסות את שני הכיוונים
+    רעיונית: למה כל מה שנגזר חוקי, ולמה כל מילה חוקית נגזרת.</p>
+
+  <div class="warn">הטעות הנפוצה: דקדוק שיוצר את כל השפה אבל <b>גם עוד</b> (הכלה חד-כיוונית).
+    בדקו מילים גבוליות: ‏ε, מילים שכולן אות אחת, והמקרים שעל גבול התנאי.</div>
+</section>
+
+<section>
+  <h2 id="ch6-t9">סגירויות של חסרות הקשר</h2>
+
+  <p>עם דקדוקים, שלוש סגירויות הן חד-שורתיות — בהינתן <span class="math">G₁, G₂</span>
+    (עם משתנים זרים!):</p>
+  <ul>
+    <li><b>איחוד:</b> ‏<span class="math">S → S₁ | S₂</span>.</li>
+    <li><b>שרשור:</b> ‏<span class="math">S → S₁S₂</span>.</li>
+    <li><b>כוכב:</b> ‏<span class="math">S → S₁S | ε</span>.</li>
+  </ul>
+  <p>ועוד מהקורס: <b>היפוך</b> (הופכים כל צד ימין), <b>הצבה חסרת הקשר / רגולרית</b>
+    (מציבים דקדוק במקום כל טרמינל — הכלי של 2023א ש3.4!), ו<b>חיתוך עם רגולרית</b>
+    (בנייה על PDA — פרק 8, הכלי של 2024א ש1.3).</p>
+
+  <div class="ex-box">
+    <h4>כך זה מופיע במבחן</h4>
+    <p>‏2024א ש1.3 (הפתרון הרשמי, Solution 1): ‏<span class="math">L₃ = L′ ∩ L₁</span> —
+      בונים דקדוק ל-<span class="math">L′</span> ומצטטים "חיתוך ח"ה עם רגולרית הוא ח"ה".
+      שרשראות סגירויות + דקדוק קטן = תשובה מלאה.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch6-t10">מה חסרות הקשר לא סוגרות</h2>
+
+  <div class="warn">‏CFL <b>אינה סגורה</b> לחיתוך ולמשלים!</div>
+
+  <ul>
+    <li><b>חיתוך:</b> ‏<span class="math">{a<sup>n</sup>b<sup>n</sup>c<sup>m</sup>} ∩ {a<sup>m</sup>b<sup>n</sup>c<sup>n</sup>} = {a<sup>n</sup>b<sup>n</sup>c<sup>n</sup>}</span>
+      — שתי ח"ה קלאסיות שחיתוכן איננו ח"ה (פרק 8).</li>
+    <li><b>משלים:</b> אילו הייתה סגירות למשלים, מדה-מורגן היה נובע סגור לחיתוך — סתירה.
+      (זו בדיוק התשובה הרשמית של מבחן-לדוגמה ש3.4 על XOR: ‏<span class="math">L₁ XOR Σ<sup>*</sup> = <span class="comp">L₁</span></span>.)</li>
+    <li><b>הפרש:</b> ‏<span class="math">Σ<sup>*</sup> ∖ L = <span class="comp">L</span></span> — נופל עם המשלים.</li>
+  </ul>
+
+  <table>
+    <tr><th>פעולה</th><th>REG</th><th>CFL</th></tr>
+    <tr><td>איחוד / שרשור / כוכב / היפוך / הצבה</td><td>✓</td><td>✓</td></tr>
+    <tr><td>חיתוך עם רגולרית</td><td>✓</td><td>✓</td></tr>
+    <tr><td>חיתוך כללי</td><td>✓</td><td>✗</td></tr>
+    <tr><td>משלים / הפרש</td><td>✓</td><td>✗</td></tr>
+  </table>
+
+  <div class="note"><b>לב הפרק:</b> משתנה = סוכן עצמאי שמייצר מבנה מתואם מקומית; עמימות = שני עצים;
+    התבניות (זוגות, שיקוף, מקרים, קינון, אי-שוויון) מכסות כמעט כל שאלת "בנו דקדוק"; וטבלת
+    הסגירויות — בפרט השורות של ✗ — היא נשק ההכרעה בשאלות נכון/לא נכון.</div>
+</section>

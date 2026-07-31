@@ -1,0 +1,247 @@
+<h1>אוטומטי מחסנית, פישוט ו־CNF</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 7 (הרצאה 7 + תרגול 7)</p>
+
+<section>
+  <h2 id="ch7-t0">PDA — ההגדרה הפורמלית</h2>
+
+  <div class="def">
+    <span class="term">אוטומט מחסנית (PDA)</span> — שישייה
+    <span class="math">A = (Q, Σ, Γ, δ, q<sub>s</sub>, F)</span>:
+    <ul>
+      <li><span class="math">Q</span> — מצבים; <span class="math">Σ</span> — אלף-בית קלט;
+        <span class="math">Γ</span> — <b>אלף-בית מחסנית</b> (יכול להיות שונה מ-Σ!).</li>
+      <li><span class="math">δ: Q × Σ<sub>ε</sub> × Γ<sub>ε</sub> → P(Q × Γ<sub>ε</sub>)</span> —
+        פונקציית מעברים <b>אי-דטרמיניסטית</b>.</li>
+      <li><span class="math">q<sub>s</sub></span> התחלתי, <span class="math">F ⊆ Q</span> מקבלים.</li>
+    </ul>
+  </div>
+
+  <p>‏NFA + מחסנית אינסופית שרואים רק את ראשה. הסימון על חץ:
+    <span class="math">σ, γ → γ′</span> = "קרא <span class="math">σ</span> מהקלט, הוצא (pop)
+    <span class="math">γ</span> מהמחסנית, דחוף (push) <span class="math">γ′</span>" — וכל אחד
+    מהשלושה יכול להיות <span class="math">ε</span> ("בלי לקרוא / בלי להוציא / בלי לדחוף").</p>
+
+  <div class="note">המחסנית מתחילה <b>ריקה</b>. לכן הצעד הראשון האופייני הוא
+    <span class="math">ε, ε → $</span> — דחיפת סמל תחתית שמאפשר לזהות אחר-כך "המחסנית התרוקנה".
+    זו קונבנציה, לא חלק מההגדרה — אבל כמעט כל בנייה בקורס משתמשת בה (ראו ה-PDA של 2024ב ש3.3).</div>
+</section>
+
+<section>
+  <h2 id="ch7-t1">צעד חישוב — לקרוא, להוציא, לדחוף</h2>
+
+  <p>קונפיגורציה של PDA: (מצב, יתרת קלט, תוכן מחסנית). מעבר
+    <span class="math">(p, γ′) ∈ δ(q, σ, γ)</span> חוקי כאשר:</p>
+  <ul>
+    <li>אם <span class="math">σ ∈ Σ</span> — האות הבאה בקלט היא <span class="math">σ</span> (ונצרכת);
+      אם <span class="math">σ = ε</span> — לא נוגעים בקלט.</li>
+    <li>אם <span class="math">γ ∈ Γ</span> — ראש המחסנית הוא <span class="math">γ</span> (ומוסר);
+      אם <span class="math">γ = ε</span> — לא מציצים ולא מוציאים.</li>
+    <li>‏<span class="math">γ′</span> נדחף (או כלום, אם <span class="math">ε</span>).</li>
+  </ul>
+
+  <div class="warn">‏pop הוא <b>תנאי וגם פעולה</b>: מעבר עם <span class="math">γ = 0</span> אפשרי רק כשבראש
+    המחסנית יש 0 — ואז ה-0 יורד. אין "הצצה בלי הוצאה" ישירה (מדמים אותה עם pop ואז push חוזר).
+    ואם המחסנית ריקה, מעבר שדורש pop אינו זמין — הריצה נתקעת.</div>
+</section>
+
+<section>
+  <h2 id="ch7-t2">ריצות וקבלה — הדוגמה 0ⁿ1ⁿ</h2>
+
+  <div class="def"><span class="term">קבלה</span> — ‏PDA מקבל את <span class="math">w</span> אם
+    <b>קיימת</b> ריצה שקוראת את כל <span class="math">w</span> ומסתיימת במצב מקבל
+    (בקורס: קבלה לפי מצב מקבל; תכולת המחסנית בסוף לא חשובה — אלא אם תכננו שתהיה ריקה).</div>
+
+  <div class="ex-box">
+    <h4>‏PDA ל-<span class="math">{0<sup>n</sup>1<sup>n</sup> | n ≥ 0}</span></h4>
+    <div class="fsa"><svg viewBox="0 0 470 130" xmlns="http://www.w3.org/2000/svg">
+      <path class="tr" d="M8,65 L30,65" marker-end="url(#arr)"/>
+      <circle class="st st-acc" cx="58" cy="65" r="20"/><circle class="st st-acc" cx="58" cy="65" r="25"/>
+      <text class="slbl" x="58" y="65">q₁</text>
+      <circle class="st" cx="185" cy="65" r="25"/><text class="slbl" x="185" y="65">q₂</text>
+      <circle class="st" cx="310" cy="65" r="25"/><text class="slbl" x="310" y="65">q₃</text>
+      <circle class="st st-acc" cx="425" cy="65" r="20"/><circle class="st st-acc" cx="425" cy="65" r="25"/>
+      <text class="slbl" x="425" y="65">q₄</text>
+      <path class="tr" d="M83,65 L157,65" marker-end="url(#arr)"/>
+      <text class="lbl" x="120" y="55" text-anchor="middle">ε,ε→$</text>
+      <path class="tr" d="M173,44 C163,18 207,18 197,44" marker-end="url(#arr)"/>
+      <text class="lbl" x="185" y="14" text-anchor="middle">0,ε→0</text>
+      <path class="tr" d="M210,65 L282,65" marker-end="url(#arr)"/>
+      <text class="lbl" x="246" y="55" text-anchor="middle">1,0→ε</text>
+      <path class="tr" d="M298,44 C288,18 332,18 322,44" marker-end="url(#arr)"/>
+      <text class="lbl" x="310" y="14" text-anchor="middle">1,0→ε</text>
+      <path class="tr" d="M335,65 L397,65" marker-end="url(#arr)"/>
+      <text class="lbl" x="366" y="55" text-anchor="middle">ε,$→ε</text>
+    </svg><div class="fsa-cap">דוחפים 0-ים, פורקים מול 1-ים, ומקבלים רק אם ה-$ נחשף בדיוק בסוף</div></div>
+    <p>ריצה על 0011: דוחפים $00, שני ה-1-ים פורקים, ‏<span class="math">ε,$→ε</span> מוביל לקבלה.
+      על 001 — ה-$ לא נחשף; על 011 — pop נכשל. שימו לב ש-<span class="math">q₁</span> מקבל
+      (בשביל <span class="math">ε</span> שבשפה).</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch7-t3">תבניות תכנון PDA</h2>
+
+  <table>
+    <tr><th>משימה</th><th>תבנית</th></tr>
+    <tr><td>השוואת שני בלוקים</td><td>דחוף את הראשון, פרוק מול השני (‏0ⁿ1ⁿ)</td></tr>
+    <tr><td>מאזן שוטף (‏#₀=#₁ בכל סדר)</td><td>המחסנית מחזיקה את העודף הנוכחי; מצבים לצד העודף — ה-PDA של 2024ב ש3.3</td></tr>
+    <tr><td>ניחוש נקודת אמצע/פיצול</td><td>מעבר ε אי-דטרמיניסטי בין "שלב דחיפה" ל"שלב פריקה" (‏ww<sup>R</sup>)</td></tr>
+    <tr><td>סימולציית DFA + מונה</td><td>מצבי מכפלה (מצב DFA, שלב) והמחסנית למונה — ‏Solution 1 של 2024א ש1.3</td></tr>
+    <tr><td>לזכור מצב לחזרה</td><td>לדחוף את <b>שם המצב</b> למחסנית ולשלוף בחזרה — הבנייה של Op ב-2023ב ש1.4 (‏Γ ⊇ Q_B!)</td></tr>
+  </table>
+
+  <div class="note">‏<span class="math">Γ</span> חופשי לגמרי: סמלי ספירה, אותיות מסומנות, ואפילו שמות
+    מצבים — הטריק של 2023ב ש1.4 שבו ה-PDA "שומר" את מצב ה-DFA במחסנית בזמן שהוא מריץ תת-שגרה.
+    להרחיב את Γ זו הדרך האלגנטית להעביר מידע על פני זמן.</div>
+</section>
+
+<section>
+  <h2 id="ch7-t4">אי־דטרמיניזם ב־PDA הוא מהותי</h2>
+
+  <div class="thm">בניגוד לאוטומטים סופיים — כאן אי-הדטרמיניזם <b>מוסיף כוח</b>:
+    קיימות שפות ח"ה שאף PDA דטרמיניסטי לא מזהה. הדוגמה הקלאסית:
+    ‏<span class="math">PAL = {w | w = w<sup>R</sup>}</span> — חייבים <b>לנחש</b> את האמצע.</div>
+
+  <p>לכן בקורס "PDA" הוא תמיד אי-דטרמיניסטי, והמשפט המרכזי (פרק 8) מדבר על
+    PDA ⟺ CFG. תובנה חשובה לשאלות נכון/לא נכון: "לכל PDA קיים PDA דטרמיניסטי שקול" — <b>לא נכון</b>.</p>
+
+  <div class="note">זה גם מסביר למה אין "מכפלת PDA" לחיתוך ולמה אין היפוך-מקבלים למשלים:
+    הטכניקות הדטרמיניסטיות של פרק 2 לא שורדות את המעבר למחסנית — בדיוק הפעולות שח"ה
+    לא סגורה להן (פרק 6, t10).</div>
+</section>
+
+<section>
+  <h2 id="ch7-t5">PDA ← CFG — הבנייה</h2>
+
+  <div class="algo">
+    <h4>הבנייה מדף הנוסחאות (שלושה מצבים)</h4>
+    <p>בהינתן <span class="math">G = (V, Σ, S, R)</span> בונים PDA עם
+      <span class="math">q<sub>start</sub> → q<sub>loop</sub> → q<sub>accept</sub></span>:</p>
+    <ul>
+      <li>בכניסה: ‏<span class="math">ε, ε → S$</span> (דוחפים את משתנה ההתחלה מעל סמל תחתית).</li>
+      <li>ב-<span class="math">q<sub>loop</sub></span>, לכל כלל <span class="math">A → α</span>:
+        מעבר <span class="math">ε, A → α</span> — מחליפים משתנה בראש המחסנית בצד ימין של כלל
+        (נדחף הפוך, כך שהסמל השמאלי של α בראש).</li>
+      <li>לכל <span class="math">a ∈ Σ</span>: מעבר <span class="math">a, a → ε</span> —
+        טרמינל בראש המחסנית "מסומן" מול אות הקלט.</li>
+      <li>‏<span class="math">ε, $ → ε</span> אל <span class="math">q<sub>accept</sub></span>.</li>
+    </ul>
+  </div>
+
+  <p>הרעיון: ה-PDA מבצע <b>גזירה שמאלית</b> על המחסנית — המשתנה השמאלי ביותר תמיד בראש,
+    ואי-הדטרמיניזם מנחש איזה כלל להפעיל. הקלט מאמת את הטרמינלים שנחשפים.</p>
+
+  <div class="note">כיוון אחד של משפט השקילות CFG ⟺ PDA — קצר ובונה. הכיוון השני
+    (PDA → CFG, עם <span class="math">A<sub>p,q</sub></span>) מחכה בפרק 8 והוא המסובך מהשניים.</div>
+</section>
+
+<section>
+  <h2 id="ch7-t6">דקדוק מפושט — הסרת כללי ε</h2>
+
+  <div class="def"><span class="term">דקדוק מפושט</span> — ללא כללי <span class="math">ε</span>
+    (מהצורה <span class="math">A → ε</span>; מותר רק <span class="math">S → ε</span>)
+    וללא כללי יחידה (<span class="math">A → B</span>).</div>
+
+  <div class="algo">
+    <h4>הסרת כללי ε (מדף הנוסחאות)</h4>
+    <ol>
+      <li>בוחרים כלל <span class="math">A → ε</span> (עם <span class="math">A ≠ S</span>) ומוחקים אותו.</li>
+      <li>מפצים: לכל כלל שמכיל <span class="math">A</span> בצד ימין, מוסיפים עותקים עם המופע מושמט —
+        <b>לכל תת-קבוצה של מופעים</b>: מ-<span class="math">B → αAβAγ</span> נוצרים גם
+        <span class="math">B → αβAγ</span>, גם <span class="math">B → αAβγ</span> וגם
+        <span class="math">B → αβγ</span>.</li>
+      <li>עבור <span class="math">B → A</span> מוסיפים <span class="math">B → ε</span>
+        (אלא אם כבר הוסר — לא מחזירים מתים!).</li>
+      <li>חוזרים עד שאין כללי <span class="math">ε</span>.</li>
+    </ol>
+    <p class="small"><b>אם <span class="math">ε ∈ L</span>:</b> מריצים את התהליך ואז מוסיפים התחלה חדשה
+      עם <span class="math">S′ → S | ε</span> — כך ה-ε היחיד יושב בהתחלה שאינה מופיעה בשום צד ימין.</p>
+  </div>
+
+  <div class="warn">שתי הטעויות הקבועות: לשכוח את עותקי-הביניים (רק "הכול או כלום" במקום כל
+    תת-קבוצה), ולהחזיר כלל ε שכבר טופל (זה מכניס את האלגוריתם ללולאה אינסופית).</div>
+</section>
+
+<section>
+  <h2 id="ch7-t7">הסרת כללי יחידה</h2>
+
+  <div class="algo">
+    <h4>ההליך</h4>
+    <ol>
+      <li>בוחרים כלל יחידה <span class="math">A → B</span> ומוחקים אותו.</li>
+      <li>לכל כלל <span class="math">B → α</span> מוסיפים <span class="math">A → α</span>
+        ("‏A מאמץ את כללי B").</li>
+      <li>חוזרים עד שאין כללי יחידה. (שרשראות <span class="math">A→B→C</span> מטופלות מעצמן —
+        האימוץ יוצר <span class="math">A→C</span> שהוא כלל יחידה חדש שיוסר בתורו.)</li>
+    </ol>
+  </div>
+
+  <p>למה מסירים אותם? כללי יחידה לא מוסיפים כוח (רק "שינוי שם") אבל מסבכים ניתוחים —
+    ובדרך ל-CNF הם חייבים ללכת. סדר נכון: קודם ε, אחר-כך יחידה
+    (הסרת ε עלולה לייצר כללי יחידה חדשים, כמו <span class="math">B → A</span> שנותר אחרי השמטת השני).</p>
+
+  <div class="ex-box">
+    <h4>מיני-דוגמה</h4>
+    <div class="gram">
+      <div class="rule"><span class="nt">S</span> → <span class="nt">A</span>b | <span class="nt">A</span></div>
+      <div class="rule"><span class="nt">A</span> → a | ε</div>
+    </div>
+    <p>הסרת <span class="math">A → ε</span>: נוספים <span class="math">S → b</span> ו-<span class="math">S → ε</span>
+      (מהכלל <span class="math">S → A</span>)… אבל <span class="math">ε∈L</span>, אז עוברים דרך
+      <span class="math">S′</span>. אחר-כך <span class="math">S → A</span> מוסר עם אימוץ
+      <span class="math">S → a</span>. תוצאה: ‏<span class="math">S′ → S | ε, S → Ab | b | a, A → a</span>.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch7-t8">צורת חומסקי הנורמלית (CNF)</h2>
+
+  <div class="def"><span class="term">CNF</span> — כל כלל הוא מאחת משתי הצורות:
+    <div class="gram"><div class="rule"><span class="nt">A</span> → <span class="nt">B</span><span class="nt">C</span></div>
+    <div class="rule"><span class="nt">A</span> → σ</div></div>
+    עם <span class="math">B, C ≠ S</span>; ואם <span class="math">ε ∈ L</span> מותר גם
+    <span class="math">S → ε</span>.</div>
+
+  <div class="algo">
+    <h4>‏CFG → CNF (סדר הצעדים מדף הנוסחאות)</h4>
+    <ol>
+      <li>התחלה חדשה: <span class="math">S′ → S</span> (מגן על ההתחלה מהופעה בצד ימין).</li>
+      <li>הסרת כללי <span class="math">ε</span>.</li>
+      <li>הסרת כללי יחידה.</li>
+      <li>נרמול הכללים הארוכים: טרמינל בכלל ארוך מוחלף במשתנה
+        (<span class="math">A<sub>σ</sub> → σ</span>); כלל <span class="math">A → B₁B₂…B<sub>n</sub></span>
+        עם <span class="math">n &gt; 2</span> מפוצל בשרשרת:
+        <span class="math">A → B₁C₁, C₁ → B₂C₂, …</span></li>
+    </ol>
+  </div>
+
+  <p>למה CNF שווה את הטרחה? עצי גזירה נעשים <b>בינאריים</b> — גזירת מילה באורך
+    <span class="math">n</span> אורכת בדיוק <span class="math">2n−1</span> צעדים, גובה העץ לוגריתמי
+    לכל הפחות — ומכאן נגזרות למת הניפוח לח"ה (פרק 8) ואלגוריתמי הכרעה על דקדוקים.</p>
+</section>
+
+<section>
+  <h2 id="ch7-t9">היררכיית חומסקי — התמונה המלאה</h2>
+
+  <div class="hier">
+    <div class="ring"><span class="hlbl">RE — ניתנות לזיהוי (מכונות טיורינג)</span>
+      <div class="ring"><span class="hlbl">R — כריעות</span>
+        <div class="ring"><span class="hlbl">CFL — חסרות הקשר (PDA / CFG)</span>
+          <div class="ring"><span class="hlbl">REG — רגולריות (DFA / NFA / Regex)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>כל ההכלות ממש, והעדים שכדאי לזכור בעל-פה:</p>
+  <ul>
+    <li><span class="math">{a<sup>n</sup>b<sup>n</sup>} ∈ CFL ∖ REG</span></li>
+    <li><span class="math">{a<sup>n</sup>b<sup>n</sup>c<sup>n</sup>} ∈ R ∖ CFL</span> (מ"ט סופרת בקלות — פרק 9)</li>
+    <li><span class="math">A<sub>TM</sub> ∈ RE ∖ R</span> (פרקים 11–13)</li>
+    <li>ומעל הכול: שפות שאינן אפילו ב-RE (‏<span class="comp">A<sub>TM</sub></span>).</li>
+  </ul>
+
+  <div class="note"><b>לב הפרק:</b> ‏PDA = NFA + מחסנית, עם אי-דטרמיניזם מהותי; ‏CFG → PDA בבנייה
+    ישירה; והפישוטים (ε, יחידה, CNF) הם הדרך מהדקדוק החופשי לצורה שאפשר לנתח.
+    ההיררכיה שציירנו היא המפה שכל שאר הקורס ימלא בתוכן.</div>
+</section>

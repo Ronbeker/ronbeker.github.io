@@ -1,0 +1,216 @@
+<h1>מכונות טיורינג</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 9 (הרצאה 9 + תרגול 9)</p>
+
+<section>
+  <h2 id="ch9-t0">מכונת טיורינג — ההגדרה הפורמלית</h2>
+
+  <div class="def">
+    <span class="term">מכונת טיורינג (TM)</span> — שביעייה
+    <span class="math">M = (Q, Σ, Γ, δ, q<sub>s</sub>, q<sub>acc</sub>, q<sub>rej</sub>)</span>:
+    <ul>
+      <li><span class="math">Q</span> — קבוצת מצבים סופית.</li>
+      <li><span class="math">Σ</span> — אלף-בית הקלט; תו הרווח <span class="math">␣ ∉ Σ</span>.</li>
+      <li><span class="math">Γ</span> — אלף-בית הסרט; ‏<span class="math">␣ ∈ Γ</span> וגם
+        <span class="math">Σ ⊆ Γ</span> (מותר להוסיף סימני עבודה: X, נקודות, סמנים).</li>
+      <li><span class="math">δ: Q × Γ → Q × Γ × {L, R}</span> — בכל צעד: קרא, כתוב, זוז.</li>
+      <li><span class="math">q<sub>s</sub></span> התחלתי, <span class="math">q<sub>acc</sub></span> מקבל,
+        <span class="math">q<sub>rej</sub></span> דוחה — שני האחרונים <b>עוצרים מיד</b>.</li>
+    </ul>
+  </div>
+
+  <p>שני הבדלים מהותיים מהמודלים הקודמים: הסרט <b>אינסופי</b> (ימינה) וניתן <b>לכתיבה</b>,
+    והראש נע <b>לשני הכיוונים</b>. הקלט הוא נקודת פתיחה על הסרט — לא זרם חד-פעמי.</p>
+
+  <div class="note">בקורס שלנו ההגדרה הבסיסית <b>דטרמיניסטית</b> (δ פונקציה). קבלה/דחייה הן מצבים
+    מיוחדים ולא קבוצת F — המכונה מכריזה את תשובתה ברגע שהגיעה אליהם.</div>
+</section>
+
+<section>
+  <h2 id="ch9-t1">הסרט, הראש והצעד הבודד</h2>
+
+  <p>תמונת הפתיחה: הקלט <span class="math">w</span> כתוב בתחילת הסרט, שאר הסרט רווחים
+    (<span class="math">␣</span>), הראש על התא השמאלי ביותר, והמצב <span class="math">q<sub>s</sub></span>:</p>
+
+  <div class="tape">
+    <div class="cell head">1</div><div class="cell">0</div><div class="cell">1</div><div class="cell">1</div>
+    <div class="cell blank">␣</div><div class="cell blank">␣</div><div class="cell blank">…</div>
+  </div>
+
+  <p>צעד יחיד <span class="math">δ(q, γ) = (q′, γ′, D)</span>: במצב <span class="math">q</span>
+    כשהראש קורא <span class="math">γ</span> — כותבים <span class="math">γ′</span> בתא (אולי אותו תו),
+    עוברים למצב <span class="math">q′</span>, וזזים תא אחד ימינה (<span class="math">R</span>) או שמאלה
+    (<span class="math">L</span>). ניסיון לזוז שמאלה מהתא הראשון — נשארים במקום (מוסכמת הקורס).</p>
+
+  <div class="note">היכולת <b>לכתוב</b> היא ההבדל שמייצר את כל הכוח: אפשר לסמן אותיות שטופלו
+    (‏<span class="math">a → X</span>), להשאיר פתקים, ולחזור אליהם. מחיקה = כתיבת <span class="math">␣</span>.</div>
+</section>
+
+<section>
+  <h2 id="ch9-t2">קונפיגורציות והיחס ⊢</h2>
+
+  <div class="def"><span class="term">קונפיגורציה</span> — צילום מצב מלא של החישוב, בכתיב
+    <span class="math">uqv</span>: תוכן הסרט משמאל לראש הוא <span class="math">u</span>, המצב
+    <span class="math">q</span>, והראש קורא את התו הראשון של <span class="math">v</span>.
+    ‏<span class="term">‏C₁ ⊢ C₂</span> — קונפיגורציה <span class="math">C₂</span> מתקבלת מ-<span class="math">C₁</span>
+    בצעד אחד; ‏<span class="math">⊢<sup>*</sup></span> — במספר סופי של צעדים.</div>
+
+  <div class="ex-box">
+    <h4>דוגמה</h4>
+    <div class="config-line">q_s1011 ⊢ Xq₁011 ⊢ X0q₁11 ⊢ …</div>
+    <p>הקונפיגורציה ההתחלתית על <span class="math">w</span> היא <span class="math">q<sub>s</sub>w</span>;
+      קבלה = הגעה לקונפיגורציה שמכילה את <span class="math">q<sub>acc</sub></span>.</p>
+  </div>
+
+  <p>הכתיב הזה הופך את "ריצת מכונה" לאובייקט מתמטי מדויק — סדרת קונפיגורציות
+    <span class="math">C₀ ⊢ C₁ ⊢ C₂ ⊢ …</span> — שעליו קל לנסח טענות (ובהמשך: לקודד אותו כמילה!).</p>
+</section>
+
+<section>
+  <h2 id="ch9-t3">קבלה, דחייה, לולאה — שלוש התוצאות</h2>
+
+  <div class="def">על קלט נתון, לריצה יש בדיוק אחת משלוש תוצאות:
+    <ul>
+      <li><b>מקבלת</b> — מגיעה ל-<span class="math">q<sub>acc</sub></span> (ועוצרת).</li>
+      <li><b>דוחה</b> — מגיעה ל-<span class="math">q<sub>rej</sub></span> (ועוצרת).</li>
+      <li><b>מתלולאת (loops)</b> — רצה לנצח ואינה עוצרת כלל.</li>
+    </ul>
+    ‏<span class="term">שפת המכונה</span> — ‏<span class="math">L(M) = {w | M מקבלת את w}</span>.
+    ‏<span class="term">עוצרת (halts)</span> על <span class="math">w</span> — מקבלת או דוחה.
+  </div>
+
+  <div class="warn">האפשרות השלישית היא הדמות הראשית של סוף הקורס: מבחוץ, אי אפשר להבדיל בין
+    "עוד רגע תעצור" ל"תרוץ לנצח". דיוק לשוני חובה: "‏M לא מקבלת את w" כולל גם דחייה <b>וגם</b> לולאה —
+    ובשאלות R/RE ההבדל בין "לא מקבלת" ל"דוחה" שווה את כל הנקודות (ראו N_{M,w} במבחני 2024!).</div>
+</section>
+
+<section>
+  <h2 id="ch9-t4">R ו־RE — כריעה מול ניתנת לזיהוי</h2>
+
+  <div class="def">
+    <span class="term">מכריע (Decider)</span> — מכונה שעוצרת על <b>כל</b> קלט.
+    שפה <span class="math">L ∈ <b>R</b></span> (<b>כריעה</b>) אם קיים מכריע עם
+    <span class="math">L(M) = L</span>.<br>
+    <span class="term">מזהה (Recognizer)</span> — מכונה כלשהי; ‏<span class="math">L ∈ <b>RE</b></span>
+    (<b>ניתנת לזיהוי</b>) אם קיימת מכונה עם <span class="math">L(M) = L</span> —
+    על מילים מחוץ לשפה מותר לה לדחות <b>או להתלולאת</b>.
+  </div>
+
+  <p>מיד מההגדרות: ‏<span class="math">R ⊆ RE</span>. בהמשך נראה שההכלה ממש
+    (‏<span class="math">A<sub>TM</sub></span>), ושיש גם מה שמעבר: ‏<span class="math">coRE</span>
+    ומחלקות שאינן באף אחת (פרק 11).</p>
+
+  <div class="ex-box">
+    <h4>אינטואיציה שימושית</h4>
+    <p>‏<span class="math">R</span> = "יש אלגוריתם שעונה תמיד כן/לא".
+      ‏<span class="math">RE</span> = "יש מבחן חד-צדדי: על כן — נדע מתישהו; על לא — אולי נחכה לנצח".
+      החצי-כוח הזה הוא בדיוק מה שהמזהים בבניות המבחן (dovetailing, פרק 11) מנצלים.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="ch9-t5">דוגמה מפורטת: מכריע לפלינדרומים</h2>
+
+  <div class="ex-box">
+    <h4>‏<span class="math">PAL = {w ∈ {a,b}<sup>*</sup> | w = w<sup>R</sup>}</span> — האלגוריתם מתרגול 9</h4>
+    <ol>
+      <li>אם הסרט ריק (או תו יחיד) — <b>קבל</b>.</li>
+      <li>זכור את התו הראשון במצב, מחק אותו (כתוב <span class="math">␣</span>), וסע ימינה עד סוף המילה.</li>
+      <li>השווה את התו האחרון לתו הזכור: שונה — <b>דחה</b>; זהה — מחק גם אותו.</li>
+      <li>חזור שמאלה לתחילת המילה הנותרת, וחזור לשלב 1.</li>
+    </ol>
+    <p>כל סיבוב מוחק זוג קצוות; המילה מתקצרת ⇒ המכונה <b>עוצרת תמיד</b> — זהו מכריע,
+      ולכן <span class="math">PAL ∈ R</span>. (זמן: ‏<span class="math">O(n²)</span> תנועות — לא
+      שמעניין בקורס הזה, אבל נחמד לדעת.)</p>
+  </div>
+
+  <p>המבנה "זכור-במצב, סמן-על-הסרט, סע-והשווה, חזור" הוא התבנית של כמעט כל מכונה מפורשת:
+    כך גם <span class="math">{a<sup>n</sup>b<sup>n</sup>c<sup>n</sup>}</span> (מחק אחד מכל בלוק בכל סיבוב)
+    ו-<span class="math">{ww}</span> (מצא אמצע בסימון לסירוגין, ואז השווה חצאים).</p>
+</section>
+
+<section>
+  <h2 id="ch9-t6">טבלת מעברים — רמת המכונה</h2>
+
+  <p>כשנדרש פירוט מלא (תרגול 9), כותבים את δ כטבלה. קטע מהמכונה של PAL —
+    "זכרתי a, נוסע ימינה לסוף":</p>
+
+  <table class="ttable">
+    <tr><th>δ</th><th>a</th><th>b</th><th>␣</th></tr>
+    <tr><th>q<sub>a→</sub></th><td>(q<sub>a→</sub>, a, R)</td><td>(q<sub>a→</sub>, b, R)</td><td>(q<sub>a✓</sub>, ␣, L)</td></tr>
+    <tr><th>q<sub>a✓</sub></th><td>(q<sub>←</sub>, ␣, L)</td><td>(q<sub>rej</sub>, b, R)</td><td>(q<sub>acc</sub>, ␣, R)</td></tr>
+  </table>
+
+  <p>קונבנציות: שם המצב מקודד את "מה אני זוכר ולאן אני נוסע"
+    (<span class="math">q<sub>a→</sub></span> = זוכר a, בדרך ימינה); תא של מצב עוצר לא ממשיכים למלא.</p>
+
+  <div class="note">במבחן המודרני כמעט אף פעם לא תידרשו לטבלה מלאה — אבל להבין אותה חובה:
+    היא מה שמאחורי כל תיאור מילולי, והיא מה שמקודד ב-⟨M⟩ (t8). אם מתבקש "תיאור ברמת מעברים" —
+    זו הצורה.</div>
+</section>
+
+<section>
+  <h2 id="ch9-t7">תיאורי high-level — מה מותר במבחן</h2>
+
+  <p>הנחיה רשמית שמופיעה על כל טופס: <b>"תיאורים של מכונות טיורינג צריכים להיות ב-high-level"</b>
+    (אם לא צוין אחרת). כלומר — פסאודו-קוד ממוספר במרכאות:</p>
+
+  <pre>M: "On input w:
+1. Scan the tape and check that w has the form a*b*c*; if not, reject.
+2. Repeat while any letter remains:
+   2.1. Cross off one a, one b and one c; if some block is exhausted
+        while another is not, reject.
+3. If the tape holds only crossed marks, accept."</pre>
+
+  <p>מה מותר לכתוב כצעד? כל דבר שמכונה "ברור שאפשר לממש": סריקות, סימון/מחיקה, השוואות,
+    ספירה, סימולציה של אוטומט/מכונה נתונים, לולאות על מילים בסדר לקסיקוגרפי. מה שאסור:
+    צעדים שהם עצמם בעיה לא-כריעה ("בדוק אם M עוצרת") — אלא אם זו בדיוק הפעולה שמותר להניח.</p>
+
+  <div class="note">הסגנון הזה — "‏M: on input …" עם סעיפים ממוספרים — הוא בדיוק סגנון הפתרונות
+    הרשמיים (ראו את המזהים של שאלה 2 בכל מבחני 2023–2024). לאמץ אותו אחד-לאחד: הבודקים רגילים אליו.</div>
+</section>
+
+<section>
+  <h2 id="ch9-t8">קידודים: ⟨M⟩ ו־⟨M,w⟩</h2>
+
+  <div class="def"><span class="term">קידוד</span> — כל אובייקט סופי (DFA, דקדוק, מכונת טיורינג)
+    ניתן לתיאור כמחרוזת סופית: ‏<span class="math">⟨M⟩</span> = תיאור המכונה
+    (הטבלה של δ, המצבים, האלף-ביתים) כמילה. ‏<span class="math">⟨M, w⟩</span> — קידוד של זוג.
+  </div>
+
+  <p>המשמעות המהפכנית: <b>מכונות הן קלט לגיטימי למכונות אחרות</b>. מכאן:</p>
+  <ul>
+    <li>שפות של קידודים: ‏<span class="math">A<sub>TM</sub> = {⟨M,w⟩ | M מקבלת את w}</span>,
+      ‏<span class="math">E<sub>DFA</sub></span>, ‏<span class="math">REG<sub>TM</sub></span>… —
+      כל "השפות המרכזיות" מדף הנוסחאות.</li>
+    <li><b>המכונה האוניברסלית</b> ‏<span class="math">U</span>: מקבלת <span class="math">⟨M,w⟩</span>
+      ומדמה את ריצת <span class="math">M</span> על <span class="math">w</span> צעד-צעד.
+      "מחשב שמריץ תוכנות" — והבסיס לכך ש-<span class="math">A<sub>TM</sub> ∈ RE</span>.</li>
+    <li>בדיקות תחביר ("האם הקלט הוא ⟨M⟩ חוקי?") הן תמיד כריעות — מבנה סופי בלבד.</li>
+  </ul>
+
+  <div class="warn">להבחין חדות: ‏<span class="math">⟨M⟩</span> (מחרוזת סופית — תחביר) לעומת
+    <span class="math">L(M)</span> (שפה, אולי אינסופית — סמנטיקה). שאלות על התחביר — קלות וכריעות;
+    שאלות על הסמנטיקה — ליבת אי-הכריעות (משפט רייס, פרק 13). בלבול ביניהן הוא טעות החישוביות מס' 1.</div>
+</section>
+
+<section>
+  <h2 id="ch9-t9">תזת צ'רץ'–טיורינג</h2>
+
+  <div class="thm"><span class="term">התזה:</span> כל מה שניתן לחישוב באלגוריתם (במובן האינטואיטיבי)
+    — ניתן לחישוב במכונת טיורינג. "אלגוריתם" ו"מכונת טיורינג" הם אותו מושג.</div>
+
+  <p>זו <b>תזה</b>, לא משפט — אי אפשר להוכיח טענה על מושג לא-פורמלי ("אלגוריתם"). הראיות:
+    כל פורמליזם סביר שהוצע (λ-calculus, מכונות רגיסטרים, שפות תכנות מודרניות) התגלה כשקול
+    בדיוק למכונת טיורינג; וכל הרחבה של המכונה עצמה (פרק 10) לא הוסיפה כוח.</p>
+
+  <div class="ex-box">
+    <h4>ההשלכה המעשית במבחן</h4>
+    <p>התזה היא מה שמכשיר את תיאורי ה-high-level: "יש אלגוריתם ⇒ יש מ"ט". ובכיוון השני —
+      תוצאות אי-הכריעות שנוכיח הן טענות על <b>כל מחשב שהוא</b>, לא על מודל צעצוע:
+      אין תוכנית שמכריעה את בעיית העצירה. נקודה.</p>
+  </div>
+
+  <div class="note"><b>לב הפרק:</b> שביעייה עם סרט כתיב ודו-כיווני; שלוש תוצאות אפשריות (הלולאה!);
+    ‏R = עוצר תמיד, ‏RE = מזהה חד-צדדי; קידוד הופך מכונות לקלט; והתזה הופכת "אלגוריתם" למושג מתמטי.
+    מכאן והלאה — משחקים רק בקומה הזו.</div>
+</section>
