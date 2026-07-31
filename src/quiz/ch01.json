@@ -1,0 +1,110 @@
+{
+  "sid": "ch1",
+  "topics": [
+    {
+      "t": "מה זה מודל חישובי ומה נלמד בקורס",
+      "q": [
+        {
+          "q": "מהו סדר ההכלה הנכון בין מחלקות השפות שנלמדות בקורס?",
+          "c": [
+            "שפות רגולריות ⊂ שפות חסרות הקשר ⊂ שפות כריעות",
+            "שפות חסרות הקשר ⊂ שפות רגולריות ⊂ שפות כריעות",
+            "שפות כריעות ⊂ שפות רגולריות ⊂ שפות חסרות הקשר",
+            "כל המחלקות שוות — ההבדל הוא רק בדרך ההגדרה"
+          ],
+          "e": "הסולם של הקורס: אוטומט סופי (זיכרון קבוע) ⊂ אוטומט מחסנית (מחסנית) ⊂ מכונת טיורינג (סרט אינסופי). כל מודל חזק ממש מקודמו — למשל <span class=\"math\">{aⁿbⁿ}</span> חסרת הקשר אך לא רגולרית."
+        },
+        {
+          "q": "מהן שתי \"תבניות העל\" של שאלות המבחן בקורס, כפי שמופיעות כמעט בכל סעיף?",
+          "c": [
+            "בנייה של מזהה לשפה, והוכחה ששפה לא שייכת למחלקה",
+            "חישוב סיבוכיות זמן, וכתיבת קוד יעיל",
+            "שרטוט גרפים, וחישוב הסתברויות",
+            "פישוט ביטויים בוליאניים, וטבלאות אמת"
+          ],
+          "e": "כל נושא מציע כלי בנייה (DFA/NFA/רגקס/CFG/PDA/TM והמרות ביניהם) וכלי אי־אפשרות (למות ניפוח, רדוקציות, משפט רייס). סיבוכיות (NP וכו') כלל לא נלמדת בקורס הזה."
+        },
+        {
+          "q": "מדוע מגדירים \"מודל חישובי\" כאובייקט מתמטי (קבוצות ופונקציות) ולא כמחשב ממשי?",
+          "c": [
+            "כדי שאפשר יהיה להוכיח טענות מדויקות על גבולות היכולת של המודל",
+            "כי מחשבים אמיתיים איטיים מדי לניסויים",
+            "כי לא היו מחשבים כשהומצאה התורה — היום ההגדרות מיושנות",
+            "כדי לחסוך זיכרון בזמן הסימולציה"
+          ],
+          "e": "רק על הגדרה פורמלית אפשר להוכיח משפטים כמו \"אף אוטומט סופי לא מזהה את <span class=\"math\">{aⁿbⁿ}</span>\" או \"בעיית העצירה אינה כריעה\" — טענות על <b>כל</b> מכונה אפשרית, לא על מימוש מסוים."
+        }
+      ]
+    },
+    {
+      "t": "אלף־בית, מילים ופעולות על מילים",
+      "q": [
+        {
+          "q": "מה ההבדל בין <span class=\"math\">ε</span> לבין <span class=\"math\">∅</span>?",
+          "c": [
+            "<span class=\"math\">ε</span> היא מילה באורך 0; <span class=\"math\">∅</span> היא שפה שאין בה אף מילה",
+            "אין הבדל — שני סימונים לאותו דבר",
+            "<span class=\"math\">ε</span> היא שפה ריקה; <span class=\"math\">∅</span> היא מילה ריקה",
+            "<span class=\"math\">∅</span> היא המילה הקצרה ביותר בכל שפה"
+          ],
+          "e": "<span class=\"math\">ε</span> — מילה (אורך 0). <span class=\"math\">∅</span> — קבוצה ריקה של מילים. לכן <span class=\"math\">{ε} ≠ ∅</span>: בשפה <span class=\"math\">{ε}</span> יש מילה אחת."
+        },
+        {
+          "q": "עבור <span class=\"math\">w = aab</span>, מהי המילה <span class=\"math\">w<sup>R</sup>w</span>?",
+          "c": [
+            "<span class=\"math\">baaaab</span>",
+            "<span class=\"math\">aabbaa</span>",
+            "<span class=\"math\">baabaa</span>",
+            "<span class=\"math\">aabaab</span>"
+          ],
+          "e": "<span class=\"math\">w<sup>R</sup> = baa</span>, ואז משרשרים: <span class=\"math\">w<sup>R</sup>·w = baa·aab = baaaab</span>. שימו לב שהתוצאה פלינדרום — <span class=\"math\">w<sup>R</sup>w</span> תמיד פלינדרום באורך זוגי."
+        },
+        {
+          "q": "כמה מילים באורך בדיוק <span class=\"math\">k</span> יש מעל אלף־בית בגודל <span class=\"math\">|Σ| = n</span>?",
+          "c": [
+            "<span class=\"math\">n<sup>k</sup></span>",
+            "<span class=\"math\">k<sup>n</sup></span>",
+            "<span class=\"math\">n·k</span>",
+            "אינסוף"
+          ],
+          "e": "בכל אחת מ־<span class=\"math\">k</span> העמדות בוחרים אות אחת מתוך <span class=\"math\">n</span> — סה\"כ <span class=\"math\">n<sup>k</sup></span>. לכן <span class=\"math\">Σ<sup>*</sup></span> אינסופית אך <b>בת מנייה</b> — עובדה שחוזרת בפרק החישוביות."
+        }
+      ]
+    },
+    {
+      "t": "שפות ופעולות על שפות",
+      "q": [
+        {
+          "q": "מהי <span class=\"math\">∅<sup>*</sup></span>?",
+          "c": [
+            "<span class=\"math\">{ε}</span>",
+            "<span class=\"math\">∅</span>",
+            "<span class=\"math\">Σ<sup>*</sup></span>",
+            "לא מוגדר"
+          ],
+          "e": "<span class=\"math\">L<sup>*</sup> = ⋃<sub>k≥0</sub> L<sup>k</sup></span> ותמיד <span class=\"math\">L<sup>0</sup> = {ε}</span> — שרשור של אפס מילים. לכן גם לשפה הריקה: <span class=\"math\">∅<sup>*</sup> = {ε}</span>. זו נקודה קבועה בהמרות GNFA."
+        },
+        {
+          "q": "עבור <span class=\"math\">L = {ab, ba}</span>, איזו מילה <b>אינה</b> שייכת ל־<span class=\"math\">L<sup>*</sup></span>?",
+          "c": [
+            "<span class=\"math\">aab</span>",
+            "<span class=\"math\">abba</span>",
+            "<span class=\"math\">ε</span>",
+            "<span class=\"math\">baba</span>"
+          ],
+          "e": "מילה ב־<span class=\"math\">L<sup>*</sup></span> היא שרשור בלוקים של <span class=\"math\">ab</span> או <span class=\"math\">ba</span> — תמיד באורך זוגי. <span class=\"math\">aab</span> באורך 3, ולכן לא בשפה. השאר: <span class=\"math\">abba = ab·ba</span>, <span class=\"math\">ε</span> (אפס בלוקים), <span class=\"math\">baba = ba·ba</span>."
+        },
+        {
+          "q": "מהי השפה <span class=\"math\">L·∅</span> עבור שפה <span class=\"math\">L</span> כלשהי?",
+          "c": [
+            "<span class=\"math\">∅</span>",
+            "<span class=\"math\">L</span>",
+            "<span class=\"math\">{ε}</span>",
+            "<span class=\"math\">Σ<sup>*</sup></span>"
+          ],
+          "e": "שרשור דורש לבחור מילה מכל אחת מהשפות: <span class=\"math\">L·∅ = {uv | u∈L, v∈∅}</span> — אין אף <span class=\"math\">v</span> לבחור, לכן התוצאה ריקה. לעומת זאת <span class=\"math\">L·{ε} = L</span>. אלו שני המקרים שהכי מתבלבלים ביניהם."
+        }
+      ]
+    }
+  ]
+}

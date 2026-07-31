@@ -1,0 +1,321 @@
+<h1>דף נוסחאות והגדרות</h1>
+<p class="chapter-subtitle">הנוסח שמצורף רשמית למבחני 2023–2024 (מתורגם ומורחב קלות) — כדאי להכיר אותו היטב: הוא זמין לכם בזמן המבחן</p>
+
+<section>
+  <h2>אוטומטים סופיים</h2>
+
+  <div class="def"><span class="term">אוטומט סופי דטרמיניסטי (DFA)</span> —
+    חמישייה <span class="math">A = (Q, Σ, δ, q<sub>s</sub>, F)</span> כאשר:
+    <ul>
+      <li><span class="math">Q</span> — קבוצה סופית של מצבים.</li>
+      <li><span class="math">Σ</span> — קבוצה סופית, האלף־בית.</li>
+      <li><span class="math">δ: Q × Σ → Q</span> — פונקציית המעברים.</li>
+      <li><span class="math">q<sub>s</sub> ∈ Q</span> — המצב ההתחלתי.</li>
+      <li><span class="math">F ⊆ Q</span> — קבוצת המצבים המקבלים.</li>
+    </ul>
+  </div>
+
+  <div class="def"><span class="term">אוטומט סופי לא־דטרמיניסטי (NFA)</span> —
+    חמישייה <span class="math">B = (Q, Σ, δ, q<sub>s</sub>, F)</span>, זהה ל־DFA פרט לפונקציית המעברים:
+    <div class="lang-def">δ: Q × Σ<sub>ε</sub> → P(Q)&nbsp;&nbsp;,&nbsp;&nbsp;Σ<sub>ε</sub> = Σ ∪ {ε}</div>
+    כלומר מכל מצב, על כל אות (או על <span class="math">ε</span>), עוברים ל<em>קבוצת</em> מצבים אפשריים.
+  </div>
+
+  <div class="thm"><span class="term">שפה רגולרית</span> — שפה נקראת רגולרית אם ורק אם קיים אוטומט סופי שמזהה אותה
+    (שקול: קיים ביטוי רגולרי שמתאר אותה; שקול: קיים דקדוק רגולרי שיוצר אותה).</div>
+</section>
+
+<section>
+  <h2>המרות בין מודלים רגולריים</h2>
+
+  <div class="algo">
+    <h4>NFA ← DFA (בניית תת־הקבוצות)</h4>
+    <p>בהינתן <span class="math">N = (Q<sub>N</sub>, Σ<sub>N</sub>, δ<sub>N</sub>, q<sub>sN</sub>, F<sub>N</sub>)</span> נבנה
+      <span class="math">D = (Q<sub>D</sub>, Σ<sub>D</sub>, δ<sub>D</sub>, q<sub>sD</sub>, F<sub>D</sub>)</span>:</p>
+    <ul>
+      <li><span class="math">Q<sub>D</sub> = P(Q<sub>N</sub>)</span> (קבוצת החזקה).</li>
+      <li><span class="math">Σ<sub>D</sub> = Σ<sub>N</sub></span>.</li>
+      <li>לכל <span class="math">R ∈ Q<sub>D</sub></span> ולכל <span class="math">σ ∈ Σ<sub>D</sub></span>:
+        <span class="math">δ<sub>D</sub>(R, σ) = ⋃<sub>r∈R</sub> E(δ<sub>N</sub>(r, σ))</span>,
+        כאשר <span class="math">E(R)</span> היא סגירת ה־<span class="math">ε</span> — כל המצבים שנגישים מ־<span class="math">R</span> במעברי <span class="math">ε</span> בלבד.</li>
+      <li><span class="math">q<sub>sD</sub> = E(q<sub>sN</sub>)</span>.</li>
+      <li><span class="math">F<sub>D</sub> = {R ∈ Q<sub>D</sub> | R ∩ F<sub>N</sub> ≠ ∅}</span>.</li>
+    </ul>
+  </div>
+
+  <div class="algo">
+    <h4>Regex ← NFA</h4>
+    <ol>
+      <li>מציירים NFA בן שני מצבים שהמעבר ביניהם מסומן בביטוי <span class="math">r</span> כולו.</li>
+      <li>מעבר שמסומן <span class="math">r + s</span> מוחלף בשני חיצים מקבילים — אחד <span class="math">r</span> ואחד <span class="math">s</span>.</li>
+      <li>מעבר שמסומן <span class="math">rs</span> מוחלף בשני חיצים עוקבים דרך מצב ביניים חדש.</li>
+      <li>מעבר שמסומן <span class="math">r<sup>*</sup></span> מוחלף במבנה: <span class="math">ε</span> פנימה, לולאת <span class="math">r</span> עצמית, <span class="math">ε</span> החוצה.</li>
+      <li>ממשיכים עד שכל התוויות הן אותיות מ־<span class="math">Σ<sub>ε</sub></span>.</li>
+    </ol>
+  </div>
+
+  <div class="algo">
+    <h4>NFA ← Regex&nbsp;: דרך GNFA (אלימינציית מצבים)</h4>
+    <p><b>שלב א — הפיכה ל־GNFA:</b></p>
+    <ul>
+      <li>מצב התחלתי חדש <span class="math">s</span> עם <span class="math">δ(s, ε) = q<sub>s</sub></span>, כך שמההתחלה יוצאים חיצים בלבד.</li>
+      <li>מצב מקבל יחיד חדש <span class="math">f</span>: לכל <span class="math">q ∈ F</span> מוסיפים <span class="math">δ(q, ε) = f</span>, וקובעים <span class="math">F = {f}</span>.</li>
+      <li>בין כל זוג מצבים יש בדיוק חץ אחד: חיצים מקבילים מוחלפים בסכום (<span class="math">+</span>) של התוויות; אם אין חץ — מוסיפים חץ בתווית <span class="math">∅</span>.</li>
+    </ul>
+    <p><b>שלב ב — אלימינציה:</b> מסלקים בכל פעם מצב <span class="math">k ≠ s, f</span>, ולכל זוג <span class="math">(i, j)</span> מעדכנים:</p>
+    <div class="lang-def">new(i,j) = old(i,j) + old(i,k)·old(k,k)<sup>*</sup>·old(k,j)</div>
+    <p>תזכורת: <span class="math">∅<sup>*</sup> = {ε}</span>. בסוף נשארים רק <span class="math">s</span> ו־<span class="math">f</span>, והתווית על החץ ביניהם היא הביטוי הרגולרי המבוקש.</p>
+  </div>
+</section>
+
+<section>
+  <h2>מצבים שקולים ומינימיזציה</h2>
+
+  <div class="def"><span class="term">מילה מפרידה (Separating word)</span> —
+    לשני מצבים <span class="math">q, p ∈ Q</span>, מילה <span class="math">w ∈ Σ<sup>*</sup></span> נקראת מפרידה אם בדיוק אחד משני הריצות מסתיים במצב מקבל:
+    <span class="math">δ′(q,w) ∈ F</span> אבל <span class="math">δ′(p,w) ∉ F</span>, או להפך
+    (<span class="math">δ′</span> — הרחבת פונקציית המעברים למילים).
+  </div>
+
+  <div class="def"><span class="term">שקילות־k</span> — <span class="math">p ≡<sub>k</sub> q</span> אם אין מילה מפרידה באורך
+    <span class="math">≤ k</span>. <span class="term">שקילות</span> — <span class="math">p ≡ q</span> אם הם
+    <span class="math">k</span>־שקולים לכל <span class="math">k ≥ 0</span>.
+  </div>
+
+  <div class="algo">
+    <h4>מציאת מחלקות שקילות (ל־DFA בלבד)</h4>
+    <ol>
+      <li>מסירים את כל המצבים הלא־נגישים.</li>
+      <li>מתחילים מהחלוקה <span class="math">E<sub>0</sub> = {F, Q∖F}</span>.</li>
+      <li>בצעד <span class="math">k ≥ 1</span> בונים את <span class="math">E<sub>k</sub></span>: מצבים <span class="math">q, p</span> באותה מחלקה ב־<span class="math">E<sub>k−1</sub></span> נשארים יחד אם ורק אם לכל <span class="math">σ ∈ Σ</span> מתקיים <span class="math">δ(q,σ) ≡<sub>k−1</sub> δ(p,σ)</span>.</li>
+      <li>עוצרים כאשר <span class="math">E<sub>k−1</sub> = E<sub>k</sub></span>.</li>
+    </ol>
+  </div>
+
+  <div class="algo">
+    <h4>מינימיזציה של DFA</h4>
+    <ol>
+      <li>מריצים את אלגוריתם מחלקות השקילות על <span class="math">Q</span>.</li>
+      <li>מקצים מצב חדש לכל מחלקת שקילות.</li>
+      <li>בונים את ה־DFA הממוזער בהתאם.</li>
+    </ol>
+  </div>
+
+  <div class="thm"><span class="term">טענה</span> — שני DFA־ים <span class="math">A, B</span> שקולים
+    (<span class="math">L(A) = L(B)</span>) אם ורק אם <span class="math">q<sub>s<sub>A</sub></sub> ≡ q<sub>s<sub>B</sub></sub></span>
+    (באוטומט האיחוד שלהם).</div>
+</section>
+
+<section>
+  <h2>למת הניפוח לשפות רגולריות</h2>
+  <div class="thm">
+    אם <span class="math">L</span> שפה רגולרית, אז קיים <span class="math">n ∈ ℕ</span> כך שלכל מילה
+    <span class="math">w ∈ L</span> עם <span class="math">|w| ≥ n</span> קיימת חלוקה <span class="math">w = xyz</span> המקיימת:
+    <ol>
+      <li><span class="math">|y| &gt; 0</span></li>
+      <li><span class="math">|xy| ≤ n</span></li>
+      <li>לכל שלם <span class="math">i ≥ 0</span>: <span class="math">w<sub>i</sub> = xy<sup>i</sup>z ∈ L</span></li>
+    </ol>
+  </div>
+  <div class="note"><b>הערת אורך:</b> אם <span class="math">|y| = t</span> אז
+    <span class="math">|xy<sup>i</sup>z| = |w| + (i−1)t</span> — שימושי כשצריך לפגוע באורך מסוים.</div>
+</section>
+
+<section>
+  <h2>דקדוקים</h2>
+
+  <div class="def"><span class="term">דקדוק חסר הקשר (CFG)</span> —
+    רביעייה <span class="math">G = (V, Σ, S, R)</span>:
+    <ul>
+      <li><span class="math">V</span> — קבוצה סופית של משתנים.</li>
+      <li><span class="math">Σ</span> — קבוצת הטרמינלים, <span class="math">V ∩ Σ = ∅</span>.</li>
+      <li><span class="math">S ∈ V</span> — משתנה ההתחלה.</li>
+      <li><span class="math">R</span> — קבוצה סופית של כללי גזירה מהצורה <span class="math">A → α</span>, כאשר <span class="math">A ∈ V</span> ו־<span class="math">α ∈ (V ∪ Σ)<sup>*</sup></span>.</li>
+    </ul>
+    שפה שנוצרת על ידי CFG נקראת <span class="term">שפה חסרת הקשר (CFL)</span> —
+    ושפה היא חסרת הקשר אם ורק אם קיים אוטומט מחסנית שמזהה אותה.
+  </div>
+
+  <div class="def"><span class="term">דקדוק רגולרי (RG)</span> — כל כלל הוא מאחת הצורות:
+    <div class="gram"><div class="rule">A → w</div><div class="rule">A → wB</div></div>
+    כאשר <span class="math">A, B ∈ V</span> ו־<span class="math">w ∈ Σ<sup>*</sup></span>.
+    <span class="term">דקדוק רגולרי פשוט (SRG)</span> — כל כלל מהצורה
+    <span class="math">A → σ</span> (עם <span class="math">σ ∈ Σ</span>),
+    <span class="math">A → σB</span> (עם <span class="math">σ ∈ Σ<sub>ε</sub></span>),
+    או <span class="math">A → ε</span>.
+  </div>
+
+  <div class="algo">
+    <h4>RG ← NFA</h4>
+    <ul>
+      <li>משתנה לכל מצב; <span class="math">S</span> — המשתנה של <span class="math">q<sub>s</sub></span>.</li>
+      <li>לכל מעבר <span class="math">δ(A, σ) = B</span> מוסיפים כלל <span class="math">A → σB</span>; לכל מעבר <span class="math">δ(A, ε) = B</span> מוסיפים <span class="math">A → B</span>.</li>
+      <li>לכל מצב מקבל <span class="math">q ∈ F</span> מוסיפים <span class="math">A → ε</span>.</li>
+    </ul>
+  </div>
+
+  <div class="algo">
+    <h4>NFA ← RG (דרך SRG)</h4>
+    <ul>
+      <li>הופכים את הדקדוק לפשוט (מפצלים <span class="math">A → σ<sub>1</sub>σ<sub>2</sub>…σ<sub>n</sub>B</span> לשרשרת כללים באות אחת).</li>
+      <li>מצב לכל משתנה; <span class="math">q<sub>s</sub> = S</span>.</li>
+      <li><span class="math">A → σB</span> נותן מעבר <span class="math">δ(A, σ) = B</span>; <span class="math">A → B</span> נותן מעבר <span class="math">ε</span>.</li>
+      <li>לכל <span class="math">A → σ</span>: מוסיפים מצב חדש <span class="math">q<sub>i</sub></span>, מעבר <span class="math">δ(A, σ) = q<sub>i</sub></span>, ומכניסים את <span class="math">q<sub>i</sub></span> ל־<span class="math">F</span>.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>פישוט דקדוק ו־CNF</h2>
+
+  <div class="def"><span class="term">דקדוק מפושט</span> — דקדוק ללא כללי <span class="math">ε</span>
+    (מהצורה <span class="math">A → ε</span>; מותר רק <span class="math">S → ε</span>) וללא כללי יחידה
+    (מהצורה <span class="math">A → B</span>).</div>
+
+  <div class="algo">
+    <h4>הסרת כללי ε</h4>
+    <ol>
+      <li>בוחרים כלל <span class="math">A → ε</span> (עם <span class="math">A ≠ S</span>) ומסירים אותו.</li>
+      <li>לכל כלל <span class="math">B → αAβ</span> מוסיפים (בלי להסיר את המקור) את <span class="math">B → αβ</span> — לכל מופע של <span class="math">A</span> בנפרד: מ־<span class="math">B → αAβAγ</span> נקבל גם <span class="math">B → αβAγ</span>, גם <span class="math">B → αAβγ</span> וגם <span class="math">B → αβγ</span>. עבור <span class="math">B → A</span> מוסיפים <span class="math">B → ε</span> (אלא אם כבר הוסר).</li>
+      <li>חוזרים עד שלא נותרו כללי <span class="math">ε</span>.</li>
+    </ol>
+    <p class="small"><b>אם <span class="math">ε ∈ L</span>:</b> מריצים את האלגוריתם ואז מוסיפים משתנה התחלה חדש עם
+      <span class="math">S′ → S | ε</span>.</p>
+  </div>
+
+  <div class="algo">
+    <h4>הסרת כללי יחידה</h4>
+    <ol>
+      <li>בוחרים כלל יחידה <span class="math">A → B</span> ומסירים אותו.</li>
+      <li>לכל כלל <span class="math">B → α</span> מוסיפים <span class="math">A → α</span>.</li>
+      <li>חוזרים עד שלא נותרו כללי יחידה.</li>
+    </ol>
+  </div>
+
+  <div class="def"><span class="term">צורת חומסקי הנורמלית (CNF)</span> — כל כלל הוא מאחת הצורות:
+    <div class="gram"><div class="rule">A → BC</div><div class="rule">A → σ</div></div>
+    כאשר <span class="math">A, B, C ∈ V</span>, <span class="math">B, C ≠ S</span>, ו־<span class="math">σ ∈ Σ</span>.
+    אם <span class="math">ε ∈ L</span> מותר גם <span class="math">S → ε</span>.
+  </div>
+
+  <div class="algo">
+    <h4>CNF ← CFG</h4>
+    <ol>
+      <li>מוסיפים משתנה התחלה חדש <span class="math">S′</span> וכלל <span class="math">S′ → S</span>.</li>
+      <li>מסירים כללי <span class="math">ε</span>.</li>
+      <li>מסירים כללי יחידה.</li>
+      <li>מתקנים את הכללים שנותרו: טרמינל <span class="math">σ<sub>i</sub></span> בכלל ארוך מוחלף במשתנה <span class="math">A<sub>i</sub></span> עם כלל <span class="math">A<sub>i</sub> → σ<sub>i</sub></span>; כלל <span class="math">A → B<sub>1</sub>B<sub>2</sub>…B<sub>n</sub></span> (עם <span class="math">n &gt; 2</span>) מפוצל ל־<span class="math">A → B<sub>1</sub>C<sub>1</sub></span> ו־<span class="math">C<sub>1</sub> → B<sub>2</sub>…B<sub>n</sub></span>, וחוזר חלילה.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>אוטומט מחסנית (PDA)</h2>
+
+  <div class="def"><span class="term">PDA</span> — שישייה <span class="math">A = (Q, Σ, Γ, δ, q<sub>s</sub>, F)</span>:
+    <ul>
+      <li><span class="math">Q</span> — מצבים; <span class="math">Σ</span> — אלף־בית הקלט; <span class="math">Γ</span> — אלף־בית המחסנית.</li>
+      <li><span class="math">δ: Q × Σ<sub>ε</sub> × Γ<sub>ε</sub> → P(Q × Γ<sub>ε</sub>)</span> — פונקציית המעברים (קוראים אות או <span class="math">ε</span>, מוציאים סמל מחסנית או <span class="math">ε</span>, דוחפים סמל או <span class="math">ε</span>).</li>
+      <li><span class="math">q<sub>s</sub> ∈ Q</span> התחלתי; <span class="math">F ⊆ Q</span> מקבלים.</li>
+    </ul>
+  </div>
+
+  <div class="def"><span class="term">PDA מפושט</span> —
+    יש לו מצב מקבל יחיד <span class="math">q<sub>f</sub></span>; לפני קבלה המחסנית חייבת להיות ריקה;
+    וכל מעבר או מוציא סמל מהמחסנית (pop) או מכניס סמל (push), אך לא שניהם.
+  </div>
+
+  <div class="algo">
+    <h4>PDA ← CFG</h4>
+    <p>בהינתן <span class="math">G = (V, Σ, S, R)</span> בונים PDA עם שלושה מצבים
+      <span class="math">q<sub>start</sub> → q<sub>loop</sub> → q<sub>accept</sub></span>:</p>
+    <ul>
+      <li>בכניסה דוחפים <span class="math">S$</span> (מעבר <span class="math">ε,ε→S$</span>).</li>
+      <li>ב־<span class="math">q<sub>loop</sub></span>: לכל כלל <span class="math">A → α<sub>1</sub>…α<sub>k</sub></span> — מעבר <span class="math">ε, A → α<sub>1</sub>…α<sub>k</sub></span>; לכל <span class="math">a ∈ Σ</span> — מעבר <span class="math">a, a → ε</span>.</li>
+      <li>מעבר <span class="math">ε, $ → ε</span> אל <span class="math">q<sub>accept</sub></span>.</li>
+    </ul>
+  </div>
+
+  <div class="algo">
+    <h4>CFG ← PDA</h4>
+    <p>בהינתן PDA מפושט <span class="math">P = (Q, Σ<sub>P</sub>, Γ, δ, q<sub>s</sub>, {q<sub>f</sub>})</span>, לכל
+      <span class="math">p, q ∈ Q</span> מגדירים את <span class="math">L<sub>p,q</sub></span> — כל המילים שמריצות את
+      <span class="math">P</span> ממצב <span class="math">p</span> עם מחסנית ריקה למצב <span class="math">q</span> עם מחסנית ריקה.
+      שימו לב: <span class="math">L(P) = L<sub>q<sub>s</sub>,q<sub>f</sub></sub></span>.</p>
+    <p>בונים דקדוק עם משתנים <span class="math">A<sub>p,q</sub></span> לכל זוג מצבים, <span class="math">S = A<sub>q<sub>s</sub>,q<sub>f</sub></sub></span>, וכללים:</p>
+    <ul>
+      <li>לכל <span class="math">p, q, r ∈ Q</span>: <span class="math">A<sub>p,q</sub> → A<sub>p,r</sub>A<sub>r,q</sub></span>.</li>
+      <li>לכל <span class="math">p ∈ Q</span>: <span class="math">A<sub>p,p</sub> → ε</span>.</li>
+      <li>לכל <span class="math">p, q, r, s ∈ Q</span>, <span class="math">γ ∈ Γ</span>, <span class="math">σ′, σ″ ∈ Σ<sub>ε</sub></span> כך ש־<span class="math">(r, γ) ∈ δ(p, σ′, ε)</span> (push) ו־<span class="math">(q, ε) ∈ δ(s, σ″, γ)</span> (pop):
+        מוסיפים <span class="math">A<sub>p,q</sub> → σ′A<sub>r,s</sub>σ″</span>.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>למת הניפוח לשפות חסרות הקשר</h2>
+  <div class="thm">
+    אם <span class="math">L</span> שפה חסרת הקשר, אז קיים <span class="math">p ∈ ℕ</span> כך שלכל
+    <span class="math">w ∈ L</span> עם <span class="math">|w| ≥ p</span> קיימת חלוקה
+    <span class="math">w = uvxyz</span> המקיימת:
+    <ol>
+      <li><span class="math">|vy| &gt; 0</span></li>
+      <li><span class="math">|vxy| ≤ p</span></li>
+      <li>לכל שלם <span class="math">i ≥ 0</span>: <span class="math">w<sub>i</sub> = uv<sup>i</sup>xy<sup>i</sup>z ∈ L</span></li>
+    </ol>
+  </div>
+  <div class="note"><b>הערת אורך:</b> אם <span class="math">|v| = s</span> ו־<span class="math">|y| = t</span> אז
+    <span class="math">|uv<sup>i</sup>xy<sup>i</sup>z| = |w| + (i−1)s + (i−1)t</span>.</div>
+</section>
+
+<section>
+  <h2>הצבה (Substitution)</h2>
+  <div class="def"><span class="term">הצבה</span> — בהינתן אלף־ביתים <span class="math">Σ<sub>1</sub>, Σ<sub>2</sub></span>,
+    הצבה היא פונקציה <span class="math">f: Σ<sub>1</sub> → P(Σ<sub>2</sub><sup>*</sup>)</span> — לכל אות
+    <span class="math">σ ∈ Σ<sub>1</sub></span> מתאימים שפה <span class="math">L<sub>σ</sub></span> מעל <span class="math">Σ<sub>2</sub></span>.
+    ההרחבה למילה: <span class="math">f(w) = {w<sub>1</sub>w<sub>2</sub>…w<sub>n</sub> | w<sub>i</sub> ∈ f(σ<sub>i</sub>)}</span>;
+    ולשפה: <span class="math">f(L) = ⋃<sub>w∈L</sub> f(w)</span>.
+  </div>
+  <div class="thm"><span class="term">הצבה רגולרית</span> — אם <span class="math">L</span> רגולרית וכל
+    <span class="math">L<sub>σ</sub></span> רגולרית, אז <span class="math">f(L)</span> רגולרית.
+    <span class="term">הצבה חסרת הקשר</span> — אם <span class="math">L</span> חסרת הקשר וכל
+    <span class="math">L<sub>σ</sub></span> חסרת הקשר, אז <span class="math">f(L)</span> חסרת הקשר.</div>
+</section>
+
+<section>
+  <h2>מכונת טיורינג</h2>
+  <div class="def"><span class="term">מכונת טיורינג (TM)</span> —
+    שביעייה <span class="math">M = (Q, Σ, Γ, δ, q<sub>s</sub>, q<sub>acc</sub>, q<sub>rej</sub>)</span>:
+    <ul>
+      <li><span class="math">Q</span> — קבוצה סופית של מצבים.</li>
+      <li><span class="math">Σ</span> — אלף־בית הקלט; תו הרווח <span class="math">␣ ∉ Σ</span>.</li>
+      <li><span class="math">Γ</span> — אלף־בית הסרט; <span class="math">␣ ∈ Γ</span> וגם <span class="math">Σ ⊆ Γ</span>.</li>
+      <li><span class="math">δ: Q × Γ → Q × Γ × {L, R}</span> — פונקציית המעברים.</li>
+      <li><span class="math">q<sub>s</sub></span> התחלתי; <span class="math">q<sub>acc</sub></span> מקבל; <span class="math">q<sub>rej</sub></span> דוחה.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>השפות המרכזיות</h2>
+  <div class="def">
+    <ul class="major-langs">
+      <li><span class="math">A<sub>DFA</sub> = {⟨D, w⟩ | D is a DFA and D accepts w}</span></li>
+      <li><span class="math">A<sub>TM</sub> = {⟨M, w⟩ | M is a TM and M accepts w}</span></li>
+      <li><span class="math">HALT<sub>TM</sub> = {⟨M, w⟩ | M is a TM and M halts on input w}</span></li>
+      <li><span class="math">E<sub>DFA</sub> = {⟨D⟩ | D is a DFA and L(D) = ∅}</span></li>
+      <li><span class="math">E<sub>TM</sub> = {⟨M⟩ | M is a TM and L(M) = ∅}</span></li>
+      <li><span class="math">REG<sub>TM</sub> = {⟨M⟩ | M is a TM and L(M) is a regular language}</span></li>
+      <li><span class="math">EQ<sub>DFA</sub> = {⟨D<sub>1</sub>, D<sub>2</sub>⟩ | D<sub>1</sub>, D<sub>2</sub> are DFAs and L(D<sub>1</sub>) = L(D<sub>2</sub>)}</span></li>
+      <li><span class="math">EQ<sub>TM</sub> = {⟨M<sub>1</sub>, M<sub>2</sub>⟩ | M<sub>1</sub>, M<sub>2</sub> are TMs and L(M<sub>1</sub>) = L(M<sub>2</sub>)}</span></li>
+      <li><span class="math">PAL = {w | w ∈ Σ<sup>*</sup> and w = w<sup>R</sup>}</span></li>
+      <li><span class="math">PAL<sub>TM</sub> = {⟨M⟩ | M is a TM and L(M) = PAL}</span></li>
+      <li><span class="math">L<sub>∞</sub> = {⟨M⟩ | M is a TM and L(M) is infinite}</span></li>
+    </ul>
+  </div>
+  <div class="note"><b>סטטוס כריעות (מהקורס):</b>
+    <span class="math">A<sub>DFA</sub>, E<sub>DFA</sub>, EQ<sub>DFA</sub> ∈ R</span>&nbsp;·&nbsp;
+    <span class="math">A<sub>TM</sub>, HALT<sub>TM</sub> ∈ RE ∖ R</span>&nbsp;·&nbsp;
+    <span class="math">E<sub>TM</sub> ∈ coRE ∖ R</span>&nbsp;·&nbsp;
+    <span class="math">REG<sub>TM</sub>, EQ<sub>TM</sub> ∉ RE ∪ coRE</span>.</div>
+</section>

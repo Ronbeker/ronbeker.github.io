@@ -1,19 +1,29 @@
-/* ===================== מערכות הפעלה — מרכז הכנה למבחן ===================== */
+/* ===================== מודלים חישוביים — מרכז הכנה למבחן ===================== */
 (function () {
 'use strict';
 
 const SUMS  = JSON.parse(document.getElementById('d-summaries').textContent);
 const QUIZ  = JSON.parse(document.getElementById('d-quiz').textContent);
 const EXAMS = JSON.parse(document.getElementById('d-exams').textContent);
-const TSVI  = document.getElementById('d-tsvi').textContent;
+const LANGB = JSON.parse(document.getElementById('d-langbank').textContent);
+const DEFS  = document.getElementById('d-defs').textContent;
+const TAX   = /*@@TAX@@*/ null;
 
-const KEY = 'os-prep-v1';
+const KEY = 'cm-prep-v1';
 const byId = {}; SUMS.forEach(s => byId[s.sid] = s);
 const quizBy = {}; QUIZ.forEach(q => quizBy[q.sid] = q);
 const examBy = {}; EXAMS.forEach(e => examBy[e.id] = e);
 
+/* מאגר השאלות: כל סעיף מתויג, מכל המבחנים, בסדר הופעה קבוע */
+const BANK = [];
+EXAMS.forEach(e => e.questions.forEach(q => q.parts.forEach(p => {
+  if(p.tags && p.tags.subj) BANK.push({ e, q, p, key: e.id + '|' + p.pid });
+})));
+const subjHe = id => (TAX.subjects.find(s => s.id === id) || {}).he || id;
+const qtHe   = id => (TAX.qtypes.find(t => t.id === id) || {}).he || id;
+
 /* ---------- state ---------- */
-const DEF = { read:{}, understood:{}, topics:{}, exams:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0, mt:{} };
+const DEF = { read:{}, understood:{}, topics:{}, exams:{}, bank:{}, lang:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0, mt:{} };
 let S = load();
 function load(){
   try { const raw = localStorage.getItem(KEY); if(!raw) return structuredClone(DEF);
@@ -66,7 +76,7 @@ function toast(msg, kind){
   const t = document.createElement('div'); t.className = 'toast'+(kind?' '+kind:'');
   t.textContent = msg;
   Object.assign(t.style,{position:'fixed',insetInlineStart:'50%',transform:'translateX(-50%)',bottom:'26px',
-    background: kind==='e' ? '#a32626' : '#123f55', color:'#fff', padding:'11px 20px', borderRadius:'10px',
+    background: kind==='e' ? '#a32626' : '#3b2a75', color:'#fff', padding:'11px 20px', borderRadius:'10px',
     zIndex:200, boxShadow:'0 8px 28px rgba(0,0,0,.28)', fontWeight:'650', maxWidth:'90vw'});
   document.body.appendChild(t); setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0';
     setTimeout(()=>t.remove(), 420); }, 2600);
@@ -87,8 +97,10 @@ function stats(){
   let nT=0, dT=0;
   SUMS.forEach(s=>{ s.topics.forEach((_,i)=>{ nT++; if(S.topics[tkey(s.sid,i)]?.done) dT++; }); });
   const nE = EXAMS.length, dE = EXAMS.filter(e=>S.exams[e.id]?.done).length;
-  const total = read+und+dT+dE, max = nS+nS+nT+nE;
-  return {nS,read,und,nT,dT,nE,dE,overall:pct(total,max)};
+  const nB = BANK.length,  dB = BANK.filter(b=>S.bank[b.key]?.done).length;
+  const nL = LANGB.length, dL = LANGB.filter(l=>S.lang[l.id]?.ok).length;
+  const total = read+und+dT+dE+dB+dL, max = nS+nS+nT+nE+nB+nL;
+  return {nS,read,und,nT,dT,nE,dE,nB,dB,nL,dL,overall:pct(total,max)};
 }
 function refreshChrome(){
   const st = stats();
@@ -97,6 +109,7 @@ function refreshChrome(){
   $('#tb-sum').innerHTML  = `${st.read}/${st.nS}`;
   $('#tb-top').innerHTML  = `${st.dT}/${st.nT}`;
   $('#tb-exam').innerHTML = `${st.dE}/${st.nE}`;
+  const tb = $('#tb-bank'); if(tb) tb.innerHTML = `${st.dB}/${st.nB}`;
 }
 
 /* ===================== views ===================== */
@@ -112,16 +125,19 @@ views.dash = () => {
   const nextT = (()=>{ for(const s of SUMS) for(let i=0;i<s.topics.length;i++)
       if(!S.topics[tkey(s.sid,i)]?.done) return {s,i}; return null; })();
   const nextE = EXAMS.find(e=>!S.exams[e.id]?.done);
+  const nextB = BANK.find(b=>!S.bank[b.key]?.done);
   let days = '', dcls='';
   if(S.examDate){ const d = Math.ceil((new Date(S.examDate+'T08:00') - new Date())/864e5);
     days = d>0 ? d : (d===0?0:d); dcls = d<0?'עבר':'ימים'; }
 
   return `
-  <div class="grid g4" style="margin-bottom:16px">
-    ${statCard('סיכומים שנקראו', st.read, st.nS)}
-    ${statCard('סיכומים שהובנו', st.und, st.nS, true)}
+  <div class="grid g3" style="margin-bottom:16px">
+    ${statCard('פרקים שנקראו', st.read, st.nS)}
+    ${statCard('פרקים שהובנו', st.und, st.nS, true)}
     ${statCard('נושאים שהובנו', st.dT, st.nT, true)}
     ${statCard('מבחנים שהוכנו', st.dE, st.nE)}
+    ${statCard('שאלות מהמאגר שתורגלו', st.dB, st.nB, true)}
+    ${statCard('שפות שסווגו נכון', st.dL, st.nL)}
   </div>
 
   <div class="card countdown" style="margin-bottom:18px">
@@ -133,6 +149,7 @@ views.dash = () => {
     <div>
       <label style="display:block;margin-bottom:4px">תאריך המבחן</label>
       <input type="date" id="exam-date" value="${esc(S.examDate)}">
+      <div style="margin-top:8px"><button class="btn ghost sm" onclick="openReader('__defs__')">דף נוסחאות והגדרות</button></div>
     </div>
     <div style="text-align:center">
       <div class="big">${num(st.overall)}%</div>
@@ -148,6 +165,10 @@ views.dash = () => {
             : nextItem('כל הנושאים סומנו כמובנים', 'כל הכבוד — עכשיו מבחנים', `go('exams')`, 'למבחנים')}
     ${nextE ? nextItem('המבחן הבא לתרגול', nextE.label, `go('exams');openExam('${nextE.id}')`, 'פתח טופס')
             : nextItem('כל המבחנים הוכנו', 'אפשר לחזור על נושאים חלשים', `go('tools')`, 'לכלים')}
+    ${nextB ? nextItem('תרגל שאלה מהמאגר', subjHe(nextB.p.tags.subj)+' · '+qtHe(nextB.p.tags.qt)+' — '+nextB.e.label, `go('bank')`, 'למאגר')
+            : st.nB ? nextItem('כל שאלות המאגר תורגלו', 'כל הכבוד — שווה סבב ערבוב לחזרה', `go('bank')`, 'למאגר') : ''}
+    ${st.nL && st.dL < st.nL ? nextItem('דריל סיווג שפות', `סיווגת נכון ${st.dL} מתוך ${st.nL} שפות`, `startDrill()`, 'התחל דריל')
+            : st.nL ? nextItem('כל השפות סווגו נכון', 'שווה סבב רענון מהיר', `startDrill()`, 'סבב נוסף') : ''}
   </div>
 
   ${weak.length ? `<h2 class="sec">נושאים לחיזוק <span class="pill e">${num(weak.length)}</span></h2>
@@ -161,14 +182,14 @@ views.dash = () => {
 
   <h2 class="sec">מפת החומר</h2>
   <div class="card" style="padding:16px 18px">
-    ${['הרצאות','תרגולים'].map(g=>{
+    ${[...new Set(SUMS.map(s=>s.group))].map(g=>{
       const list = SUMS.filter(s=>s.group===g); if(!list.length) return '';
       return `<div style="margin-bottom:14px"><div class="small muted" style="font-weight:750;margin-bottom:7px">${g}</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px">${list.map(s=>{
         const tot=s.topics.length, d=s.topics.filter((_,i)=>S.topics[tkey(s.sid,i)]?.done).length;
         const cls = d===tot ? 'g' : d ? 'w' : 'n';
         return `<button class="pill ${cls}" style="cursor:pointer;font-size:.8rem"
-          onclick="go('topics');openAcc('${s.sid}')" title="${esc(s.title)}">${esc(s.sid.replace('ch','פרק ').replace('rec','תרגול '))} · ${num(d+'/'+tot)}</button>`;
+          onclick="go('topics');openAcc('${s.sid}')" title="${esc(s.title)}">${esc(s.sid.replace('ch','פרק '))} · ${num(d+'/'+tot)}</button>`;
       }).join('')}</div></div>`;}).join('')}
   </div>`;
 };
@@ -184,7 +205,7 @@ function nextItem(kicker, title, action, btn){
 
 /* ---------- Summaries ---------- */
 views.summaries = () => {
-  const groups = ['הרצאות','תרגולים'];
+  const groups = [...new Set(SUMS.map(s=>s.group))];
   return groups.map(g=>{
     const list = SUMS.filter(s=>s.group===g);
     return `<h2 class="sec">${g} <span class="pill n">${num(list.length)}</span></h2>
@@ -456,6 +477,7 @@ views.exam = () => {
     <h2>${esc(e.label)}</h2>
     <span class="timer" id="tmr">${fmtT(EX.elapsed)}</span>
     <button class="btn ghost sm" id="tbtn" onclick="toggleTimer()">${EX.running?'עצור':'הפעל שעון'}</button>
+    <button class="btn ghost sm" onclick="openDefsModal()" title="דף ההגדרות שמצורף למבחן">דף נוסחאות</button>
   </div>
   ${e.meta.note?`<div class="card" style="padding:12px 16px;margin-bottom:14px;background:var(--warn-bg);border-color:var(--warn-line)">
      <b>שים לב:</b> ${esc(e.meta.note)}</div>`:''}
@@ -585,6 +607,8 @@ function renderKeep(){
 }
 window.renderKeep = renderKeep;
 window.__grabAnchor = grabAnchor;   /* לבדיקות */
+window.__merge = (a,b)=>mergeStates(a,b);   /* לבדיקות */
+window.__stats = ()=>stats();               /* לבדיקות */
 
 window.revealSol = ()=>{
   if(!confirm('להציג את הפתרון הרשמי לפני ההגשה?')) return;
@@ -597,13 +621,16 @@ window.submitExam = ()=>{
   const L=[];
   L.push(`# הגשת מבחן לבדיקה — ${e.label}`);
   L.push('');
-  L.push(`**קורס:** מערכות הפעלה · **מבחן:** ${e.label} · **הוגש:** ${stamp} · **זמן עבודה:** ${fmtT(EX.elapsed)}`);
+  L.push(`**קורס:** מודלים חישוביים · **מבחן:** ${e.label} · **הוגש:** ${stamp} · **זמן עבודה:** ${fmtT(EX.elapsed)}`);
   if(e.meta.date) L.push(`**תאריך המבחן המקורי:** ${e.meta.date}`);
   if(e.meta.note) L.push(`**הערה:** ${e.meta.note}`);
   L.push('');
   L.push('> **בקשה לבודק:** להלן מבחן שפתרתי. לכל סעיף מופיעים: נוסח השאלה, התשובה שלי, והפתרון הרשמי.');
   L.push('> אנא בדוק כל סעיף, תן ניקוד והסבר קצר מה היה חסר או שגוי, ובסוף סכם ציון כולל,');
   L.push('> רשימת נושאים לחיזוק, וטעויות חוזרות שכדאי שאשים לב אליהן.');
+  L.push('> בהוכחות — בדוק במיוחד: מבנה לוגי וסדר כמתים; בלמות ניפוח — שהחלוקה נבחרה על ידי היריב');
+  L.push('> ושכל המקרים כוסו; ברדוקציות — שכיוון הרדוקציה נכון ושההעתקה מוכחת לשני הכיוונים;');
+  L.push('> בבניות (DFA/NFA/CFG/PDA/TM) — שההגדרה פורמלית ומלאה ושיש נימוק נכונות.');
   L.push('');
   L.push('---');
   const solFor = ref => (e.solution.find(s=>s.ref===ref)||{}).html;
@@ -666,10 +693,10 @@ views.tools = () => {
     </div>
   </div>
 
-  <h2 class="sec">שאלות שהמרצה סימן כטובות למבחן</h2>
+  <h2 class="sec">דף נוסחאות והגדרות</h2>
   <div class="card" style="padding:16px 18px;margin-bottom:18px">
-    <p style="margin-top:0" class="muted small">מתוך תמלולי ההרצאות — כולל טענות נכון/לא־נכון שחלקן הופיעו במבחן לדוגמה.</p>
-    <button class="btn" onclick="openReader('__tsvi__')">פתח</button>
+    <p style="margin-top:0" class="muted small">הנוסח שמצורף רשמית לטופס המבחן — כל ההגדרות, ההמרות והאלגוריתמים במקום אחד. זמין גם מתוך כל מבחן.</p>
+    <button class="btn" onclick="openReader('__defs__')">פתח</button>
   </div>
 
   <h2 class="sec">יומן טעויות ותובנות</h2>
@@ -710,6 +737,12 @@ views.tools = () => {
     </div>`; })()}
   </div>
 
+  <h2 class="sec">ארכיון</h2>
+  <div class="card" style="padding:16px 18px;margin-bottom:18px">
+    <p style="margin-top:0" class="muted small">אתר ההכנה הקודם — מערכות הפעלה — שמור במלואו, כולל ההתקדמות שלך.</p>
+    <a class="btn ghost sm" href="os/" style="display:inline-block;text-decoration:none">מערכות הפעלה — ארכיון ›</a>
+  </div>
+
   <h2 class="sec">גיבוי התקדמות</h2>
   <div class="card" style="padding:16px 18px;margin-bottom:18px">
     <p style="margin-top:0" class="small muted">ההתקדמות נשמרת בדפדפן הזה בלבד. מומלץ לייצא גיבוי מדי פעם.</p>
@@ -727,7 +760,7 @@ window.KEYX = KEY;
 window.exportProgress = ()=>{
   const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
   const u=URL.createObjectURL(b), a=document.createElement('a');
-  a.href=u; a.download='os-prep-progress-'+new Date().toISOString().slice(0,10)+'.json';
+  a.href=u; a.download='cm-prep-progress-'+new Date().toISOString().slice(0,10)+'.json';
   document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},400);
 };
 window.importProgress = (inp)=>{
@@ -775,6 +808,234 @@ function renderRandom(){
 }
 window.renderRandomX = ()=>renderRandom();
 
+/* ---------- מאגר שאלות לפי נושא (bank) ---------- */
+let bankF = { subj:{}, qt:{}, hideDone:false };
+const bankOpen = new Set();
+function bankPool(){
+  const sOn = TAX.subjects.some(s=>bankF.subj[s.id]);
+  const tOn = TAX.qtypes.some(t=>bankF.qt[t.id]);
+  return BANK.filter(b=>{
+    if(sOn && !bankF.subj[b.p.tags.subj]) return false;
+    if(tOn && !bankF.qt[b.p.tags.qt]) return false;
+    if(bankF.hideDone && S.bank[b.key]?.done) return false;
+    return true;
+  });
+}
+function bankSolHtml(b){
+  const hit = b.e.solution.find(s=>s.ref===b.p.pid) || b.e.solution.find(s=>s.ref===b.q.n);
+  return hit ? hit.html : '';
+}
+function bankCard(b){
+  const {e,q,p} = b;
+  const done = !!S.bank[b.key]?.done;
+  const open = bankOpen.has(b.key);
+  const sol = bankSolHtml(b);
+  const ltr = e.lang==='en';
+  return `<div class="card bq-card" data-anch="b:${esc(b.key)}">
+    <div class="bq-head">
+      <span class="exlbl">${esc(e.label)}</span>
+      <span class="pill n">${esc(subjHe(p.tags.subj))}</span>
+      <span class="pill w">${esc(qtHe(p.tags.qt))}</span>
+      ${done?'<span class="pill g">תורגל ✓</span>':''}
+    </div>
+    <div class="small muted" style="margin-bottom:6px">${esc(q.heading)}${p.label?` · סעיף ${esc(p.label)}`:''}</div>
+    ${q.intro?`<details class="bq-ctx"${open?' open':''}><summary>נתוני השאלה המלאים</summary><div class="qbody ${ltr?'ltr':''}">${q.intro}</div></details>`:''}
+    <div class="qbody ${ltr?'ltr':''}">${p.prompt||''}</div>
+    ${p.kind==='mc'&&p.choices?.length?`<div class="qbody ${ltr?'ltr':''}">${p.choices.map((c,ci)=>`<div><b>${'ABCDEF'[ci]}.</b> ${c}</div>`).join('')}</div>`:''}
+    ${open&&sol?`<div class="solbox" data-anch="bs:${esc(b.key)}"><h4>הפתרון הרשמי</h4><div class="qbody ${ltr?'ltr':''}">${sol}</div></div>`:''}
+    <div class="ex-row" style="margin-top:10px;align-items:center">
+      ${sol?`<button class="btn ghost sm" onclick="bankSol('${b.key}')">${open?'הסתר פתרון':'הצג פתרון'}</button>`:''}
+      <label class="chk${done?' done':''}"><input type="checkbox" ${done?'checked':''}
+        onchange="markBank('${b.key}',this.checked)"><span class="box"></span>תרגלתי — סמן</label>
+      <div style="flex:1"></div>
+      <button class="btn ghost sm" onclick="openExam('${e.id}')">פתח במבחן המלא</button>
+    </div>
+  </div>`;
+}
+views.bank = () => {
+  const st = stats();
+  if(!BANK.length) return `<div class="empty">המאגר יתמלא כשהמבחנים המתויגים ייכנסו לאתר</div>`;
+  const pool = bankPool();
+  const cells = TAX.subjects.map(sub=>{
+    const all = BANK.filter(b=>b.p.tags.subj===sub.id);
+    if(!all.length) return '';
+    const d = all.filter(b=>S.bank[b.key]?.done).length;
+    const on = !!bankF.subj[sub.id];
+    return `<div class="subj-cell${on?' on':''}" onclick="bankTog('subj','${sub.id}')" role="button" tabindex="0">
+      <div class="sk"><span>${esc(sub.he)}</span><span class="num">${d}/${all.length}</span></div>
+      <div class="bar${d===all.length&&all.length?' ok':''}"><i style="width:${pct(d,all.length)}%"></i></div></div>`;
+  }).join('');
+  const qtChips = TAX.qtypes.map(t=>{
+    const n = BANK.filter(b=>b.p.tags.qt===t.id).length;
+    if(!n) return '';
+    return `<button class="fchip${bankF.qt[t.id]?' on':''}" onclick="bankTog('qt','${t.id}')">${esc(t.he)}<span class="cnt">${num(n)}</span></button>`;
+  }).join('');
+  return `
+  <div class="card" style="padding:14px 18px;margin-bottom:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <div><b>${num(st.dB)}</b> מתוך <b>${num(st.nB)}</b> שאלות מהמאגר תורגלו</div>
+    <div class="bar" style="flex:1;min-width:160px"><i style="width:${pct(st.dB,st.nB)}%"></i></div>
+    <button class="btn sm" onclick="startShuffle()">🔀 תרגול בערבוב לפי הסינון</button>
+    <button class="btn sm ghost" onclick="startDrill()">⚡ דריל סיווג שפות</button>
+  </div>
+  <h2 class="sec">התקדמות לפי נושא <span class="small muted" style="font-weight:400">(לחיצה מסננת)</span></h2>
+  <div class="subj-grid">${cells}</div>
+  <div class="fchips">${qtChips}
+    <button class="fchip${bankF.hideDone?' on':''}" onclick="bankHideDone()">הסתר שתורגלו</button>
+    ${(TAX.subjects.some(s=>bankF.subj[s.id])||TAX.qtypes.some(t=>bankF.qt[t.id])||bankF.hideDone)?
+      `<button class="fchip" onclick="bankClear()">נקה סינון ✕</button>`:''}
+  </div>
+  <div class="small muted" style="margin-bottom:10px">${num(pool.length)} שאלות בסינון הנוכחי</div>
+  ${pool.length ? pool.map(bankCard).join('') : '<div class="empty">אין שאלות בסינון הנוכחי</div>'}`;
+};
+window.bankTog = (kind,id)=>{ bankF[kind][id]=!bankF[kind][id]; render(); };
+window.bankHideDone = ()=>{ bankF.hideDone=!bankF.hideDone; render(); };
+window.bankClear = ()=>{ bankF={subj:{},qt:{},hideDone:false}; render(); };
+window.bankSol = key=>{ bankOpen.has(key)?bankOpen.delete(key):bankOpen.add(key); renderKeep(); };
+window.markBank = (key,v)=>{
+  const prev = S.bank[key]||{};
+  if(v) S.bank[key]={done:true, tries:prev.tries||0};
+  else delete S.bank[key];
+  touch('b:'+key); save(); refreshChrome(); renderKeep();
+};
+
+/* ---------- מצב ערבוב (shuffle) — כרטיסיות על המאגר המסונן ---------- */
+let SH = null;
+window.startShuffle = ()=>{
+  const pool = bankPool();
+  if(!pool.length) return toast('אין שאלות בסינון הנוכחי','e');
+  const arr = pool.slice();
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  SH = { list:arr, idx:0, revealed:false, marks:[] };
+  go('shuffle');
+};
+views.shuffle = ()=>{
+  if(!SH) return '<div class="empty">אין סבב תרגול פעיל — התחל מהמאגר</div>';
+  if(SH.idx >= SH.list.length){
+    const got = SH.marks.filter(m=>m.ok).length;
+    const bySubj = {};
+    SH.marks.forEach(m=>{ const s=m.b.p.tags.subj; (bySubj[s]=bySubj[s]||{n:0,ok:0}).n++; if(m.ok) bySubj[s].ok++; });
+    return `<div class="shuf-wrap"><div class="card" style="padding:20px 22px">
+      <h2 style="margin-top:0">סיום סבב — ידעת ${num(got)} מתוך ${num(SH.marks.length)}</h2>
+      ${Object.keys(bySubj).map(s=>`<div class="next-item">
+        <span class="pill ${bySubj[s].ok===bySubj[s].n?'g':bySubj[s].ok?'w':'e'}">${num(bySubj[s].ok+'/'+bySubj[s].n)}</span>
+        <div class="t"><b>${esc(subjHe(s))}</b></div></div>`).join('')}
+      <div class="shuf-acts">
+        <button class="btn" onclick="startShuffle()">סבב חדש</button>
+        <button class="btn ghost" onclick="go('bank')">חזרה למאגר</button>
+      </div></div></div>`;
+  }
+  const b = SH.list[SH.idx], {e,q,p} = b;
+  const sol = bankSolHtml(b), ltr = e.lang==='en';
+  return `<div class="shuf-wrap">
+    <div class="shuf-prog">
+      <button class="btn ghost sm" onclick="go('bank')">‹ יציאה</button>
+      <span class="pill n">${num((SH.idx+1)+'/'+SH.list.length)}</span>
+      <div class="bar" style="flex:1;min-width:120px"><i style="width:${pct(SH.idx,SH.list.length)}%"></i></div>
+      <span class="pill g">${num(SH.marks.filter(m=>m.ok).length)} ידעתי</span>
+    </div>
+    <div class="card bq-card">
+      <div class="bq-head">
+        <span class="exlbl">${esc(e.label)}</span>
+        <span class="pill n">${esc(subjHe(p.tags.subj))}</span>
+        <span class="pill w">${esc(qtHe(p.tags.qt))}</span>
+      </div>
+      <div class="small muted" style="margin-bottom:6px">${esc(q.heading)}${p.label?` · סעיף ${esc(p.label)}`:''}</div>
+      ${q.intro?`<details class="bq-ctx" open><summary>נתוני השאלה המלאים</summary><div class="qbody ${ltr?'ltr':''}">${q.intro}</div></details>`:''}
+      <div class="qbody ${ltr?'ltr':''}">${p.prompt||''}</div>
+      ${p.kind==='mc'&&p.choices?.length?`<div class="qbody ${ltr?'ltr':''}">${p.choices.map((c,ci)=>`<div><b>${'ABCDEF'[ci]}.</b> ${c}</div>`).join('')}</div>`:''}
+      ${SH.revealed?(sol?`<div class="solbox"><h4>הפתרון הרשמי</h4><div class="qbody ${ltr?'ltr':''}">${sol}</div></div>`:'<div class="empty">אין פתרון רשמי לסעיף זה</div>'):''}
+    </div>
+    <div class="shuf-acts">
+      ${SH.revealed
+        ? `<button class="btn ok" onclick="shuffleMark(true)">ידעתי ✓</button>
+           <button class="btn" style="background:var(--err)" onclick="shuffleMark(false)">עוד לא ✗</button>`
+        : `<button class="btn" onclick="shuffleReveal()">חשוב/י — ואז הצג פתרון</button>
+           <button class="btn ghost sm" onclick="shuffleSkip()">דלג</button>`}
+    </div>
+  </div>`;
+};
+window.shuffleReveal = ()=>{ SH.revealed=true; render(); };
+window.shuffleSkip = ()=>{ SH.idx++; SH.revealed=false; render(); window.scrollTo(0,0); };
+window.shuffleMark = ok=>{
+  const b = SH.list[SH.idx];
+  const prev = S.bank[b.key]||{};
+  S.bank[b.key] = { done: !!ok, tries: (prev.tries||0)+1 };
+  touch('b:'+b.key); save(); refreshChrome();
+  SH.marks.push({b, ok:!!ok});
+  SH.idx++; SH.revealed=false; render(); window.scrollTo(0,0);
+};
+
+/* ---------- דריל סיווג שפות (drill) ---------- */
+let DR = null;
+const drillHe = { reg:'רגולרית', cfl:'חסרת הקשר (לא רגולרית)', none:'אף לא אחת' };
+window.startDrill = ()=>{
+  if(!LANGB.length) return toast('מאגר השפות עדיין ריק','e');
+  const fresh=[], done=[];
+  LANGB.forEach(l=>{ (S.lang[l.id]?.ok ? done : fresh).push(l); });
+  const sh = a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+  DR = { list: sh(fresh).concat(sh(done)), idx:0, streak:0, best:0, answered:false, picked:null, lastOk:false, sessionOk:0, timer:null };
+  go('drill');
+};
+window.drillPick = ans=>{
+  if(!DR || DR.answered) return;
+  const l = DR.list[DR.idx], ok = ans===l.ans;
+  DR.answered=true; DR.picked=ans; DR.lastOk=ok;
+  DR.streak = ok ? DR.streak+1 : 0;
+  DR.best = Math.max(DR.best, DR.streak);
+  if(ok) DR.sessionOk++;
+  const prev = S.lang[l.id]||{};
+  S.lang[l.id] = { ok: !!prev.ok || ok, tries:(prev.tries||0)+1 };
+  touch('c:'+l.id); save(); refreshChrome(); render();
+  if(ok) DR.timer = setTimeout(()=>{ if(DR && DR.answered && view==='drill') drillNext(); }, 1300);
+};
+window.drillNext = ()=>{
+  if(!DR) return; clearTimeout(DR.timer);
+  DR.answered=false; DR.picked=null; DR.idx++;
+  render();
+};
+views.drill = ()=>{
+  if(!DR) return '<div class="empty">אין דריל פעיל</div>';
+  const st = stats();
+  if(DR.idx >= DR.list.length){
+    return `<div class="drill-wrap"><div class="card" style="padding:20px 22px;text-align:center">
+      <h2 style="margin-top:0">סיום סבב הדריל</h2>
+      <p>ענית נכון על <b>${num(DR.sessionOk)}</b> מתוך <b>${num(DR.list.length)}</b> · רצף שיא בסבב: <b>${num(DR.best)}</b></p>
+      <p class="small muted">בסך הכול סיווגת נכון אי־פעם ${num(st.dL)} מתוך ${num(st.nL)} שפות.</p>
+      <div class="shuf-acts">
+        <button class="btn" onclick="startDrill()">סבב נוסף</button>
+        <button class="btn ghost" onclick="go('bank')">חזרה למאגר</button>
+      </div></div></div>`;
+  }
+  const l = DR.list[DR.idx];
+  const opts = [['reg','רגולרית'],['cfl','חסרת הקשר (לא רגולרית)'],['none','אף לא אחת']];
+  return `<div class="drill-wrap">
+    <div class="shuf-prog">
+      <button class="btn ghost sm" onclick="go('bank')">‹ יציאה</button>
+      <span class="pill n">${num((DR.idx+1)+'/'+DR.list.length)}</span>
+      <span class="pill ${st.dL===st.nL?'g':'n'}" title="סווגו נכון אי־פעם">${num(st.dL+'/'+st.nL)} ✓</span>
+      <div style="flex:1"></div>
+      <span class="streak" title="רצף נוכחי">🔥 <span class="num">${DR.streak}</span></span>
+    </div>
+    <div class="card" style="padding:12px 16px;margin-bottom:4px" class="small">
+      <span class="small muted">מהו הסיווג <b>החזק ביותר</b> שנכון לשפה? (רגולרית ⊂ חסרת הקשר)</span></div>
+    <div class="drill-lang">${l.html}</div>
+    <div class="drill-btns">${opts.map(([id,he])=>{
+      let cls='';
+      if(DR.answered){ cls = id===l.ans ? ' hit' : (id===DR.picked ? ' miss' : ' dim'); }
+      return `<button class="dbtn${cls}" ${DR.answered?'disabled':''} onclick="drillPick('${id}')">${he}</button>`;
+    }).join('')}</div>
+    <div class="drill-fb">
+      ${DR.answered
+        ? (DR.lastOk
+            ? `<span style="color:var(--ok)">נכון ✓</span>&nbsp; <span class="src">מקור: <span class="en">${esc(l.src||'')}</span></span>`
+            : `<span style="color:var(--err)">לא נכון —</span> התשובה: <b>${drillHe[l.ans]}</b>&nbsp; <span class="src">מקור: <span class="en">${esc(l.src||'')}</span></span>`)
+        : ''}
+      ${DR.answered && l.note ? `<div class="small muted" style="font-weight:400;margin-top:4px">${l.note}</div>` : ''}
+    </div>
+    ${DR.answered ? `<div class="shuf-acts"><button class="btn${DR.lastOk?' ghost':''}" onclick="drillNext()">הבא ›</button></div>` : ''}
+  </div>`;
+};
+
 /* ---------- Search ---------- */
 let searchIdx=null;
 function buildIdx(){
@@ -817,21 +1078,28 @@ window.gotoHit=(sid,ti)=>{ $('#sres').hidden=true; $('#q').value='';
 /* ---------- reader special pages ---------- */
 const origReader = views.reader;
 views.reader = () => {
-  if(readerSid==='__tsvi__'){
-    return `<div class="reader-top"><button class="btn ghost sm" onclick="go('tools')">‹ חזרה לכלים</button>
+  if(readerSid==='__defs__'){
+    return `<div class="reader-top"><button class="btn ghost sm" onclick="go(S.lastView||'dash')">‹ חזרה</button>
       <div style="flex:1"></div><button class="btn ghost sm" onclick="window.print()">הדפס</button></div>
-      <div class="summary-body">${TSVI}</div>`;
+      <div class="summary-body">${DEFS}</div>`;
   }
   return origReader();
 };
+/* דף הנוסחאות כחלון צף — מתוך מבחן, בלי לאבד את המקום */
+window.openDefsModal = ()=>{
+  $('#ov').innerHTML = `<div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-h"><h3>דף נוסחאות והגדרות</h3><button class="x" onclick="closeQuiz()" aria-label="סגור">×</button></div>
+    <div class="modal-b"><div class="summary-body">${DEFS}</div></div></div>`;
+  $('#ov').hidden = false; document.body.style.overflow='hidden';
+};
 
 /* ---------- router ---------- */
-const TABS=[['dash','דשבורד'],['summaries','סיכומים'],['topics','נושאי הקורס'],['exams','מבחנים'],['tools','כלים']];
+const TABS=[['dash','דשבורד'],['summaries','סיכומים'],['topics','נושאי הקורס'],['exams','מבחנים'],['bank','מאגר'],['tools','כלים']];
 let view = S.lastView && views[S.lastView] ? S.lastView : 'dash';
 /* מעבר בין לשוניות הוא העדפת תצוגה מקומית בלבד — הוא לא "התקדמות".
    קודם הוא קרא ל-save() ולכן עצם הדפדוף במכשיר ישן הפך אותו ל"חדש
    ביותר" ודרס בענן התקדמות אמיתית ממכשיר אחר.                       */
-window.go = (v)=>{ view=v; if(['dash','summaries','topics','exams','tools'].includes(v)){ S.lastView=v; saveLocal(); }
+window.go = (v)=>{ view=v; if(['dash','summaries','topics','exams','bank','tools'].includes(v)){ S.lastView=v; saveLocal(); }
   render(); window.scrollTo(0,0); };
 function render(){
   $$('#tabs .tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.v===view)));
@@ -846,7 +1114,7 @@ window.render = render;
 /* ===================== סנכרון ענן (JSONBin) ===================== */
 /* אין סוד קשיח בקובץ. ההגדרות נשמרות ב-localStorage של כל מכשיר בנפרד,
    או מוזרקות פעם אחת דרך פרמטרים ב-URL.                                */
-const CKEY = 'os-prep-cloud';
+const CKEY = 'cm-prep-cloud';
 const CLOUD_BAKED = { bin:'', key:'' };   // אפשר למלא כאן Access Key אם מעדיפים נוחות
 let   syncS = { st:'off', msg:'', at:0, size:0 };
 let   pulledOk = false;   // אין דחיפה לענן לפני משיכה מוצלחת — מונע דריסה של מצב חדש יותר
@@ -900,7 +1168,8 @@ async function jbFetch(url, opts){
 function progCount(x){
   if(!x || typeof x!=='object') return 0;
   return Object.keys(x.read||{}).length + Object.keys(x.understood||{}).length +
-         Object.keys(x.topics||{}).length + Object.keys(x.exams||{}).length;
+         Object.keys(x.topics||{}).length + Object.keys(x.exams||{}).length +
+         Object.keys(x.bank||{}).length + Object.keys(x.lang||{}).length;
 }
 /* כל מפתחות ה"התקדמות" של רשומה, בפורמט של mt */
 function allKeys(rec){
@@ -910,6 +1179,8 @@ function allKeys(rec){
   Object.keys(rec.topics||{}).forEach(k=>out.push('t:'+k));
   Object.keys(rec.exams||{}).forEach(id=>{ out.push('e:'+id);
     Object.keys((rec.exams[id]||{}).answers||{}).forEach(pid=>out.push(akey(id,pid))); });
+  Object.keys(rec.bank||{}).forEach(k=>out.push('b:'+k));
+  Object.keys(rec.lang||{}).forEach(k=>out.push('c:'+k));
   ['master','notes','examDate'].forEach(k=>out.push(k));
   return out;
 }
@@ -982,6 +1253,8 @@ function mergeStates(recA, recB){
   out.read       = mergeMap('r:', recA.read,       recB.read,       recA, recB, mt);
   out.understood = mergeMap('u:', recA.understood, recB.understood, recA, recB, mt);
   out.topics     = mergeMap('t:', recA.topics,     recB.topics,     recA, recB, mt);
+  out.bank       = mergeMap('b:', recA.bank,       recB.bank,       recA, recB, mt);
+  out.lang       = mergeMap('c:', recA.lang,       recB.lang,       recA, recB, mt);
   out.exams      = mergeExams(recA, recB, mt);
   out.master   = !!mergeScalar('master',   !!recA.master, !!recB.master, recA, recB, mt, false);
   out.notes    = mergeScalar('notes',    recA.notes||'',    recB.notes||'',    recA, recB, mt, '') || '';
@@ -1010,6 +1283,7 @@ function differs(merged, cloud){
       e[id] = r;
     });
     return stable({ r:x.read||{}, u:x.understood||{}, t:x.topics||{}, e,
+                    b:x.bank||{}, l:x.lang||{},
                     m:!!x.master, n:x.notes||'', d:x.examDate||'' });
   };
   return norm(merged) !== norm(cloud);
@@ -1203,7 +1477,8 @@ window.toast = toast;
 $('#tabs').innerHTML = TABS.map(([v,l])=>{
   const badge = v==='summaries'?'<span class="badge" id="tb-sum"></span>'
               : v==='topics'?'<span class="badge" id="tb-top"></span>'
-              : v==='exams'?'<span class="badge" id="tb-exam"></span>':'';
+              : v==='exams'?'<span class="badge" id="tb-exam"></span>'
+              : v==='bank'?'<span class="badge" id="tb-bank"></span>':'';
   return `<button class="tab" data-v="${v}" onclick="go('${v}')" aria-selected="false">${l}${badge}</button>`;}).join('');
 $('#q').addEventListener('input', e=>doSearch(e.target.value));
 $('#q').addEventListener('keydown', e=>{ if(e.key==='Escape'){ e.target.value=''; $('#sres').hidden=true; e.target.blur(); }});

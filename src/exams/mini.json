@@ -1,0 +1,65 @@
+{
+  "id": "mini",
+  "year": 2026,
+  "moed": "AI",
+  "label": "מבחן בדיקה זמני (יוסר)",
+  "lang": "he",
+  "combined": false,
+  "meta": {
+    "date": "",
+    "duration": "20 דקות",
+    "staff": "שלד לבדיקות מנוע — יוחלף במבחני 2023–2024 האמיתיים",
+    "totalPoints": 25,
+    "note": "מבחן זמני לבדיקת האתר. המבחנים האמיתיים בדרך."
+  },
+  "questions": [
+    {
+      "n": "1",
+      "heading": "שאלה 1 (15 נקודות)",
+      "points": 15,
+      "intro": "",
+      "parts": [
+        {
+          "pid": "q1a",
+          "label": "א",
+          "kind": "tf",
+          "rows": 3,
+          "prompt": "<p dir=\"auto\">אם <span class=\"math\">L₁</span> ו־<span class=\"math\">L₂</span> שפות רגולריות, אז <span class=\"math\">L₁ ∩ L₂</span> רגולרית. נכון או לא נכון? נמקו בקצרה.</p>",
+          "tags": { "subj": "closure", "qt": "claim" }
+        },
+        {
+          "pid": "q1b",
+          "label": "ב",
+          "kind": "open",
+          "rows": 6,
+          "prompt": "<p dir=\"auto\">בנו <span class=\"en\">DFA</span>‏ לשפה <span class=\"math\">L = {w ∈ {a,b}<sup>*</sup> | #<sub>a</sub>(w) זוגי}</span>. ציינו את החמישייה במפורש.</p>",
+          "tags": { "subj": "automata", "qt": "construction" }
+        }
+      ]
+    },
+    {
+      "n": "2",
+      "heading": "שאלה 2 (10 נקודות)",
+      "points": 10,
+      "intro": "<p dir=\"auto\">נתונה השפה:</p><div class=\"lang-def\">L = {aⁿbⁿ | n ≥ 0}</div>",
+      "parts": [
+        {
+          "pid": "q2a",
+          "label": "א",
+          "kind": "tf",
+          "rows": 2,
+          "prompt": "<p dir=\"auto\">‏<span class=\"math\">L</span> רגולרית. נכון או לא נכון?</p>",
+          "tags": { "subj": "pump-reg", "qt": "claim" }
+        },
+        {
+          "pid": "q2b",
+          "label": "ב",
+          "kind": "open",
+          "rows": 8,
+          "prompt": "<p dir=\"auto\">הוכיחו את תשובתכם מסעיף א׳ בעזרת למת הניפוח.</p>",
+          "tags": { "subj": "pump-reg", "qt": "pumping" }
+        }
+      ]
+    }
+  ]
+}

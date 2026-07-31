@@ -1,0 +1,103 @@
+<h1>מבוא: מילים, שפות ו־DFA</h1>
+<p class="chapter-subtitle">מודלים חישוביים — פרק 1 (הרצאה 1 + תרגול 1)</p>
+
+<section>
+  <h2 id="ch1-t0">מה זה מודל חישובי ומה נלמד בקורס</h2>
+
+  <div class="def">
+    <span class="term">מודל חישובי</span> — הגדרה מתמטית מדויקת של "מכונה" שמבצעת חישוב.
+    במקום לדבר על מחשב פיזי, מגדירים אובייקט פורמלי (קבוצות ופונקציות) ושואלים:
+    <b>אילו בעיות המודל הזה מסוגל לפתור, ואילו לא?</b>
+  </div>
+
+  <p>הקורס בנוי כסולם של מודלים, מהחלש אל החזק:</p>
+  <div class="hier">
+    <div class="ring"><span class="hlbl">מכונות טיורינג — R, RE</span>
+      <div class="ring"><span class="hlbl">אוטומטי מחסנית — שפות חסרות הקשר (CFL)</span>
+        <div class="ring"><span class="hlbl">אוטומטים סופיים — שפות רגולריות</span></div>
+      </div>
+    </div>
+  </div>
+
+  <ul>
+    <li><b>שפות רגולריות</b> — מה שאפשר לזהות עם זיכרון סופי קבוע: <span class="en">DFA</span>‏, <span class="en">NFA</span>‏, ביטויים רגולריים, מינימיזציה, ולמת הניפוח שמוכיחה מתי שפה <em>איננה</em> רגולרית.</li>
+    <li><b>שפות חסרות הקשר</b> — מה שאפשר לזהות עם מחסנית: דקדוקים (<span class="en">CFG</span>‏), אוטומטי מחסנית (<span class="en">PDA</span>‏), ולמת ניפוח משלהן.</li>
+    <li><b>חישוביות</b> — מכונות טיורינג, ההבדל בין <b>כריע</b> (<span class="en">R</span>‏) ל<b>ניתן לזיהוי</b> (<span class="en">RE</span>‏), רדוקציות, ומשפט רייס — הגבול העקרוני של מה שמחשב יכול להכריע.</li>
+  </ul>
+
+  <div class="note"><b>נקודת מבט שחוזרת בכל המבחן:</b> כל נושא בקורס עונה על אחת משתי שאלות —
+    <b>איך בונים</b> מזהה לשפה (בנייה/המרה), או <b>איך מוכיחים שאי־אפשר</b>
+    (למות ניפוח, רדוקציות, משפט רייס). כמעט כל סעיף במבחן הוא אחת מהשתיים.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t1">אלף־בית, מילים ופעולות על מילים</h2>
+
+  <div class="def">
+    <span class="term">אלף־בית (Σ)</span> — קבוצה סופית ולא ריקה של סימנים. למשל
+    <span class="math">Σ = {a, b}</span> או <span class="math">Σ = {0, 1}</span>.<br>
+    <span class="term">מילה (word/string)</span> — סדרה סופית של סימנים מ־<span class="math">Σ</span>.
+    <span class="term">המילה הריקה</span> מסומנת <span class="math">ε</span> ואורכה
+    <span class="math">|ε| = 0</span>.<br>
+    <span class="term">Σ<sup>*</sup></span> — קבוצת <em>כל</em> המילים הסופיות מעל
+    <span class="math">Σ</span>, כולל <span class="math">ε</span>;
+    <span class="math">Σ<sup>+</sup> = Σ<sup>*</sup> ∖ {ε}</span>.
+  </div>
+
+  <p>פעולות בסיסיות על מילים:</p>
+  <ul>
+    <li><b>שרשור</b> — <span class="math">u·v</span> (או פשוט <span class="math">uv</span>): כותבים את <span class="math">v</span> אחרי <span class="math">u</span>. מתקיים <span class="math">|uv| = |u| + |v|</span>, ו־<span class="math">ε</span> הוא איבר היחידה: <span class="math">εw = wε = w</span>.</li>
+    <li><b>חזקה</b> — <span class="math">w<sup>k</sup></span>: שרשור של <span class="math">w</span> עם עצמה <span class="math">k</span> פעמים; <span class="math">w<sup>0</sup> = ε</span>.</li>
+    <li><b>היפוך</b> — <span class="math">w<sup>R</sup></span>: המילה בסדר הפוך. מילה עם <span class="math">w = w<sup>R</sup></span> נקראת <b>פלינדרום</b>.</li>
+    <li><b>מספרי מופעים</b> — <span class="math">#<sub>a</sub>(w)</span>: כמה פעמים האות <span class="math">a</span> מופיעה ב־<span class="math">w</span>.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>דוגמה</h4>
+    <p>עבור <span class="math">u = ab</span>, <span class="math">v = ba</span>‏:
+      <span class="math">uv = abba</span>,&nbsp;
+      <span class="math">(uv)<sup>R</sup> = abba</span> (פלינדרום!),&nbsp;
+      <span class="math">u<sup>2</sup> = abab</span>,&nbsp;
+      <span class="math">#<sub>a</sub>(uv) = 2</span>.</p>
+  </div>
+
+  <div class="warn">אל תבלבלו בין <span class="math">ε</span> (מילה ריקה, אורך 0) לבין
+    <span class="math">∅</span> (שפה ריקה — קבוצה בלי אף מילה). מתקיים
+    <span class="math">{ε} ≠ ∅</span>: השפה <span class="math">{ε}</span> מכילה מילה אחת.</div>
+</section>
+
+<section>
+  <h2 id="ch1-t2">שפות ופעולות על שפות</h2>
+
+  <div class="def">
+    <span class="term">שפה (Language)</span> — תת־קבוצה כלשהי
+    <span class="math">L ⊆ Σ<sup>*</sup></span>. שפה יכולה להיות סופית, אינסופית, ריקה
+    (<span class="math">∅</span>) או כל <span class="math">Σ<sup>*</sup></span> כולה.
+  </div>
+
+  <p>שפות מוגדרות בדרך כלל בכתיב בונה־קבוצות. למשל:</p>
+  <div class="lang-def">L₁ = {w ∈ {a,b}<sup>*</sup> | #<sub>a</sub>(w) = #<sub>b</sub>(w)}</div>
+
+  <p>פעולות על שפות (שפות הן קבוצות — כל פעולות הקבוצות עובדות, ועוד שתיים מיוחדות):</p>
+  <ul>
+    <li><b>איחוד / חיתוך / משלים</b> — <span class="math">L<sub>1</sub> ∪ L<sub>2</sub></span>,
+      <span class="math">L<sub>1</sub> ∩ L<sub>2</sub></span>,
+      <span class="math"><span class="comp">L</span> = Σ<sup>*</sup> ∖ L</span>.</li>
+    <li><b>שרשור שפות</b> — <span class="math">L<sub>1</sub>·L<sub>2</sub> = {uv | u ∈ L<sub>1</sub>, v ∈ L<sub>2</sub>}</span>.</li>
+    <li><b>חזקה</b> — <span class="math">L<sup>k</sup></span>: שרשור השפה עם עצמה <span class="math">k</span> פעמים; <span class="math">L<sup>0</sup> = {ε}</span>.</li>
+    <li><b>כוכב (סגור קלין)</b> — <span class="math">L<sup>*</sup> = ⋃<sub>k≥0</sub> L<sup>k</sup></span>: כל שרשור סופי (גם ריק) של מילים מהשפה.</li>
+    <li><b>היפוך</b> — <span class="math">L<sup>R</sup> = {w<sup>R</sup> | w ∈ L}</span>.</li>
+  </ul>
+
+  <div class="ex-box">
+    <h4>דוגמה — כוכב של שפה קטנה</h4>
+    <p><span class="math">L = {ab, ba}</span>‏:&nbsp;
+      <span class="math">L<sup>*</sup></span> מכילה את
+      <span class="math">ε, ab, ba, abab, abba, baab, baba, …</span>&nbsp;
+      אבל <em>לא</em> את <span class="math">a</span> או <span class="math">aab</span>.</p>
+  </div>
+
+  <div class="note"><b>שימו לב:</b> <span class="math">∅<sup>*</sup> = {ε}</span> —
+    השרשור הריק תמיד קיים. זו נקודה שחוזרת בהמרות של ביטויים רגולריים
+    (<span class="en">GNFA</span>‏) ובשאלות "נכון/לא נכון".</div>
+</section>
