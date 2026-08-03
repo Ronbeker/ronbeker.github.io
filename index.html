@@ -1338,6 +1338,36 @@ function scrollToPct(p, smooth){
   const y = Math.max(0, Math.round(m.top + m.denom * (p/100) - topbarH() - 8));
   window.scrollTo({ top:y, behavior: smooth ? 'smooth' : 'auto' });
 }
+/* אחוז הגלילה של כותרת נושא — ההפוך של scrollToPct. מחזיר null כשהפרק לא מוצג
+   כרגע (למשל סימון וי מתוך לשונית הנושאים), ואז חוזרים לפי הכותרת עצמה.      */
+function headingPct(sid, i){
+  if(readerSid !== sid) return null;
+  const h = document.getElementById(sid+'-t'+i), m = readerMetrics();
+  if(!h || !m) return null;
+  const y = window.scrollY + h.getBoundingClientRect().top - topbarH() - 10;
+  return Math.max(0, Math.min(100, Math.round((y + topbarH() + 8 - m.top) * 100 / m.denom)));
+}
+function scrollToCheckpoint(sid, cp, smooth){
+  if(cp.p != null){ scrollToPct(cp.p, smooth); return; }
+  const h = document.getElementById(sid+'-t'+cp.t);
+  if(h) window.scrollTo({ top: Math.max(0, Math.round(window.scrollY + h.getBoundingClientRect().top - topbarH() - 10)),
+                          behavior: smooth ? 'smooth' : 'auto' });
+}
+/* וי על נושא = "סיימתי אותו", ולכן הסימנייה עוברת לנושא הבא. אף פעם לא אחורה:
+   סימון מאוחר של נושא ישן לא אמור לזרוק אותך לתחילת הפרק.                     */
+function advanceBookmark(sid, i){
+  const s = byId[sid]; if(!s) return;
+  const cur = S.cp[sid];
+  if(cur && cur.pin) return;                       // צ'קפוינט שנעוץ ידנית מנצח
+  if(cur && cur.t != null && cur.t > i) return;    // כבר מתקדם יותר
+  const next = i + 1;
+  if(next >= s.topics.length){                     // סימנת את האחרון — אין לאן להמשיך
+    if(cur){ delete S.cp[sid]; touch('p:'+sid); }
+    return;
+  }
+  S.cp[sid] = { p: headingPct(sid, next), t: next, pin:false };
+  touch('p:'+sid);
+}
 /* האחוז בסרגל הוא כמה נושאים סומנו כנקראו — מדד של מה שעשית, לא של איפה העין
    שלך נמצאת. מיקום הגלילה עדיין נמדד (cp.p), אבל רק כדי להחזיר אותך לנקודה
    המדויקת שעזבת; הוא לא מוצג כאחוז התקדמות.                                  */
@@ -1351,16 +1381,17 @@ function trackCheckpoint(){
     if(cur){ delete S.cp[s.sid]; touch('p:'+s.sid); cpDirty = true; saveLocal(); }
     return;
   }
-  if(cur && Math.abs(cur.p - m.p) < 1) return;
+  if(cur && cur.p != null && Math.abs(cur.p - m.p) < 1) return;
   S.cp[s.sid] = { p:m.p, t:currentTopicIdx(), pin:false };
   touch('p:'+s.sid); cpDirty = true; saveLocal();
 }
 function flushCheckpoint(){ if(cpDirty){ cpDirty = false; save(); } }
 function autoJumpCheckpoint(sid){
-  const cp = S.cp[sid]; if(!cp || cp.p <= 1 || cp.p >= 99) return;
+  const cp = S.cp[sid]; if(!cp) return;
+  if(cp.p != null && (cp.p <= 1 || cp.p >= 99)) return;   // בקצוות אין לאן להחזיר
   setTimeout(()=>{
     if(view!=='reader' || readerSid!==sid) return;
-    scrollToPct(cp.p, false);        /* שחזור מיידי — לא גלילה מונפשת על פני חצי פרק */
+    scrollToCheckpoint(sid, cp, false);   /* שחזור מיידי — לא גלילה מונפשת על פני חצי פרק */
     toast(`חזרנו לצ׳קפוינט — נושא ${(cp.t??0)+1} מתוך ${byId[sid].topics.length}`);
   }, 60);
 }
@@ -1374,7 +1405,7 @@ window.pinCheckpoint = () => {
   renderKeepScroll();
 };
 window.jumpCheckpoint = () => { const s = readerChapter(); const cp = s && S.cp[s.sid];
-  if(cp) scrollToPct(cp.p, true); };
+  if(cp) scrollToCheckpoint(s.sid, cp, true); };
 window.clearCheckpoint = () => {
   const s = readerChapter(); if(!s || !S.cp[s.sid]) return;
   delete S.cp[s.sid]; touch('p:'+s.sid); cpDirty = false; save();
@@ -1388,11 +1419,16 @@ window.setTopicRead = (sid, i, v) => {
   if(v) S.tread[k] = true; else delete S.tread[k];
   touch('k:'+k);
   const s = byId[sid];
-  if(v && s && s.topics.every((_,j)=>S.tread[tkey(sid,j)]) && !S.read[sid]){
-    S.read[sid] = true; touch('r:'+sid);          // כל הנושאים נקראו ⇒ הפרק נקרא
+  if(v){
+    advanceBookmark(sid, i);
+    if(s && s.topics.every((_,j)=>S.tread[tkey(sid,j)]) && !S.read[sid]){
+      S.read[sid] = true; touch('r:'+sid);        // כל הנושאים נקראו ⇒ הפרק נקרא
+    }
   }
   save(); refreshChrome();
-  if(view==='topics') render(); else updateReaderChrome();
+  /* רינדור מלא ולא עדכון נקודתי: הסרגל מכיל גם את כפתור הסימנייה, וזה בדיוק
+     מה שנשאר תקוע קודם — נבנה פעם אחת בפתיחת הפרק ולא התעדכן לעולם.          */
+  if(view==='topics') render(); else renderKeepScroll();
 };
 /* כפתורי "קראתי" מוזרקים לכותרות הנושאים אחרי הרינדור — התוכן עצמו לא נגוע */
 function decorateReader(){
