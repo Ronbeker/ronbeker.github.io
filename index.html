@@ -1114,7 +1114,7 @@ views.dash = () => {
 
   <h2 class="sec">מה הצעד הבא</h2>
   <div class="card next-list" style="margin-bottom:18px">
-    ${lastCp ? nextItem(`עצרת ב-${lastCp.cp.p}% מהפרק${lastCp.cp.t!=null?` · נושא ${lastCp.cp.t+1}`:''}`,
+    ${lastCp ? nextItem(`עצרת בנושא ${(lastCp.cp.t??0)+1} מתוך ${byId[lastCp.sid].topics.length} · ${topicPct(lastCp.sid, lastCp.cp.t)}%`,
                         'המשך מהמקום שעצרת — ' + byId[lastCp.sid].title,
                         `openReader('${lastCp.sid}')`, 'המשך קריאה') : ''}
     ${nextS ? nextItem('קרא את הסיכום הבא', nextS.title, `go('summaries');openReader('${nextS.sid}')`, 'פתח סיכום')
@@ -1181,7 +1181,7 @@ views.summaries = () => {
         </div>
         <div class="bar" style="margin:2px 0 8px"><i style="width:${pct(rd,tot)}%"></i></div>
         ${cp ? `<button class="cp-hint" onclick="openReader('${s.sid}')" title="המשך מהמקום שעצרת">
-          ${cp.pin?'📌':'↩︎'} המשך מ-${num(cp.p)}%${cp.t!=null?` · נושא ${num(cp.t+1)}`:''}</button>` : ''}
+          ${cp.pin?'📌':'↩︎'} המשך מנושא ${num((cp.t??0)+1+'/'+tot)} · ${num(topicPct(s.sid,cp.t))}%</button>` : ''}
         <div class="sum-actions">
           <label class="chk${r?' done':''}"><input type="checkbox" ${r?'checked':''}
             onchange="setRead('${s.sid}',this.checked)"><span class="box"></span>קראתי</label>
@@ -1285,7 +1285,7 @@ views.reader = () => {
     <span class="bar${rd===tot?' ok':''}"><i style="width:${pct(rd,tot)}%"></i></span>
     <span class="rd-pos" id="rd-pos"></span>
     <button class="btn ghost sm" onclick="pinCheckpoint()" title="שמור כאן צ׳קפוינט קבוע">📌 סמן צ׳קפוינט</button>
-    ${cp ? `<button class="btn sm" onclick="jumpCheckpoint()" title="קפוץ לצ׳קפוינט">${cp.pin?'📌':'↩︎'} ${num(cp.p)}%</button>
+    ${cp ? `<button class="btn sm" onclick="jumpCheckpoint()" title="קפוץ לצ׳קפוינט — נושא ${(cp.t??0)+1}">${cp.pin?'📌':'↩︎'} ${num(topicPct(s.sid,cp.t))}%</button>
       <button class="x" onclick="clearCheckpoint()" aria-label="נקה צ׳קפוינט" title="נקה צ׳קפוינט">×</button>` : ''}
   </div>
   <div class="card toc"><b>נושאי הפרק</b><ol>${s.topics.map((t,i)=>{
@@ -1339,17 +1339,27 @@ function scrollToPct(p, smooth){
   const y = Math.max(0, Math.round(m.top + m.denom * (p/100) - topbarH() - 8));
   window.scrollTo({ top:y, behavior: smooth ? 'smooth' : 'auto' });
 }
-function updatePosLabel(m){
+/* המיקום מוצג ביחידות של נושאים ולא של פיקסלים: "נושא 4 מתוך 10" אומר משהו על
+   החומר, בעוד ש"45% מהדף" משתנה לפי אורך הסעיפים ולא לפי כמה באמת עברת.
+   אחוז הגלילה עדיין נשמר בצ'קפוינט (cp.p) — הוא מה שמחזיר אותך לנקודה המדויקת. */
+function topicPct(sid, t){
+  const s = byId[sid];
+  if(!s || !s.topics.length || t == null) return 0;
+  return Math.round((t + 1) * 100 / s.topics.length);
+}
+function updatePosLabel(){
   const el = document.getElementById('rd-pos'); if(!el) return;
-  m = m || readerMetrics(); if(!m) return;
+  const s = readerChapter(); if(!s) return;
   const t = currentTopicIdx();
-  el.innerHTML = `מיקום: <b class="num">${m.p}%</b>${t!=null?` · נושא ${num(t+1)}`:''}`;
+  el.innerHTML = t == null
+    ? 'מיקום: לפני הנושא הראשון'
+    : `מיקום: נושא ${num((t+1)+'/'+s.topics.length)} · <b class="num">${topicPct(s.sid,t)}%</b>`;
 }
 let cpDirty = false, cpTimer = 0;
 function trackCheckpoint(){
   const s = readerChapter(); if(!s) return;
   const m = readerMetrics(); if(!m) return;
-  updatePosLabel(m);
+  updatePosLabel();
   const cur = S.cp[s.sid];
   if(cur && cur.pin) return;                       // צ'קפוינט מקובע — לא נוגעים
   if(m.p <= 1 || m.p >= 98){                       // בהתחלה או בסוף אין לאן לחזור
@@ -1367,15 +1377,16 @@ function autoJumpCheckpoint(sid){
     if(view!=='reader' || readerSid!==sid) return;
     scrollToPct(cp.p, false);        /* שחזור מיידי — לא גלילה מונפשת על פני חצי פרק */
     updatePosLabel();
-    toast(`חזרנו לצ׳קפוינט — ${cp.p}% מהפרק`);
+    toast(`חזרנו לצ׳קפוינט — נושא ${(cp.t??0)+1} מתוך ${byId[sid].topics.length}`);
   }, 60);
 }
 window.pinCheckpoint = () => {
   const s = readerChapter(); if(!s) return;
   const m = readerMetrics(); if(!m) return;
-  S.cp[s.sid] = { p:m.p, t:currentTopicIdx(), pin:true };
+  const t = currentTopicIdx();
+  S.cp[s.sid] = { p:m.p, t, pin:true };
   touch('p:'+s.sid); cpDirty = false; save();
-  toast(`צ׳קפוינט נשמר — ${m.p}% מהפרק`);
+  toast(`צ׳קפוינט נשמר — נושא ${(t??0)+1} מתוך ${s.topics.length}`);
   renderKeepScroll();
 };
 window.jumpCheckpoint = () => { const s = readerChapter(); const cp = s && S.cp[s.sid];
