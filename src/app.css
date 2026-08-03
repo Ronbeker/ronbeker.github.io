@@ -321,6 +321,38 @@ mark{background:#ffe9a8;padding:0 2px;border-radius:3px}
 /* התוכן לא יוסתר מאחורי הסרגל הצף */
 body:has(.ret-bar) .wrap{padding-bottom:130px}
 
+/* ===== קורא: סרגל התקדמות וצ'קפוינט ===== */
+.rd-bar{position:sticky;top:calc(var(--tbh,96px) + 6px);z-index:36;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border:1px solid var(--brand-lt);border-radius:12px;padding:8px 12px;margin:0 0 14px;
+  box-shadow:0 2px 8px rgba(16,32,45,.08)}
+.rd-bar .rd-lbl{font-size:.86rem;color:var(--ink-2);white-space:nowrap}
+.rd-bar .rd-lbl b{color:var(--brand-dk)}
+.rd-bar .bar{flex:1 1 120px;min-width:100px}
+.rd-bar .rd-pos{font-size:.82rem;color:var(--ink-2);white-space:nowrap}
+.rd-bar .x{border:0;background:none;cursor:pointer;font-size:1.15rem;line-height:1;color:var(--ink-2);padding:0 4px}
+.rd-bar .x:hover{color:var(--err)}
+@media(max-width:640px){
+  .rd-bar{gap:7px;padding:7px 10px}
+  .rd-bar .rd-word{display:none}          /* בנייד משאירים רק את המספרים */
+  .rd-bar .bar{flex:1 1 70px;min-width:60px}
+}
+
+/* סימון "קראתי" לכל נושא — בכותרות הסיכום ובאקורדיון */
+.tmark{border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:99px;
+  padding:2px 11px;font:700 .72rem/1.6 inherit;cursor:pointer;white-space:nowrap;
+  vertical-align:middle;margin-inline-start:10px;transition:background .12s,border-color .12s,color .12s}
+.tmark:hover{border-color:var(--brand);color:var(--brand-dk)}
+.tmark.on{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok)}
+.toc li.rd > a{color:var(--ok)}
+.toc .toc-m{white-space:nowrap}
+.cp-hint{display:block;width:100%;text-align:start;border:1px dashed var(--brand-lt);
+  background:var(--brand-pale);color:var(--brand-dk);border-radius:9px;padding:5px 10px;
+  font:700 .8rem inherit;cursor:pointer;margin:0 0 8px}
+.cp-hint:hover{border-style:solid;border-color:var(--brand)}
+@media print{ .rd-bar,.tmark,.cp-hint{display:none!important} }
+
 /* ===== מאגר השאלות (bank) ===== */
 .fchips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
 .fchip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 13px;font-size:.84rem;

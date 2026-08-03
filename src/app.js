@@ -23,7 +23,7 @@ const subjHe = id => (TAX.subjects.find(s => s.id === id) || {}).he || id;
 const qtHe   = id => (TAX.qtypes.find(t => t.id === id) || {}).he || id;
 
 /* ---------- state ---------- */
-const DEF = { read:{}, understood:{}, topics:{}, exams:{}, bank:{}, lang:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0, mt:{} };
+const DEF = { read:{}, understood:{}, topics:{}, tread:{}, exams:{}, bank:{}, lang:{}, cp:{}, master:false, notes:'', examDate:'', lastView:'dash', updatedAt:0, mt:{} };
 let S = load();
 function load(){
   try { const raw = localStorage.getItem(KEY); if(!raw) return structuredClone(DEF);
@@ -94,13 +94,15 @@ function stats(){
   const nS = SUMS.length;
   const read = SUMS.filter(s=>S.read[s.sid]).length;
   const und  = SUMS.filter(s=>S.understood[s.sid]).length;
-  let nT=0, dT=0;
-  SUMS.forEach(s=>{ s.topics.forEach((_,i)=>{ nT++; if(S.topics[tkey(s.sid,i)]?.done) dT++; }); });
+  let nT=0, dT=0, dR=0;
+  SUMS.forEach(s=>{ s.topics.forEach((_,i)=>{ nT++;
+    if(S.topics[tkey(s.sid,i)]?.done) dT++;
+    if(S.tread[tkey(s.sid,i)]) dR++; }); });
   const nE = EXAMS.length, dE = EXAMS.filter(e=>S.exams[e.id]?.done).length;
   const nB = BANK.length,  dB = BANK.filter(b=>S.bank[b.key]?.done).length;
   const nL = LANGB.length, dL = LANGB.filter(l=>S.lang[l.id]?.ok).length;
-  const total = read+und+dT+dE+dB+dL, max = nS+nS+nT+nE+nB+nL;
-  return {nS,read,und,nT,dT,nE,dE,nB,dB,nL,dL,overall:pct(total,max)};
+  const total = read+und+dR+dT+dE+dB+dL, max = nS+nS+nT+nT+nE+nB+nL;
+  return {nS,read,und,nT,dT,dR,nE,dE,nB,dB,nL,dL,overall:pct(total,max)};
 }
 function refreshChrome(){
   const st = stats();
@@ -126,6 +128,11 @@ views.dash = () => {
       if(!S.topics[tkey(s.sid,i)]?.done) return {s,i}; return null; })();
   const nextE = EXAMS.find(e=>!S.exams[e.id]?.done);
   const nextB = BANK.find(b=>!S.bank[b.key]?.done);
+  /* הצ'קפוינט שנגעו בו לאחרונה — "המשך מהמקום שעצרת" */
+  const lastCp = Object.keys(S.cp||{})
+    .filter(sid=>byId[sid] && S.cp[sid] && S.cp[sid].p > 1)
+    .sort((a,b)=>(S.mt['p:'+b]||0)-(S.mt['p:'+a]||0))
+    .map(sid=>({sid, cp:S.cp[sid]}))[0];
   let days = '', dcls='';
   if(S.examDate){ const d = Math.ceil((new Date(S.examDate+'T08:00') - new Date())/864e5);
     days = d>0 ? d : (d===0?0:d); dcls = d<0?'עבר':'ימים'; }
@@ -134,6 +141,7 @@ views.dash = () => {
   <div class="grid g3" style="margin-bottom:16px">
     ${statCard('פרקים שנקראו', st.read, st.nS)}
     ${statCard('פרקים שהובנו', st.und, st.nS, true)}
+    ${statCard('נושאים שנקראו', st.dR, st.nT)}
     ${statCard('נושאים שהובנו', st.dT, st.nT, true)}
     ${statCard('מבחנים שהוכנו', st.dE, st.nE)}
     ${statCard('שאלות מהמאגר שתורגלו', st.dB, st.nB, true)}
@@ -159,6 +167,9 @@ views.dash = () => {
 
   <h2 class="sec">מה הצעד הבא</h2>
   <div class="card next-list" style="margin-bottom:18px">
+    ${lastCp ? nextItem(`עצרת ב-${lastCp.cp.p}% מהפרק${lastCp.cp.t!=null?` · נושא ${lastCp.cp.t+1}`:''}`,
+                        'המשך מהמקום שעצרת — ' + byId[lastCp.sid].title,
+                        `openReader('${lastCp.sid}')`, 'המשך קריאה') : ''}
     ${nextS ? nextItem('קרא את הסיכום הבא', nextS.title, `go('summaries');openReader('${nextS.sid}')`, 'פתח סיכום')
             : nextItem('כל הסיכומים נקראו', 'אפשר לעבור לבדיקת הבנה של הנושאים', `go('topics')`, 'לנושאים')}
     ${nextT ? nextItem('בדוק הבנה בנושא הבא', nextT.s.topics[nextT.i], `go('topics');openQuiz('${nextT.s.sid}',${nextT.i})`, 'התחל בדיקה')
@@ -212,12 +223,18 @@ views.summaries = () => {
     <div class="grid g3" style="margin-bottom:8px">${list.map(s=>{
       const r=!!S.read[s.sid], u=!!S.understood[s.sid];
       const tot=s.topics.length, d=s.topics.filter((_,i)=>S.topics[tkey(s.sid,i)]?.done).length;
+      const rd = s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
+      const cp = S.cp[s.sid];
       return `<div class="card sum-card">
         <h3>${esc(s.title)}</h3>
         <div class="sum-meta">
           <span class="pill n">${num(tot)} נושאים</span>
+          <span class="pill ${rd===tot?'g':rd?'w':'n'}">${num(rd+'/'+tot)} נקראו</span>
           <span class="pill ${d===tot?'g':d?'w':'n'}">${num(d+'/'+tot)} נבדקו</span>
         </div>
+        <div class="bar" style="margin:2px 0 8px"><i style="width:${pct(rd,tot)}%"></i></div>
+        ${cp ? `<button class="cp-hint" onclick="openReader('${s.sid}')" title="המשך מהמקום שעצרת">
+          ${cp.pin?'📌':'↩︎'} המשך מ-${num(cp.p)}%${cp.t!=null?` · נושא ${num(cp.t+1)}`:''}</button>` : ''}
         <div class="sum-actions">
           <label class="chk${r?' done':''}"><input type="checkbox" ${r?'checked':''}
             onchange="setRead('${s.sid}',this.checked)"><span class="box"></span>קראתי</label>
@@ -247,7 +264,7 @@ function flash(el){ if(!el) return; el.classList.add('flash'); setTimeout(()=>el
 
 window.gotoTopicInSummary = (sid, i) => {
   returnTo = { sid, i, title: byId[sid].topics[i] };
-  openReader(sid);
+  openReader(sid, true);
   setTimeout(()=>{
     const e = document.getElementById(sid+'-t'+i);
     if(e){ e.scrollIntoView(); window.scrollBy(0,-110); flash(e); }
@@ -267,9 +284,12 @@ window.clearReturn = () => { returnTo = null; render(); };
 
 /* ---------- Reader ---------- */
 let readerSid = null;
-window.openReader = (sid) => {
-  readerSid = sid; go('reader');
-  requestAnimationFrame(()=>window.scrollTo(0,0));
+/* skipJump=true כשמגיעים ליעד ספציפי (נושא מהאקורדיון / תוצאת חיפוש) —
+   אז לא קופצים לצ'קפוינט ולא דורסים את המקום שאליו התכוונו.            */
+window.openReader = (sid, skipJump) => {
+  flushCheckpoint();
+  readerSid = sid; go('reader');          // go() כבר מגליל לראש העמוד
+  if(!skipJump) autoJumpCheckpoint(sid);
 };
 views.reader = () => {
   if(readerSid === '__all__'){
@@ -286,19 +306,31 @@ views.reader = () => {
   const s = byId[readerSid]; if(!s) return '<div class="empty">לא נמצא</div>';
   const r=!!S.read[s.sid], u=!!S.understood[s.sid];
   const ret = !!(returnTo && returnTo.sid === s.sid);
+  const tot = s.topics.length;
+  const rd  = s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
+  const cp  = S.cp[s.sid];
   return `<div class="reader-top">
     ${ret ? `<button class="btn sm" onclick="backToTopic()">‹ חזרה לנושא</button>` : ''}
     <button class="btn ghost sm" onclick="go('summaries')">‹ חזרה לסיכומים</button>
     <div class="grow" style="flex:1"></div>
-    <label class="chk${r?' done':''}"><input type="checkbox" ${r?'checked':''}
+    <label class="chk${r?' done':''}" id="rd-chk"><input type="checkbox" ${r?'checked':''}
       onchange="setRead('${s.sid}',this.checked)"><span class="box"></span>קראתי</label>
     <label class="chk${u?' done':''}"><input type="checkbox" ${u?'checked':''}
       onchange="setUnd('${s.sid}',this.checked)"><span class="box"></span>הבנתי</label>
     <button class="btn sm ghost" onclick="go('topics');openAcc('${s.sid}')">בדוק הבנה בנושאים</button>
     <button class="btn ghost sm" onclick="window.print()">הדפס</button></div>
+  <div class="rd-bar" role="region" aria-label="התקדמות וצ׳קפוינט">
+    <span class="rd-lbl"><b id="rd-count">${num(rd+'/'+tot)}</b><span class="rd-word"> נושאים נקראו</span></span>
+    <span class="bar${rd===tot?' ok':''}"><i style="width:${pct(rd,tot)}%"></i></span>
+    <span class="rd-pos" id="rd-pos"></span>
+    <button class="btn ghost sm" onclick="pinCheckpoint()" title="שמור כאן צ׳קפוינט קבוע">📌 סמן צ׳קפוינט</button>
+    ${cp ? `<button class="btn sm" onclick="jumpCheckpoint()" title="קפוץ לצ׳קפוינט">${cp.pin?'📌':'↩︎'} ${num(cp.p)}%</button>
+      <button class="x" onclick="clearCheckpoint()" aria-label="נקה צ׳קפוינט" title="נקה צ׳קפוינט">×</button>` : ''}
+  </div>
   <div class="card toc"><b>נושאי הפרק</b><ol>${s.topics.map((t,i)=>{
-    const done = S.topics[tkey(s.sid,i)]?.done;
-    return `<li><a href="#${s.sid}-t${i}">${esc(t)}</a>${done?' <span class="pill g" style="font-size:.7rem">✓</span>':''}</li>`;
+    const done = S.topics[tkey(s.sid,i)]?.done, was = S.tread[tkey(s.sid,i)];
+    return `<li id="toc-${s.sid}-${i}"${was?' class="rd"':''}><a href="#${s.sid}-t${i}">${esc(t)}</a>
+      <span class="toc-m">${was?'<span class="pill n" style="font-size:.68rem">נקרא</span>':''}${done?' <span class="pill g" style="font-size:.7rem">✓</span>':''}</span></li>`;
   }).join('')}</ol></div>
   <div class="summary-body">${s.html}</div>
   <div style="display:flex;gap:9px;justify-content:center;margin:22px 0 0;flex-wrap:wrap">
@@ -313,6 +345,142 @@ views.reader = () => {
     <button class="x" onclick="clearReturn()" aria-label="סגור">×</button>
   </div>` : ''}`;
 };
+
+/* ---------- צ'קפוינט קריאה + סימון נושאים שנקראו ----------
+   האתר זוכר לבד באיזה אחוז מהפרק עצרת, ומחזיר אותך לשם בפתיחה הבאה.
+   כפתור "סמן צ׳קפוינט" מקבע מקום מסוים (ואז המעקב האוטומטי לא דורס אותו). */
+function topbarH(){ const b = document.querySelector('.topbar');
+  return b ? Math.round(b.getBoundingClientRect().height) : 96; }
+function syncTbh(){ document.documentElement.style.setProperty('--tbh', topbarH()+'px'); }
+function readerChapter(){ return (view==='reader' && byId[readerSid]) ? byId[readerSid] : null; }
+function readerMetrics(){
+  const b = document.querySelector('#app .summary-body'); if(!b) return null;
+  const rect = b.getBoundingClientRect();
+  const top  = window.scrollY + rect.top;
+  const line = window.scrollY + topbarH() + 8;
+  const viewH = Math.max(140, window.innerHeight - topbarH() - 24);
+  const denom = Math.max(1, rect.height - viewH);
+  const p = Math.max(0, Math.min(100, Math.round((line - top) * 100 / denom)));
+  return { top, denom, p };
+}
+function currentTopicIdx(){
+  const s = readerChapter(); if(!s) return null;
+  const line = window.scrollY + topbarH() + 12;
+  let idx = null;
+  for(let i=0;i<s.topics.length;i++){
+    const h = document.getElementById(s.sid+'-t'+i); if(!h) continue;
+    if(window.scrollY + h.getBoundingClientRect().top <= line) idx = i; else break;
+  }
+  return idx;
+}
+function scrollToPct(p, smooth){
+  const m = readerMetrics(); if(!m) return;
+  const y = Math.max(0, Math.round(m.top + m.denom * (p/100) - topbarH() - 8));
+  window.scrollTo({ top:y, behavior: smooth ? 'smooth' : 'auto' });
+}
+function updatePosLabel(m){
+  const el = document.getElementById('rd-pos'); if(!el) return;
+  m = m || readerMetrics(); if(!m) return;
+  const t = currentTopicIdx();
+  el.innerHTML = `מיקום: <b class="num">${m.p}%</b>${t!=null?` · נושא ${num(t+1)}`:''}`;
+}
+let cpDirty = false, cpTimer = 0;
+function trackCheckpoint(){
+  const s = readerChapter(); if(!s) return;
+  const m = readerMetrics(); if(!m) return;
+  updatePosLabel(m);
+  const cur = S.cp[s.sid];
+  if(cur && cur.pin) return;                       // צ'קפוינט מקובע — לא נוגעים
+  if(m.p <= 1 || m.p >= 98){                       // בהתחלה או בסוף אין לאן לחזור
+    if(cur){ delete S.cp[s.sid]; touch('p:'+s.sid); cpDirty = true; saveLocal(); }
+    return;
+  }
+  if(cur && Math.abs(cur.p - m.p) < 1) return;
+  S.cp[s.sid] = { p:m.p, t:currentTopicIdx(), pin:false };
+  touch('p:'+s.sid); cpDirty = true; saveLocal();
+}
+function flushCheckpoint(){ if(cpDirty){ cpDirty = false; save(); } }
+function autoJumpCheckpoint(sid){
+  const cp = S.cp[sid]; if(!cp || cp.p <= 1 || cp.p >= 99) return;
+  setTimeout(()=>{
+    if(view!=='reader' || readerSid!==sid) return;
+    scrollToPct(cp.p, false);        /* שחזור מיידי — לא גלילה מונפשת על פני חצי פרק */
+    updatePosLabel();
+    toast(`חזרנו לצ׳קפוינט — ${cp.p}% מהפרק`);
+  }, 60);
+}
+window.pinCheckpoint = () => {
+  const s = readerChapter(); if(!s) return;
+  const m = readerMetrics(); if(!m) return;
+  S.cp[s.sid] = { p:m.p, t:currentTopicIdx(), pin:true };
+  touch('p:'+s.sid); cpDirty = false; save();
+  toast(`צ׳קפוינט נשמר — ${m.p}% מהפרק`);
+  renderKeepScroll();
+};
+window.jumpCheckpoint = () => { const s = readerChapter(); const cp = s && S.cp[s.sid];
+  if(cp) scrollToPct(cp.p, true); };
+window.clearCheckpoint = () => {
+  const s = readerChapter(); if(!s || !S.cp[s.sid]) return;
+  delete S.cp[s.sid]; touch('p:'+s.sid); cpDirty = false; save();
+  renderKeepScroll();
+};
+/* רינדור מחדש בלי לאבד את מקום הקריאה (הכותרות לא זזות בקורא) */
+function renderKeepScroll(){ const y = window.scrollY; render(); window.scrollTo(0, y); }
+
+window.setTopicRead = (sid, i, v) => {
+  const k = tkey(sid,i);
+  if(v) S.tread[k] = true; else delete S.tread[k];
+  touch('k:'+k);
+  const s = byId[sid];
+  if(v && s && s.topics.every((_,j)=>S.tread[tkey(sid,j)]) && !S.read[sid]){
+    S.read[sid] = true; touch('r:'+sid);          // כל הנושאים נקראו ⇒ הפרק נקרא
+  }
+  save(); refreshChrome();
+  if(view==='topics') render(); else updateReaderChrome();
+};
+/* כפתורי "קראתי" מוזרקים לכותרות הנושאים אחרי הרינדור — התוכן עצמו לא נגוע */
+function decorateReader(){
+  const s = readerChapter(); if(!s) return;
+  s.topics.forEach((t,i)=>{
+    const h = document.getElementById(s.sid+'-t'+i); if(!h || h.querySelector('.tmark')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tmark'; b.dataset.k = s.sid+'|'+i;
+    b.onclick = () => window.setTopicRead(s.sid, i, !S.tread[tkey(s.sid,i)]);
+    h.appendChild(b);
+  });
+  updateReaderChrome();
+  updatePosLabel();
+}
+function updateReaderChrome(){
+  const s = readerChapter(); if(!s) return;
+  let rd = 0;
+  s.topics.forEach((t,i)=>{
+    const on = !!S.tread[tkey(s.sid,i)]; if(on) rd++;
+    const b = document.querySelector(`.tmark[data-k="${s.sid}|${i}"]`);
+    if(b){ b.classList.toggle('on', on);
+      b.textContent = on ? '✓ נקרא' : '＋ קראתי';
+      b.title = on ? 'בטל סימון' : 'סמן שקראתי את הנושא'; }
+    const li = document.getElementById('toc-'+s.sid+'-'+i);
+    if(li){ li.classList.toggle('rd', on);
+      const m = li.querySelector('.toc-m');
+      if(m){ const done = S.topics[tkey(s.sid,i)]?.done;
+        m.innerHTML = (on?'<span class="pill n" style="font-size:.68rem">נקרא</span>':'') +
+                      (done?' <span class="pill g" style="font-size:.7rem">✓</span>':''); } }
+  });
+  const tot = s.topics.length;
+  const c = document.getElementById('rd-count'); if(c) c.innerHTML = num(rd+'/'+tot);
+  const bar = document.querySelector('.rd-bar .bar');
+  if(bar){ bar.classList.toggle('ok', rd===tot); bar.querySelector('i').style.width = pct(rd,tot)+'%'; }
+  const chk = document.getElementById('rd-chk');
+  if(chk){ const on = !!S.read[s.sid];
+    chk.classList.toggle('done', on); chk.querySelector('input').checked = on; }
+}
+/* setTimeout ולא requestAnimationFrame: rAF מוקפא כשהלשונית מוסתרת,
+   ואז דווקא המקום האחרון שקראנו בו — לפני שעברנו אפליקציה — לא היה נשמר. */
+addEventListener('scroll', ()=>{ if(cpTimer) return;
+  cpTimer = setTimeout(()=>{ cpTimer = 0; trackCheckpoint(); }, 150); }, {passive:true});
+addEventListener('resize', syncTbh, {passive:true});
+window.__cp = { track:trackCheckpoint, metrics:readerMetrics };   /* לבדיקות */
 
 /* ---------- Topics ---------- */
 let openAccs = {};
@@ -332,20 +500,25 @@ views.topics = () => {
     אחרת מוצג הסבר מלא ואפשר לנסות שוב.</span></div>
   ` + SUMS.map(s=>{
     const tot=s.topics.length, d=s.topics.filter((_,i)=>S.topics[tkey(s.sid,i)]?.done).length;
+    const rdc=s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
     const open = openAccs[s.sid];
     return `<div class="card acc${open?' open':''}" id="acc-${s.sid}">
       <button class="acc-h" onclick="toggleAcc('${s.sid}')">
         <span class="arw">▾</span>
         <span class="ttl">${esc(s.title)}</span>
-        <span class="pill ${d===tot?'g':d?'w':'n'}">${num(d+'/'+tot)}</span>
+        <span class="pill ${rdc===tot?'g':rdc?'w':'n'}" title="נושאים שנקראו">${num(rdc+'/'+tot)} נקראו</span>
+        <span class="pill ${d===tot?'g':d?'w':'n'}" title="נושאים שהובנו">${num(d+'/'+tot)}</span>
       </button>
       <div class="acc-b">${s.topics.map((t,i)=>{
         const r = S.topics[tkey(s.sid,i)]; const done = r?.done;
+        const was = !!S.tread[tkey(s.sid,i)];
         return `<div class="tp${done?' done':''}" id="tp-${s.sid}-${i}">
           <span class="n">${num(i+1)}</span>
           <span class="t">${esc(t)}</span>
           ${done ? `<span class="pill g">הבנתי</span>` : r?.tries ? `<span class="pill e">${num(r.score)}/3</span>` : ''}
           <span class="acts">
+            <button class="tmark${was?' on':''}" onclick="setTopicRead('${s.sid}',${i},${!was})"
+              title="${was?'בטל סימון':'סמן שקראתי את הנושא'}">${was?'✓ נקרא':'＋ קראתי'}</button>
             <button class="btn sm ghost" onclick="gotoTopicInSummary('${s.sid}',${i})">לסיכום</button>
             <button class="btn sm ${done?'ghost':''}" onclick="openQuiz('${s.sid}',${i})">${done?'תרגל שוב':'בדוק הבנה'}</button>
           </span></div>`;}).join('')}</div></div>`;
@@ -1072,7 +1245,7 @@ function doSearch(q){
   box.hidden=false;
 }
 window.gotoHit=(sid,ti)=>{ $('#sres').hidden=true; $('#q').value='';
-  openReader(sid); setTimeout(()=>{ const e=document.getElementById(sid+'-t'+ti);
+  openReader(sid, true); setTimeout(()=>{ const e=document.getElementById(sid+'-t'+ti);
     if(e){ e.scrollIntoView(); window.scrollBy(0,-110);} },80); };
 
 /* ---------- reader special pages ---------- */
@@ -1099,12 +1272,14 @@ let view = S.lastView && views[S.lastView] ? S.lastView : 'dash';
 /* מעבר בין לשוניות הוא העדפת תצוגה מקומית בלבד — הוא לא "התקדמות".
    קודם הוא קרא ל-save() ולכן עצם הדפדוף במכשיר ישן הפך אותו ל"חדש
    ביותר" ודרס בענן התקדמות אמיתית ממכשיר אחר.                       */
-window.go = (v)=>{ view=v; if(['dash','summaries','topics','exams','bank','tools'].includes(v)){ S.lastView=v; saveLocal(); }
+window.go = (v)=>{ if(view==='reader' && v!=='reader') flushCheckpoint();
+  view=v; if(['dash','summaries','topics','exams','bank','tools'].includes(v)){ S.lastView=v; saveLocal(); }
   render(); window.scrollTo(0,0); };
 function render(){
   $$('#tabs .tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.v===view)));
   $('#app').innerHTML = (views[view]||views.dash)();
   refreshChrome();
+  if(view==='reader'){ syncTbh(); decorateReader(); }
   const dt=$('#exam-date'); if(dt) dt.onchange=e=>{ S.examDate=e.target.value; touch('examDate'); save(); render(); };
   if(window.__fabUpdate) requestAnimationFrame(window.__fabUpdate);
 }
@@ -1168,7 +1343,8 @@ async function jbFetch(url, opts){
 function progCount(x){
   if(!x || typeof x!=='object') return 0;
   return Object.keys(x.read||{}).length + Object.keys(x.understood||{}).length +
-         Object.keys(x.topics||{}).length + Object.keys(x.exams||{}).length +
+         Object.keys(x.topics||{}).length + Object.keys(x.tread||{}).length +
+         Object.keys(x.exams||{}).length +
          Object.keys(x.bank||{}).length + Object.keys(x.lang||{}).length;
 }
 /* כל מפתחות ה"התקדמות" של רשומה, בפורמט של mt */
@@ -1179,8 +1355,10 @@ function allKeys(rec){
   Object.keys(rec.topics||{}).forEach(k=>out.push('t:'+k));
   Object.keys(rec.exams||{}).forEach(id=>{ out.push('e:'+id);
     Object.keys((rec.exams[id]||{}).answers||{}).forEach(pid=>out.push(akey(id,pid))); });
+  Object.keys(rec.tread||{}).forEach(k=>out.push('k:'+k));
   Object.keys(rec.bank||{}).forEach(k=>out.push('b:'+k));
   Object.keys(rec.lang||{}).forEach(k=>out.push('c:'+k));
+  Object.keys(rec.cp||{}).forEach(k=>out.push('p:'+k));
   ['master','notes','examDate'].forEach(k=>out.push(k));
   return out;
 }
@@ -1253,6 +1431,8 @@ function mergeStates(recA, recB){
   out.read       = mergeMap('r:', recA.read,       recB.read,       recA, recB, mt);
   out.understood = mergeMap('u:', recA.understood, recB.understood, recA, recB, mt);
   out.topics     = mergeMap('t:', recA.topics,     recB.topics,     recA, recB, mt);
+  out.tread      = mergeMap('k:', recA.tread,      recB.tread,      recA, recB, mt);
+  out.cp         = mergeMap('p:', recA.cp,         recB.cp,         recA, recB, mt);
   out.bank       = mergeMap('b:', recA.bank,       recB.bank,       recA, recB, mt);
   out.lang       = mergeMap('c:', recA.lang,       recB.lang,       recA, recB, mt);
   out.exams      = mergeExams(recA, recB, mt);
@@ -1283,7 +1463,7 @@ function differs(merged, cloud){
       e[id] = r;
     });
     return stable({ r:x.read||{}, u:x.understood||{}, t:x.topics||{}, e,
-                    b:x.bank||{}, l:x.lang||{},
+                    b:x.bank||{}, l:x.lang||{}, k:x.tread||{}, p:x.cp||{},
                     m:!!x.master, n:x.notes||'', d:x.examDate||'' });
   };
   return norm(merged) !== norm(cloud);
@@ -1517,8 +1697,12 @@ document.addEventListener('keydown', e=>{
 window.addEventListener('beforeunload', ()=>{
   if(EX){ S.exams[EX.e.id]=Object.assign({},S.exams[EX.e.id],{answers:EX.answers, elapsed:EX.elapsed});
           touch('e:'+EX.e.id); S.updatedAt = Date.now(); }
+  if(cpDirty){ cpDirty = false; S.updatedAt = Date.now(); }   // המקום שעצרנו בו נשמר גם בסגירת הדף
   writeLocal();   // בלי לחדש חותמת זמן סתם — אחרת סגירת דף תיראה כשינוי
 });
+/* עזיבת הלשונית (במיוחד בנייד) — לדחוף את הצ'קפוינט לענן */
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) flushCheckpoint(); });
+syncTbh();
 render();
 })();
 
