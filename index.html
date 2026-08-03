@@ -341,7 +341,6 @@ body:has(.ret-bar) .wrap{padding-bottom:130px}
 .rd-bar .rd-lbl{font-size:.86rem;color:var(--ink-2);white-space:nowrap}
 .rd-bar .rd-lbl b{color:var(--brand-dk)}
 .rd-bar .bar{flex:1 1 120px;min-width:100px}
-.rd-bar .rd-pos{font-size:.82rem;color:var(--ink-2);white-space:nowrap}
 .rd-bar .x{border:0;background:none;cursor:pointer;font-size:1.15rem;line-height:1;color:var(--ink-2);padding:0 4px}
 .rd-bar .x:hover{color:var(--err)}
 @media(max-width:640px){
@@ -1114,7 +1113,7 @@ views.dash = () => {
 
   <h2 class="sec">מה הצעד הבא</h2>
   <div class="card next-list" style="margin-bottom:18px">
-    ${lastCp ? nextItem(`עצרת בנושא ${(lastCp.cp.t??0)+1} מתוך ${byId[lastCp.sid].topics.length} · ${topicPct(lastCp.sid, lastCp.cp.t)}%`,
+    ${lastCp ? nextItem(`עצרת בנושא ${(lastCp.cp.t??0)+1} מתוך ${byId[lastCp.sid].topics.length}`,
                         'המשך מהמקום שעצרת — ' + byId[lastCp.sid].title,
                         `openReader('${lastCp.sid}')`, 'המשך קריאה') : ''}
     ${nextS ? nextItem('קרא את הסיכום הבא', nextS.title, `go('summaries');openReader('${nextS.sid}')`, 'פתח סיכום')
@@ -1181,7 +1180,7 @@ views.summaries = () => {
         </div>
         <div class="bar" style="margin:2px 0 8px"><i style="width:${pct(rd,tot)}%"></i></div>
         ${cp ? `<button class="cp-hint" onclick="openReader('${s.sid}')" title="המשך מהמקום שעצרת">
-          ${cp.pin?'📌':'↩︎'} המשך מנושא ${num((cp.t??0)+1+'/'+tot)} · ${num(topicPct(s.sid,cp.t))}%</button>` : ''}
+          ${cp.pin?'📌':'↩︎'} המשך מנושא ${num((cp.t??0)+1+'/'+tot)}</button>` : ''}
         <div class="sum-actions">
           <label class="chk${r?' done':''}"><input type="checkbox" ${r?'checked':''}
             onchange="setRead('${s.sid}',this.checked)"><span class="box"></span>קראתי</label>
@@ -1281,11 +1280,11 @@ views.reader = () => {
     <button class="btn sm ghost" onclick="go('topics');openAcc('${s.sid}')">בדוק הבנה בנושאים</button>
     <button class="btn ghost sm" onclick="window.print()">הדפס</button></div>
   <div class="rd-bar" role="region" aria-label="התקדמות וצ׳קפוינט">
-    <span class="rd-lbl"><b id="rd-count">${num(rd+'/'+tot)}</b><span class="rd-word"> נושאים נקראו</span></span>
+    <span class="rd-lbl"><b id="rd-count">${num(rd+'/'+tot)}</b><span class="rd-word"> נושאים נקראו</span>
+      · <b class="num" id="rd-pct">${pct(rd,tot)}%</b></span>
     <span class="bar${rd===tot?' ok':''}"><i style="width:${pct(rd,tot)}%"></i></span>
-    <span class="rd-pos" id="rd-pos"></span>
     <button class="btn ghost sm" onclick="pinCheckpoint()" title="שמור כאן צ׳קפוינט קבוע">📌 סמן צ׳קפוינט</button>
-    ${cp ? `<button class="btn sm" onclick="jumpCheckpoint()" title="קפוץ לצ׳קפוינט — נושא ${(cp.t??0)+1}">${cp.pin?'📌':'↩︎'} ${num(topicPct(s.sid,cp.t))}%</button>
+    ${cp ? `<button class="btn sm" onclick="jumpCheckpoint()" title="קפוץ למקום שעזבת">${cp.pin?'📌':'↩︎'} נושא ${num((cp.t??0)+1)}</button>
       <button class="x" onclick="clearCheckpoint()" aria-label="נקה צ׳קפוינט" title="נקה צ׳קפוינט">×</button>` : ''}
   </div>
   <div class="card toc"><b>נושאי הפרק</b><ol>${s.topics.map((t,i)=>{
@@ -1339,27 +1338,13 @@ function scrollToPct(p, smooth){
   const y = Math.max(0, Math.round(m.top + m.denom * (p/100) - topbarH() - 8));
   window.scrollTo({ top:y, behavior: smooth ? 'smooth' : 'auto' });
 }
-/* המיקום מוצג ביחידות של נושאים ולא של פיקסלים: "נושא 4 מתוך 10" אומר משהו על
-   החומר, בעוד ש"45% מהדף" משתנה לפי אורך הסעיפים ולא לפי כמה באמת עברת.
-   אחוז הגלילה עדיין נשמר בצ'קפוינט (cp.p) — הוא מה שמחזיר אותך לנקודה המדויקת. */
-function topicPct(sid, t){
-  const s = byId[sid];
-  if(!s || !s.topics.length || t == null) return 0;
-  return Math.round((t + 1) * 100 / s.topics.length);
-}
-function updatePosLabel(){
-  const el = document.getElementById('rd-pos'); if(!el) return;
-  const s = readerChapter(); if(!s) return;
-  const t = currentTopicIdx();
-  el.innerHTML = t == null
-    ? 'מיקום: לפני הנושא הראשון'
-    : `מיקום: נושא ${num((t+1)+'/'+s.topics.length)} · <b class="num">${topicPct(s.sid,t)}%</b>`;
-}
+/* האחוז בסרגל הוא כמה נושאים סומנו כנקראו — מדד של מה שעשית, לא של איפה העין
+   שלך נמצאת. מיקום הגלילה עדיין נמדד (cp.p), אבל רק כדי להחזיר אותך לנקודה
+   המדויקת שעזבת; הוא לא מוצג כאחוז התקדמות.                                  */
 let cpDirty = false, cpTimer = 0;
 function trackCheckpoint(){
   const s = readerChapter(); if(!s) return;
   const m = readerMetrics(); if(!m) return;
-  updatePosLabel();
   const cur = S.cp[s.sid];
   if(cur && cur.pin) return;                       // צ'קפוינט מקובע — לא נוגעים
   if(m.p <= 1 || m.p >= 98){                       // בהתחלה או בסוף אין לאן לחזור
@@ -1376,7 +1361,6 @@ function autoJumpCheckpoint(sid){
   setTimeout(()=>{
     if(view!=='reader' || readerSid!==sid) return;
     scrollToPct(cp.p, false);        /* שחזור מיידי — לא גלילה מונפשת על פני חצי פרק */
-    updatePosLabel();
     toast(`חזרנו לצ׳קפוינט — נושא ${(cp.t??0)+1} מתוך ${byId[sid].topics.length}`);
   }, 60);
 }
@@ -1421,7 +1405,6 @@ function decorateReader(){
     h.appendChild(b);
   });
   updateReaderChrome();
-  updatePosLabel();
 }
 function updateReaderChrome(){
   const s = readerChapter(); if(!s) return;
@@ -1441,6 +1424,7 @@ function updateReaderChrome(){
   });
   const tot = s.topics.length;
   const c = document.getElementById('rd-count'); if(c) c.innerHTML = num(rd+'/'+tot);
+  const p = document.getElementById('rd-pct');   if(p) p.textContent = pct(rd,tot)+'%';
   const bar = document.querySelector('.rd-bar .bar');
   if(bar){ bar.classList.toggle('ok', rd===tot); bar.querySelector('i').style.width = pct(rd,tot)+'%'; }
   const chk = document.getElementById('rd-chk');

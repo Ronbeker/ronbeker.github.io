@@ -330,7 +330,6 @@ body:has(.ret-bar) .wrap{padding-bottom:130px}
 .rd-bar .rd-lbl{font-size:.86rem;color:var(--ink-2);white-space:nowrap}
 .rd-bar .rd-lbl b{color:var(--brand-dk)}
 .rd-bar .bar{flex:1 1 120px;min-width:100px}
-.rd-bar .rd-pos{font-size:.82rem;color:var(--ink-2);white-space:nowrap}
 .rd-bar .x{border:0;background:none;cursor:pointer;font-size:1.15rem;line-height:1;color:var(--ink-2);padding:0 4px}
 .rd-bar .x:hover{color:var(--err)}
 @media(max-width:640px){
