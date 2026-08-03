@@ -1198,7 +1198,21 @@ views.summaries = () => {
       <button class="btn sm" onclick="openReader('__all__')">פתח הכל</button>
     </div></div>`;
 };
-window.setRead = (sid,v)=>{ S.read[sid]=v; if(!v) delete S.read[sid]; touch('r:'+sid); save(); refreshChrome(); render(); };
+/* סימון הפרק כנקרא גורר את כל נושאיו — ובביטול גם מתבטל אצלם, אחרת נשאר מצב
+   סותר: "0/11 נקראו" לצד פרק מסומן (או ההפך), ומד ההתקדמות מספר סיפור לא נכון. */
+window.setRead = (sid,v)=>{
+  S.read[sid]=v; if(!v) delete S.read[sid]; touch('r:'+sid);
+  const s = byId[sid]; let n = 0;
+  if(s) s.topics.forEach((_,i)=>{
+    const k = tkey(sid,i);
+    if(v ? !S.tread[k] : !!S.tread[k]){
+      if(v) S.tread[k] = true; else delete S.tread[k];
+      touch('k:'+k); n++;
+    }
+  });
+  save(); refreshChrome(); render();
+  if(n) toast(v ? `סומנו ${n} נושאים כנקראו` : `הוסר הסימון מ-${n} נושאים`);
+};
 window.setUnd  = (sid,v)=>{ S.understood[sid]=v; if(!v) delete S.understood[sid]; touch('u:'+sid); save(); refreshChrome(); render(); };
 
 
