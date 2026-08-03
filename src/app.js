@@ -101,7 +101,10 @@ function stats(){
   const nE = EXAMS.length, dE = EXAMS.filter(e=>S.exams[e.id]?.done).length;
   const nB = BANK.length,  dB = BANK.filter(b=>S.bank[b.key]?.done).length;
   const nL = LANGB.length, dL = LANGB.filter(l=>S.lang[l.id]?.ok).length;
-  const total = read+und+dR+dT+dE+dB+dL, max = nS+nS+nT+nT+nE+nB+nL;
+  /* סימוני "קראתי" ברמת הנושא לא נספרים במד הכללי בכוונה: קריאה כבר מיוצגת
+     ע"י שתי הסימונים של הפרק, וספירה נוספת של 134 נושאים הייתה מנפחת את האחוז
+     מקריאה בלבד — על חשבון בחנים, מבחנים ותרגול. dR מוחזר לתצוגה בלבד.        */
+  const total = read+und+dT+dE+dB+dL, max = nS+nS+nT+nE+nB+nL;
   return {nS,read,und,nT,dT,dR,nE,dE,nB,dB,nL,dL,overall:pct(total,max)};
 }
 function refreshChrome(){

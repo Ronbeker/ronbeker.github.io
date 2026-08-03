@@ -224,7 +224,7 @@ out = out.replace('<!DOCTYPE html>',
 nT = sum(len(s['topics']) for s in summaries)
 nP = sum(len(q['parts']) for e in exams for q in e['questions'])
 nTagged = sum(1 for e in exams for q in e['questions'] for p in q['parts'] if p.get('tags'))
-denom = 2 * len(summaries) + 2 * nT + len(exams) + nTagged + len(langbank)
+denom = 2 * len(summaries) + nT + len(exams) + nTagged + len(langbank)
 print(f'built index.html ({len(out.encode("utf-8"))//1024} KB)')
 print(f'  chapters: {len(summaries)} · topics: {nT} · quiz questions: {nT * 3}')
 print(f'  exams: {len(exams)} · parts: {nP} (tagged: {nTagged}) · languages: {len(langbank)}')
