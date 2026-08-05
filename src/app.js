@@ -89,19 +89,34 @@ function download(name, text){
 }
 const tkey = (sid,i) => sid+'|'+i;
 
+/* הסימון על נושא פירושו "הגעתי לפה", לא "סיימתי אותו". לכן ההתקדמות היא מה
+   שנמצא *מאחורי* הנושא המסומן הרחוק ביותר: הגעת לנושא 3 ⇒ עברת 2. סימון הפרק
+   כולו כנקרא הוא הדבר היחיד שסוגר 100%, אחרת אי אפשר היה להגיע לשם.        */
+function furthestMark(sid){
+  const s = byId[sid]; if(!s) return -1;
+  let f = -1;
+  s.topics.forEach((_,i)=>{ if(S.tread[tkey(sid,i)]) f = i; });
+  return f;
+}
+function readPos(sid){
+  const s = byId[sid]; if(!s) return 0;
+  if(S.read[sid]) return s.topics.length;
+  return Math.max(0, furthestMark(sid));
+}
+
 /* ---------- progress ---------- */
 function stats(){
   const nS = SUMS.length;
   const read = SUMS.filter(s=>S.read[s.sid]).length;
   const und  = SUMS.filter(s=>S.understood[s.sid]).length;
   let nT=0, dT=0, dR=0;
-  SUMS.forEach(s=>{ s.topics.forEach((_,i)=>{ nT++;
-    if(S.topics[tkey(s.sid,i)]?.done) dT++;
-    if(S.tread[tkey(s.sid,i)]) dR++; }); });
+  SUMS.forEach(s=>{ dR += readPos(s.sid);
+    s.topics.forEach((_,i)=>{ nT++;
+      if(S.topics[tkey(s.sid,i)]?.done) dT++; }); });
   const nE = EXAMS.length, dE = EXAMS.filter(e=>S.exams[e.id]?.done).length;
   const nB = BANK.length,  dB = BANK.filter(b=>S.bank[b.key]?.done).length;
   const nL = LANGB.length, dL = LANGB.filter(l=>S.lang[l.id]?.ok).length;
-  /* סימוני "קראתי" ברמת הנושא לא נספרים במד הכללי בכוונה: קריאה כבר מיוצגת
+  /* סימוני "הגעתי לפה" לא נספרים במד הכללי בכוונה: קריאה כבר מיוצגת
      ע"י שתי הסימונים של הפרק, וספירה נוספת של 134 נושאים הייתה מנפחת את האחוז
      מקריאה בלבד — על חשבון בחנים, מבחנים ותרגול. dR מוחזר לתצוגה בלבד.        */
   const total = read+und+dT+dE+dB+dL, max = nS+nS+nT+nE+nB+nL;
@@ -144,7 +159,7 @@ views.dash = () => {
   <div class="grid g3" style="margin-bottom:16px">
     ${statCard('פרקים שנקראו', st.read, st.nS)}
     ${statCard('פרקים שהובנו', st.und, st.nS, true)}
-    ${statCard('נושאים שנקראו', st.dR, st.nT)}
+    ${statCard('נושאים מאחוריך', st.dR, st.nT)}
     ${statCard('נושאים שהובנו', st.dT, st.nT, true)}
     ${statCard('מבחנים שהוכנו', st.dE, st.nE)}
     ${statCard('שאלות מהמאגר שתורגלו', st.dB, st.nB, true)}
@@ -226,13 +241,13 @@ views.summaries = () => {
     <div class="grid g3" style="margin-bottom:8px">${list.map(s=>{
       const r=!!S.read[s.sid], u=!!S.understood[s.sid];
       const tot=s.topics.length, d=s.topics.filter((_,i)=>S.topics[tkey(s.sid,i)]?.done).length;
-      const rd = s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
+      const rd = readPos(s.sid);
       const cp = S.cp[s.sid];
       return `<div class="card sum-card">
         <h3>${esc(s.title)}</h3>
         <div class="sum-meta">
           <span class="pill n">${num(tot)} נושאים</span>
-          <span class="pill ${rd===tot?'g':rd?'w':'n'}">${num(rd+'/'+tot)} נקראו</span>
+          <span class="pill ${rd===tot?'g':rd?'w':'n'}" title="נושאים שכבר מאחוריך">${num(rd+'/'+tot)} מאחוריך</span>
           <span class="pill ${d===tot?'g':d?'w':'n'}">${num(d+'/'+tot)} נבדקו</span>
         </div>
         <div class="bar" style="margin:2px 0 8px"><i style="width:${pct(rd,tot)}%"></i></div>
@@ -258,7 +273,7 @@ views.summaries = () => {
     </div></div>`;
 };
 /* סימון הפרק כנקרא גורר את כל נושאיו — ובביטול גם מתבטל אצלם, אחרת נשאר מצב
-   סותר: "0/11 נקראו" לצד פרק מסומן (או ההפך), ומד ההתקדמות מספר סיפור לא נכון. */
+   סותר: "0/11 מאחוריך" לצד פרק מסומן (או ההפך), ומד ההתקדמות מספר סיפור לא נכון. */
 window.setRead = (sid,v)=>{
   S.read[sid]=v; if(!v) delete S.read[sid]; touch('r:'+sid);
   const s = byId[sid]; let n = 0;
@@ -270,7 +285,7 @@ window.setRead = (sid,v)=>{
     }
   });
   save(); refreshChrome(); render();
-  if(n) toast(v ? `סומנו ${n} נושאים כנקראו` : `הוסר הסימון מ-${n} נושאים`);
+  if(n) toast(v ? `סומנו ${n} נושאים` : `הוסר הסימון מ-${n} נושאים`);
 };
 window.setUnd  = (sid,v)=>{ S.understood[sid]=v; if(!v) delete S.understood[sid]; touch('u:'+sid); save(); refreshChrome(); render(); };
 
@@ -324,7 +339,7 @@ views.reader = () => {
   const r=!!S.read[s.sid], u=!!S.understood[s.sid];
   const ret = !!(returnTo && returnTo.sid === s.sid);
   const tot = s.topics.length;
-  const rd  = s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
+  const rd  = readPos(s.sid);
   const cp  = S.cp[s.sid];
   return `<div class="reader-top">
     ${ret ? `<button class="btn sm" onclick="backToTopic()">‹ חזרה לנושא</button>` : ''}
@@ -337,7 +352,7 @@ views.reader = () => {
     <button class="btn sm ghost" onclick="go('topics');openAcc('${s.sid}')">בדוק הבנה בנושאים</button>
     <button class="btn ghost sm" onclick="window.print()">הדפס</button></div>
   <div class="rd-bar" role="region" aria-label="התקדמות וצ׳קפוינט">
-    <span class="rd-lbl"><b id="rd-count">${num(rd+'/'+tot)}</b><span class="rd-word"> נושאים נקראו</span>
+    <span class="rd-lbl"><b id="rd-count">${num(rd+'/'+tot)}</b><span class="rd-word"> נושאים מאחוריך</span>
       · <b class="num" id="rd-pct">${pct(rd,tot)}%</b></span>
     <span class="bar${rd===tot?' ok':''}"><i style="width:${pct(rd,tot)}%"></i></span>
     <button class="btn ghost sm" onclick="pinCheckpoint()" title="שמור כאן צ׳קפוינט קבוע">📌 סמן צ׳קפוינט</button>
@@ -347,7 +362,7 @@ views.reader = () => {
   <div class="card toc"><b>נושאי הפרק</b><ol>${s.topics.map((t,i)=>{
     const done = S.topics[tkey(s.sid,i)]?.done, was = S.tread[tkey(s.sid,i)];
     return `<li id="toc-${s.sid}-${i}"${was?' class="rd"':''}><a href="#${s.sid}-t${i}">${esc(t)}</a>
-      <span class="toc-m">${was?'<span class="pill n" style="font-size:.68rem">נקרא</span>':''}${done?' <span class="pill g" style="font-size:.7rem">✓</span>':''}</span></li>`;
+      <span class="toc-m">${was?'<span class="pill n" style="font-size:.68rem">הגעת</span>':''}${done?' <span class="pill g" style="font-size:.7rem">✓</span>':''}</span></li>`;
   }).join('')}</ol></div>
   <div class="summary-body">${s.html}</div>
   <div style="display:flex;gap:9px;justify-content:center;margin:22px 0 0;flex-wrap:wrap">
@@ -410,22 +425,18 @@ function scrollToCheckpoint(sid, cp, smooth){
   if(h) window.scrollTo({ top: Math.max(0, Math.round(window.scrollY + h.getBoundingClientRect().top - topbarH() - 10)),
                           behavior: smooth ? 'smooth' : 'auto' });
 }
-/* וי על נושא = "סיימתי אותו", ולכן הסימנייה עוברת לנושא הבא. אף פעם לא אחורה:
+/* "הגעתי לפה" על נושא = שם אתה נמצא, ולכן הסימנייה נעצרת על אותו נושא עצמו
+   ולא על הבא — לחזור לנושא הבא היה מדלג על מה שעוד לא קראת. אף פעם לא אחורה:
    סימון מאוחר של נושא ישן לא אמור לזרוק אותך לתחילת הפרק.                     */
 function advanceBookmark(sid, i){
   const s = byId[sid]; if(!s) return;
   const cur = S.cp[sid];
   if(cur && cur.pin) return;                       // צ'קפוינט שנעוץ ידנית מנצח
   if(cur && cur.t != null && cur.t > i) return;    // כבר מתקדם יותר
-  const next = i + 1;
-  if(next >= s.topics.length){                     // סימנת את האחרון — אין לאן להמשיך
-    if(cur){ delete S.cp[sid]; touch('p:'+sid); }
-    return;
-  }
-  S.cp[sid] = { p: headingPct(sid, next), t: next, pin:false };
+  S.cp[sid] = { p: headingPct(sid, i), t: i, pin:false };
   touch('p:'+sid);
 }
-/* האחוז בסרגל הוא כמה נושאים סומנו כנקראו — מדד של מה שעשית, לא של איפה העין
+/* האחוז בסרגל הוא כמה נושאים כבר מאחוריך — מדד של מה שעשית, לא של איפה העין
    שלך נמצאת. מיקום הגלילה עדיין נמדד (cp.p), אבל רק כדי להחזיר אותך לנקודה
    המדויקת שעזבת; הוא לא מוצג כאחוז התקדמות.                                  */
 let cpDirty = false, cpTimer = 0;
@@ -479,7 +490,7 @@ window.setTopicRead = (sid, i, v) => {
   if(v){
     advanceBookmark(sid, i);
     if(s && s.topics.every((_,j)=>S.tread[tkey(sid,j)]) && !S.read[sid]){
-      S.read[sid] = true; touch('r:'+sid);        // כל הנושאים נקראו ⇒ הפרק נקרא
+      S.read[sid] = true; touch('r:'+sid);        // הגעת לכל הנושאים ⇒ הפרק נקרא
     }
   }
   save(); refreshChrome();
@@ -487,7 +498,7 @@ window.setTopicRead = (sid, i, v) => {
      מה שנשאר תקוע קודם — נבנה פעם אחת בפתיחת הפרק ולא התעדכן לעולם.          */
   if(view==='topics') render(); else renderKeepScroll();
 };
-/* כפתורי "קראתי" מוזרקים לכותרות הנושאים אחרי הרינדור — התוכן עצמו לא נגוע */
+/* כפתורי "הגעתי לפה" מוזרקים לכותרות הנושאים אחרי הרינדור — התוכן עצמו לא נגוע */
 function decorateReader(){
   const s = readerChapter(); if(!s) return;
   s.topics.forEach((t,i)=>{
@@ -501,21 +512,20 @@ function decorateReader(){
 }
 function updateReaderChrome(){
   const s = readerChapter(); if(!s) return;
-  let rd = 0;
   s.topics.forEach((t,i)=>{
-    const on = !!S.tread[tkey(s.sid,i)]; if(on) rd++;
+    const on = !!S.tread[tkey(s.sid,i)];
     const b = document.querySelector(`.tmark[data-k="${s.sid}|${i}"]`);
     if(b){ b.classList.toggle('on', on);
-      b.textContent = on ? '✓ נקרא' : '＋ קראתי';
-      b.title = on ? 'בטל סימון' : 'סמן שקראתי את הנושא'; }
+      b.textContent = on ? '✓ הגעתי לפה' : '＋ הגעתי לפה';
+      b.title = on ? 'בטל סימון' : 'סמן שהגעת לנושא הזה'; }
     const li = document.getElementById('toc-'+s.sid+'-'+i);
     if(li){ li.classList.toggle('rd', on);
       const m = li.querySelector('.toc-m');
       if(m){ const done = S.topics[tkey(s.sid,i)]?.done;
-        m.innerHTML = (on?'<span class="pill n" style="font-size:.68rem">נקרא</span>':'') +
+        m.innerHTML = (on?'<span class="pill n" style="font-size:.68rem">הגעת</span>':'') +
                       (done?' <span class="pill g" style="font-size:.7rem">✓</span>':''); } }
   });
-  const tot = s.topics.length;
+  const tot = s.topics.length, rd = readPos(s.sid);
   const c = document.getElementById('rd-count'); if(c) c.innerHTML = num(rd+'/'+tot);
   const p = document.getElementById('rd-pct');   if(p) p.textContent = pct(rd,tot)+'%';
   const bar = document.querySelector('.rd-bar .bar');
@@ -549,13 +559,13 @@ views.topics = () => {
     אחרת מוצג הסבר מלא ואפשר לנסות שוב.</span></div>
   ` + SUMS.map(s=>{
     const tot=s.topics.length, d=s.topics.filter((_,i)=>S.topics[tkey(s.sid,i)]?.done).length;
-    const rdc=s.topics.filter((_,i)=>S.tread[tkey(s.sid,i)]).length;
+    const rdc=readPos(s.sid);
     const open = openAccs[s.sid];
     return `<div class="card acc${open?' open':''}" id="acc-${s.sid}">
       <button class="acc-h" onclick="toggleAcc('${s.sid}')">
         <span class="arw">▾</span>
         <span class="ttl">${esc(s.title)}</span>
-        <span class="pill ${rdc===tot?'g':rdc?'w':'n'}" title="נושאים שנקראו">${num(rdc+'/'+tot)} נקראו</span>
+        <span class="pill ${rdc===tot?'g':rdc?'w':'n'}" title="נושאים שכבר מאחוריך">${num(rdc+'/'+tot)} מאחוריך</span>
         <span class="pill ${d===tot?'g':d?'w':'n'}" title="נושאים שהובנו">${num(d+'/'+tot)}</span>
       </button>
       <div class="acc-b">${s.topics.map((t,i)=>{
@@ -567,7 +577,7 @@ views.topics = () => {
           ${done ? `<span class="pill g">הבנתי</span>` : r?.tries ? `<span class="pill e">${num(r.score)}/3</span>` : ''}
           <span class="acts">
             <button class="tmark${was?' on':''}" onclick="setTopicRead('${s.sid}',${i},${!was})"
-              title="${was?'בטל סימון':'סמן שקראתי את הנושא'}">${was?'✓ נקרא':'＋ קראתי'}</button>
+              title="${was?'בטל סימון':'סמן שהגעת לנושא הזה'}">${was?'✓ הגעתי לפה':'＋ הגעתי לפה'}</button>
             <button class="btn sm ghost" onclick="gotoTopicInSummary('${s.sid}',${i})">לסיכום</button>
             <button class="btn sm ${done?'ghost':''}" onclick="openQuiz('${s.sid}',${i})">${done?'תרגל שוב':'בדוק הבנה'}</button>
           </span></div>`;}).join('')}</div></div>`;
