@@ -15,10 +15,12 @@
   --skip:#8b98ab; --skip-bg:rgba(139,152,171,.12);
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --r:10px;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; /* dataviz-validated, dark */
 }
 :root[data-theme="light"]{
   --bg:#eef1f5; --panel:#ffffff; --panel2:#f6f8fb; --line:#d4dbe4; --line2:#e3e8ef;
   --ink:#1a2230; --ink2:#54627a; --ink3:#8593a8;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; /* light steps of same theme */
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -116,6 +118,29 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .stamp b{color:var(--ink)}
 .case textarea{width:100%;min-height:64px;resize:vertical;font-size:.87rem}
 
+/* ---------- thermal output box ---------- */
+.thermal-out{margin-top:12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);padding:11px 13px;display:none}
+.thermal-out.on{display:block}
+.th-hd{font-family:var(--mono);font-size:.75rem;color:var(--ink3);margin-bottom:8px}
+.th-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.th-item{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink2);font-family:var(--mono)}
+.th-item i{width:10px;height:10px;border-radius:3px;flex:none}
+.th-item b{color:var(--ink);font-weight:600}
+.th-wrap{position:relative}
+.th-wrap canvas{width:100%;height:170px;display:block;cursor:crosshair}
+.th-tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);
+  border-radius:7px;padding:6px 9px;font-family:var(--mono);font-size:.72rem;color:var(--ink2);
+  display:none;z-index:5;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.th-tip b{color:var(--ink)}
+
+/* ---------- sessions dialog ---------- */
+.sess-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line2)}
+.sess-row:last-child{border-bottom:0}
+.sess-meta{flex:1;min-width:0}
+.sess-meta b{font-family:var(--mono)}
+.sess-meta small{display:block;color:var(--ink3)}
+.sess-cur{color:var(--acc);font-size:.75rem;font-family:var(--mono)}
+
 /* ---------- footer bar ---------- */
 .bar{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:60}
 .bar-in{max-width:1060px;margin:0 auto;padding:9px 18px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -149,6 +174,7 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
     <div class="brand"><span class="dot"></span>ENPORTABLE <small>field session runner</small></div>
     <div class="grow"></div>
     <span class="pill" id="clockPill"><b id="clock" class="mono">--:--:--</b></span>
+    <span class="pill" id="livePill" hidden title="latest row of the on-device thermal log"><span class="st-dot"></span><span id="liveTxt">…</span></span>
     <span class="pill" id="syncPill"><span class="st-dot"></span><span id="syncTxt">local only</span></span>
     <div class="prog-wrap"><div class="prog"><i id="progBar"></i></div><span id="progTxt">0/24</span></div>
     <button class="iconbtn" id="themeBtn" title="theme">◐</button>
@@ -169,12 +195,20 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
     <button class="btn" id="exportCsv">⬇ Timeline (CSV)</button>
     <button class="btn" id="exportJson">⬇ Backup (JSON)</button>
     <div class="grow"></div>
+    <button class="btn" id="newBtn" hidden>＋ New session</button>
+    <button class="btn" id="sessBtn" hidden>Sessions ▾</button>
+    <button class="btn" id="saveBtn" hidden>Save now</button>
     <button class="btn" id="pushBtn">Push ↑</button>
     <button class="btn" id="pullBtn">Pull ↓</button>
     <button class="btn" id="resetBtn" style="color:var(--fail)">Reset</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<dialog id="sessDlg">
+  <h3 style="margin:0 0 10px">Saved sessions</h3>
+  <div id="sessList" style="max-height:340px;overflow:auto"></div>
+  <div style="text-align:right;margin-top:14px"><button class="btn" onclick="sessDlg.close()">Close</button></div>
+</dialog>
 
 <script>
 "use strict";
@@ -356,9 +390,14 @@ const CFG_FIELDS=[["date","Date","date"],["operator","Operator","text"],["unit",
  ["connection","Transport","select",["wifi_direct","usb","mixed"]],["ambient","Ambient °C (start)","text"]];
 let state=null, dataKey=null, binCfg=null, syncTimer=null, dirty=false;
 
+function newSessionId(){
+  const d=new Date();
+  return "s"+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")
+    +"_"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+String(d.getSeconds()).padStart(2,"0");
+}
 function freshState(){
   const cases={}; CASES.forEach(c=>cases[c.id]={status:"pending",start:null,stop:null,notes:""});
-  return {v:1,config:{date:new Date().toISOString().slice(0,10)},cases,events:[],savedAt:null};
+  return {v:1,sessionId:newSessionId(),config:{date:new Date().toISOString().slice(0,10)},cases,events:[],savedAt:null};
 }
 function loadLocal(){ try{const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&s.v===1) return s;}catch(e){} return null; }
 function persist(){
@@ -371,7 +410,17 @@ function logEvent(caseId,kind,detail){ state.events.push({t:new Date().toISOStri
 /* ---------------- sync (JSONBin, E2E encrypted) ---------------- */
 const $sync=()=>document.getElementById("syncPill");
 function setSync(cls,txt){ const p=$sync(); p.className="pill "+cls; document.getElementById("syncTxt").textContent=txt; }
-function scheduleSync(){ dirty=true; if(!binCfg) return; clearTimeout(syncTimer); syncTimer=setTimeout(pushCloud,2500); }
+function scheduleSync(){
+  dirty=true; clearTimeout(syncTimer);
+  if(LOCAL_BRIDGE){ syncTimer=setTimeout(saveLocalSession,1200); return; }  // disk, not cloud
+  if(!binCfg) return;
+  syncTimer=setTimeout(pushCloud,2500);
+}
+async function saveLocalSession(){
+  const r=await bridge("/api/session/save",{id:state.sessionId,state});
+  if(r&&r.ok){ dirty=false; setSync("sync-ok","saved "+r.saved_at); }
+  else setSync("sync-off","save failed — browser copy OK");
+}
 async function pushCloud(){
   if(!binCfg||!dataKey) return;
   setSync("sync-busy","syncing…");
@@ -412,7 +461,8 @@ async function tryUnlock(pass){
 }
 async function boot(offline){
   state=loadLocal()||freshState();
-  if(!offline&&binCfg){
+  if(!state.sessionId){ state.sessionId=newSessionId(); }   // migrate pre-session states
+  if(!offline&&binCfg&&!LOCAL_BRIDGE){
     const remote=await pullCloud(true);
     if(remote&&remote.savedAt&&(!state.savedAt||remote.savedAt>state.savedAt)){
       state=remote; localStorage.setItem(LS_KEY,JSON.stringify(state));
@@ -423,8 +473,13 @@ async function boot(offline){
   for(const id of["hdr","main","bar"]) document.getElementById(id).hidden=false;
   buildUI(); render();
   setInterval(()=>{document.getElementById("clock").textContent=hhmmss(new Date());},1000);
-  if(!binCfg) setSync("sync-off","local only");
-  bridge("/api/ping").then(r=>{ if(r&&r.ok) toast("Local SSH bridge active — S-01 auto-fetch + thermal markers on"); });
+  if(LOCAL_BRIDGE){
+    binCfg=null;                                   // cloud sync is a public-page feature
+    for(const id of["pushBtn","pullBtn"]) document.getElementById(id).hidden=true;
+    for(const id of["newBtn","sessBtn","saveBtn"]) document.getElementById(id).hidden=false;
+    setSync("sync-ok","local · autosave on");
+    startLiveLoop();
+  } else if(!binCfg) setSync("sync-off","local only");
 }
 document.getElementById("lockForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -438,6 +493,38 @@ document.getElementById("lockForm").addEventListener("submit",async e=>{
   }
 });
 document.getElementById("offlineLink").addEventListener("click",()=>boot(true));
+if(LOCAL_BRIDGE){ // local field mode: no cloud creds needed, skip the passphrase
+  document.getElementById("lockForm").hidden=true;
+  document.getElementById("lockSub").textContent="Local field mode — sessions save to disk, telemetry over SSH";
+  const b=document.createElement("button");
+  b.className="btn btn-main"; b.style.width="100%"; b.textContent="Enter field session";
+  b.onclick=()=>boot(true);
+  document.getElementById("lockForm").after(b);
+}
+
+/* ---------------- live pulse (header) ---------------- */
+let liveTimer=null;
+function startLiveLoop(){
+  const pill=document.getElementById("livePill"), txt=document.getElementById("liveTxt");
+  const tick=async()=>{
+    const r=await bridge("/api/live");
+    if(!r){ pill.hidden=true; return; }
+    pill.hidden=false;
+    const dot=pill.querySelector(".st-dot");
+    if(r.ok&&r.logger==="running"&&r.top&&r.top.length){
+      dot.style.background="var(--ok)"; dot.style.animation="pulse 1.6s infinite";
+      txt.textContent=r.top[0].c.toFixed(1)+"° "+r.top[0].name+" · "+r.age_s+"s ago"+(r.marker?" · "+r.marker:"");
+      pill.title="live from "+(r.file||"device log")+"\n"+r.top.map(t=>t.name+" "+t.c+"°").join(" · ");
+    } else if(r.ok&&r.logger==="stopped"){
+      dot.style.background="var(--warn)"; dot.style.animation="none"; txt.textContent="logger stopped";
+    } else if(r.ok){
+      dot.style.background="var(--warn)"; dot.style.animation="none"; txt.textContent="no log yet";
+    } else {
+      dot.style.background="var(--fail)"; dot.style.animation="none"; txt.textContent="DUT unreachable";
+    }
+  };
+  tick(); liveTimer=setInterval(tick,4000);
+}
 
 /* ---------------- UI ---------------- */
 function hhmm(d){return d.toTimeString().slice(0,5);}
@@ -487,8 +574,10 @@ function buildUI(){
             <button class="btn btn-fail" data-act="fail" data-id="${c.id}">Fail</button>
             <button class="btn btn-blocked" data-act="blocked" data-id="${c.id}">Blocked</button>
             <button class="btn btn-skip" data-act="skipped" data-id="${c.id}">Skip</button>
+            <button class="btn" data-therm="${c.id}" title="fetch device log for this case's window" ${LOCAL_BRIDGE?"":"hidden"}>⟳ Thermal</button>
           </div>
           <textarea placeholder="Notes / actuals / latencies / finding candidates…" data-notes="${c.id}"></textarea>
+          <div class="thermal-out" id="thermal-${c.id}"></div>
         </div>
       </div>`;
     }
@@ -503,6 +592,10 @@ function buildUI(){
   cat.querySelectorAll("[data-notes]").forEach(t=>t.addEventListener("change",()=>{
     state.cases[t.dataset.notes].notes=t.value; persist();
   }));
+  cat.querySelectorAll("[data-therm]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation(); fetchThermal(b.dataset.therm,true);
+  }));
+  for(const c of CASES) if(state.cases[c.id].thermal) renderThermal(c.id);
   // bar
   document.getElementById("exportMd").onclick=exportMd;
   document.getElementById("exportCsv").onclick=exportCsv;
@@ -513,7 +606,11 @@ function buildUI(){
   document.getElementById("resetBtn").onclick=()=>{ if(confirm("Reset ALL session data on this device? (Cloud copy untouched until next push)")){ state=freshState(); persist(); buildUI(); render(); } };
   document.getElementById("themeBtn").onclick=()=>{
     const r=document.documentElement; r.dataset.theme=r.dataset.theme==="light"?"":"light";
+    for(const c of CASES) if(state.cases[c.id].thermal) renderThermal(c.id); // repaint series colors
   };
+  document.getElementById("newBtn").onclick=newSession;
+  document.getElementById("sessBtn").onclick=openSessions;
+  document.getElementById("saveBtn").onclick=()=>{ saveLocalSession(); toast("Saved"); };
 }
 async function fetchS01(){
   const r=await bridge("/api/s01");
@@ -533,7 +630,8 @@ function act(a,id){
   if(a==="start"){ cs.start=now; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
     bridge("/api/mark",{id}); if(id==="S-01") fetchS01(); }
   else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date()));
-    bridge("/api/mark",{id:"-"}); }
+    bridge("/api/mark",{id:"-"});
+    setTimeout(()=>fetchThermal(id,false),1500); }   // let the last rows land, then show the window
   else { cs.status=a; if(!cs.stop&&(a==="pass"||a==="fail"))cs.stop=cs.stop||now; logEvent(id,"status",a); }
   persist();
 }
@@ -553,6 +651,106 @@ function render(){
   }
   document.getElementById("progBar").style.width=(100*done/CASES.length)+"%";
   document.getElementById("progTxt").textContent=done+"/"+CASES.length;
+}
+
+/* ---------------- per-case thermal window ---------------- */
+const SERIES_VARS=["--s1","--s2","--s3","--s4"];
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+async function fetchThermal(id,manual){
+  const cs=state.cases[id];
+  if(!cs.start){ if(manual)toast(id+": no Start timestamp yet"); return; }
+  const from=Math.floor(new Date(cs.start)/1000);
+  const to=cs.stop?Math.ceil(new Date(cs.stop)/1000):Math.ceil(Date.now()/1000);
+  const r=await bridge(`/api/window?from=${from}&to=${to}`);
+  if(!r||!r.ok){ if(manual)toast("thermal fetch: "+(r&&r.error||"bridge off")); return; }
+  // keep stored series light: ≤120 pts each
+  for(const s of r.series){ const st=Math.max(1,Math.ceil(s.pts.length/120));
+    s.pts=s.pts.filter((_,i)=>i%st===0||i===s.pts.length-1); }
+  cs.thermal={fetched:new Date().toISOString(),n:r.n,t0:r.t0,t1:r.t1,partial:!cs.stop,series:r.series};
+  persist(); renderThermal(id);
+  toast(id+" thermal: "+r.n+" samples"+(cs.stop?"":" (running)"));
+}
+function renderThermal(id){
+  const th=state.cases[id].thermal, box=document.getElementById("thermal-"+id);
+  if(!th||!box) return;
+  const dur=th.t1-th.t0, mm=Math.floor(dur/60), ss=dur%60;
+  box.className="thermal-out on";
+  box.innerHTML=`<div class="th-hd">device log · ${th.n} samples · ${mm}m${String(ss).padStart(2,"0")}s window${th.partial?" · case still running":""} · fetched ${hhmmss(new Date(th.fetched))}</div>
+    <div class="th-legend">${th.series.map((s,i)=>
+      `<span class="th-item"><i style="background:var(${SERIES_VARS[i]})"></i>${s.name} <b>${s.first}→${s.last}°</b> (peak ${s.peak}°)</span>`).join("")}</div>
+    <div class="th-wrap"><canvas></canvas><div class="th-tip"></div></div>`;
+  drawChart(box.querySelector("canvas"),box.querySelector(".th-tip"),th);
+}
+function drawChart(cv,tip,th){
+  const wrap=cv.parentElement, W=wrap.clientWidth||600, H=170, dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const g=cv.getContext("2d"); g.scale(dpr,dpr);
+  const P={l:34,r:8,t:8,b:18};
+  let lo=1/0,hi=-1/0;
+  for(const s of th.series)for(const[,c]of s.pts){ if(c<lo)lo=c; if(c>hi)hi=c; }
+  if(hi-lo<2){ const m=(hi+lo)/2; lo=m-1; hi=m+1; } else { const pad=(hi-lo)*.08; lo-=pad; hi+=pad; }
+  const span=Math.max(1,th.t1-th.t0);
+  const X=t=>P.l+(W-P.l-P.r)*t/span, Y=c=>P.t+(H-P.t-P.b)*(1-(c-lo)/(hi-lo));
+  const ink3=cssVar("--ink3"), line2=cssVar("--line2");
+  function base(){
+    g.clearRect(0,0,W,H);
+    g.strokeStyle=line2; g.fillStyle=ink3; g.font="10px "+cssVar("--mono").replace(/"/g,"'"); g.lineWidth=1;
+    for(let i=0;i<3;i++){ const c=lo+(hi-lo)*i/2, y=Y(c);
+      g.beginPath(); g.moveTo(P.l,y); g.lineTo(W-P.r,y); g.stroke();
+      g.fillText(c.toFixed(1)+"°",2,y+3); }
+    g.fillText("0s",P.l,H-5);
+    const el=Math.floor(span/60)+"m"+String(span%60).padStart(2,"0")+"s";
+    g.fillText(el,W-P.r-g.measureText(el).width,H-5);
+    th.series.forEach((s,i)=>{
+      g.strokeStyle=cssVar(SERIES_VARS[i]); g.lineWidth=2; g.beginPath();
+      s.pts.forEach(([t,c],j)=>{ j?g.lineTo(X(t),Y(c)):g.moveTo(X(t),Y(c)); });
+      g.stroke();
+    });
+  }
+  base();
+  cv.onmousemove=e=>{
+    const r=cv.getBoundingClientRect(), t=Math.round((e.clientX-r.left-P.l)/(W-P.l-P.r)*span);
+    if(t<0||t>span){ tip.style.display="none"; base(); return; }
+    base();
+    g.strokeStyle=ink3; g.setLineDash([3,3]); g.beginPath();
+    g.moveTo(X(t),P.t); g.lineTo(X(t),H-P.b); g.stroke(); g.setLineDash([]);
+    const vals=th.series.map((s,i)=>{
+      let best=s.pts[0]; for(const p of s.pts) if(Math.abs(p[0]-t)<Math.abs(best[0]-t)) best=p;
+      return `<span style="color:var(${SERIES_VARS[i]})">●</span> ${s.name} <b>${best[1].toFixed(1)}°</b>`;
+    });
+    tip.innerHTML=`+${t}s<br>`+vals.join("<br>");
+    tip.style.display="block";
+    const tw=tip.offsetWidth;
+    tip.style.left=Math.min(W-tw-4,Math.max(0,X(t)+10))+"px"; tip.style.top="6px";
+  };
+  cv.onmouseleave=()=>{ tip.style.display="none"; base(); };
+}
+
+/* ---------------- sessions (disk, via bridge) ---------------- */
+async function openSessions(){
+  const r=await bridge("/api/sessions");
+  if(!r||!r.ok) return toast("session list unavailable");
+  const el=document.getElementById("sessList");
+  el.innerHTML=r.sessions.length?r.sessions.map(s=>`
+    <div class="sess-row">
+      <div class="sess-meta"><b>${s.id}</b>${s.id===state.sessionId?' <span class="sess-cur">● current</span>':""}
+        <small>${s.date||"—"} · ${s.operator||"no operator"} · ${s.done}/${s.total} done · saved ${s.savedAt?s.savedAt.slice(11,19):"—"}</small></div>
+      ${s.id===state.sessionId?"":`<button class="btn" data-load="${s.id}">Load</button>`}
+    </div>`).join(""):'<div class="kv">No saved sessions yet.</div>';
+  el.querySelectorAll("[data-load]").forEach(b=>b.onclick=async()=>{
+    const g=await bridge("/api/session/get?id="+b.dataset.load);
+    if(!g||!g.ok) return toast("load failed");
+    state=g.state; if(!state.sessionId)state.sessionId=b.dataset.load;
+    localStorage.setItem(LS_KEY,JSON.stringify(state));
+    sessDlg.close(); buildUI(); render(); toast("Loaded "+b.dataset.load);
+  });
+  sessDlg.showModal();
+}
+function newSession(){
+  if(!confirm("Start a new session? Current one is saved on disk and stays in the Sessions list."))return;
+  saveLocalSession();                      // final save of the outgoing session
+  state=freshState(); persist(); buildUI(); render();
+  toast("New session "+state.sessionId);
 }
 
 /* ---------------- exports ---------------- */
@@ -582,6 +780,9 @@ function exportMd(){
     md+=`- Refs: ${c.refs}${c.mut?" · **mutates**":""}${c.p0?" · **P0**":""}\n`;
     if(s.start)md+=`- Start: ${s.start}${s.stop?`  ·  Stop: ${s.stop}  ·  ${dur(s.start,s.stop)}`:""}\n`;
     md+=`- Expected: ${c.expected}\n`;
+    if(s.thermal){ const th=s.thermal;
+      md+=`- Thermal (${th.n} samples, ${th.t1-th.t0}s, device log):`+
+        th.series.map(z=>` ${z.name} ${z.first}→${z.last}° (peak ${z.peak}°)`).join(" ·")+"\n"; }
     if(s.notes)md+=`- **Actual / notes:** ${s.notes.replace(/\n/g,"\n  ")}\n`; }
   md+=`\n## Event log\n\n| Time (ISO) | Case | Event | Detail |\n|---|---|---|---|\n`;
   for(const e of state.events) md+=`| ${e.t} | ${e.caseId} | ${e.kind} | ${e.detail} |\n`;
