@@ -854,11 +854,11 @@ function drawChart(cv,tip,th,stamps){
       g.stroke();
     });
     if(stamps) for(const s of stamps){
-      const x=X(s.x), warn=cssVar("--warn");
-      g.strokeStyle=warn; g.setLineDash([4,3]); g.lineWidth=1;
+      const x=X(s.x), col=cssVar(s.sel?"--acc":"--warn");
+      g.strokeStyle=col; g.setLineDash(s.sel?[]:[4,3]); g.lineWidth=s.sel?2:1;
       g.beginPath(); g.moveTo(x,P.t); g.lineTo(x,H-P.b); g.stroke(); g.setLineDash([]);
-      g.fillStyle=warn;
-      g.fillText(s.label.slice(0,12),Math.min(x+3,W-P.r-50),P.t+9);
+      g.fillStyle=col;
+      g.fillText(s.label.slice(0,14),Math.min(x+3,W-P.r-60),P.t+9);
     }
   }
   base();
@@ -884,7 +884,12 @@ function drawChart(cv,tip,th,stamps){
    Always-on strip above the footer. Stamps are app-side epoch annotations —
    they never touch the device's case-marker file, so improvised marks can't
    corrupt a running case's CSV labels. */
-let dockData=null, dockTimer=null;
+let dockData=null, dockTimer=null, dockSel=null;   // dockSel = selected epoch (click on graph)
+function updateStampBtn(){
+  const b=document.getElementById("stampBtn");
+  b.textContent=dockSel?("📍 Stamp @ "+hhmmss(new Date(dockSel*1000))):"📍 Stamp";
+  b.title=dockSel?"stamps the selected moment (Esc to clear selection)":"mark this moment on the graph — or click the graph first to pick a past moment";
+}
 function initDock(){
   document.getElementById("dock").classList.add("on");
   const body=document.getElementById("dockBody"), tog=document.getElementById("dockToggle");
@@ -898,12 +903,18 @@ function initDock(){
   const add=()=>{
     const inp=document.getElementById("stampLabel");
     const label=(inp.value.trim()||"mark").replace(/,/g,";");
-    state.stamps.push({t:Math.floor(Date.now()/1000),label});
-    logEvent("—","stamp",label); inp.value="";
-    persist(); renderDock(); toast("📍 "+label+" @ "+hhmmss(new Date()));
+    const t=dockSel||Math.floor(Date.now()/1000);   // clicked moment wins over "now"
+    state.stamps.push({t,label});
+    state.stamps.sort((a,b)=>a.t-b.t);
+    logEvent("—","stamp",label+" @ "+hhmmss(new Date(t*1000))); inp.value="";
+    dockSel=null; updateStampBtn();
+    persist(); renderDock(); toast("📍 "+label+" @ "+hhmmss(new Date(t*1000)));
   };
   document.getElementById("stampBtn").onclick=add;
   document.getElementById("stampLabel").addEventListener("keydown",e=>{ if(e.key==="Enter")add(); });
+  document.addEventListener("keydown",e=>{                  // Esc clears the selection
+    if(e.key==="Escape"&&dockSel){ dockSel=null; updateStampBtn(); renderDock(); }
+  });
   document.getElementById("dockSpan").onchange=()=>{ dockData=null; renderDock(); };
   const loop=async()=>{
     const span=+document.getElementById("dockSpan").value;
@@ -926,15 +937,32 @@ function renderDock(err){
   const stamps=state.stamps
     .filter(s=>s.t>=dockData.t0&&s.t<=dockData.t1)
     .map(s=>({x:s.t-dockData.t0,label:s.label}));
-  drawChart(body.querySelector("canvas"),body.querySelector(".th-tip"),dockData,stamps);
+  if(dockSel&&dockSel>=dockData.t0&&dockSel<=dockData.t1)
+    stamps.push({x:dockSel-dockData.t0,label:"⌖ "+hhmmss(new Date(dockSel*1000)),sel:true});
+  const cv=body.querySelector("canvas");
+  drawChart(cv,body.querySelector(".th-tip"),dockData,stamps);
+  cv.onclick=e=>{                         // click = select a moment (absolute epoch)
+    if(!dockData) return;
+    const r=cv.getBoundingClientRect(), P={l:34,r:8}, span=dockData.t1-dockData.t0;
+    const t=Math.round((e.clientX-r.left-P.l)/(r.width-P.l-P.r)*span);
+    if(t<0||t>span) return;
+    dockSel=dockData.t0+t;
+    updateStampBtn(); renderDock();
+    document.getElementById("stampLabel").focus();
+  };
 }
 function renderDockChips(){
   const el=document.getElementById("dockChips");
   const list=state.stamps.slice(-8).reverse();
   el.innerHTML=list.map(s=>{
     const i=state.stamps.indexOf(s);
-    return `<span class="stamp-chip">${s.label} ${hhmmss(new Date(s.t*1000))}<a data-del-stamp="${i}" title="delete stamp">×</a></span>`;
+    return `<span class="stamp-chip"><a data-ren-stamp="${i}" title="rename stamp">${s.label}</a> ${hhmmss(new Date(s.t*1000))}<a data-del-stamp="${i}" title="delete stamp">×</a></span>`;
   }).join("");
+  el.querySelectorAll("[data-ren-stamp]").forEach(a=>a.onclick=()=>{
+    const s=state.stamps[+a.dataset.renStamp];
+    const nl=prompt("Rename stamp:",s.label);
+    if(nl!==null&&nl.trim()){ s.label=nl.trim().replace(/,/g,";"); persist(); renderDock(); }
+  });
   el.querySelectorAll("[data-del-stamp]").forEach(a=>a.onclick=()=>{
     const s=state.stamps[+a.dataset.delStamp];
     if(confirm(`Delete stamp "${s.label}" (${hhmmss(new Date(s.t*1000))})?`)){
