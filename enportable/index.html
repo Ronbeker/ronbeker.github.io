@@ -128,6 +128,8 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .att{display:flex;align-items:center;gap:8px}
 .att .att-txt{flex:1;min-width:0}
 .att.viewing{border-left-color:var(--acc)}
+.att-del{color:var(--fail);cursor:pointer;font-weight:700;padding:0 5px;flex:none}
+.att-del:hover{text-decoration:none;filter:brightness(1.3)}
 .btn-sm{padding:2px 9px;font-size:.72rem;border-radius:6px}
 .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.2s infinite;flex:none}
 .att .att-st{font-weight:700}
@@ -683,12 +685,40 @@ async function fetchS01(){
   logEvent("S-01","autofetch",r.fetched_at);
   persist(); toast("DUT config fetched ✓ (fw "+(r.config.firmware||"?")+")");
 }
+/* Seal-and-archive: moves the case's live fields into cs.attempts. Attempt
+   numbers are historical (max+1, never reused), so deleting one can't cause
+   a collision. Returns the archived attempt's n, or 0 if nothing to archive. */
+function archiveAttempt(id){
+  const cs=state.cases[id];
+  const touched=cs.status!=="pending"||cs.start||cs.stop||cs.notes||cs.thermal;
+  if(!touched) return 0;
+  cs.attempts=cs.attempts||[];
+  const n=cs.attempts.reduce((m,a)=>Math.max(m,a.n),0)+1;
+  cs.attempts.push({n,status:cs.status,start:cs.start,stop:cs.stop,
+    notes:cs.notes||"",thermal:cs.thermal||null});
+  if(livePollId===id) stopCaseLive();
+  delete viewingAttempt[id];
+  cs.status="pending"; cs.start=null; cs.stop=null; cs.notes=""; delete cs.thermal;
+  return n;
+}
 function act(a,id){
   const cs=state.cases[id]; const now=new Date().toISOString();
-  if(a==="start"){ cs.start=now; cs.stop=null; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
+  if(a==="start"){
+    if(cs.start&&cs.stop){                       // previous attempt is sealed — never overwrite it
+      const n=archiveAttempt(id);
+      logEvent(id,"auto-archive","attempt "+n+" sealed on new start");
+      toast(id+": attempt "+n+" sealed — attempt "+(n+1)+" starting");
+    } else if(cs.start&&!cs.stop){
+      if(!confirm(id+" is running. Restart this attempt? Its start time will be replaced (Stop first to seal it as an attempt)."))return;
+    }
+    cs.start=new Date().toISOString(); cs.stop=null; if(cs.status==="pending")cs.status="running";
+    logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
     bridge("/api/mark",{id}); if(id==="S-01") fetchS01();
     if(LOCAL_BRIDGE){ delete viewingAttempt[id]; startCaseLive(id); } }
-  else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date()));
+  else if(a==="stop"){
+    if(cs.stop){ toast(id+" already stopped — this attempt is sealed. ▶Start begins a new one."); return; }
+    if(!cs.start){ toast(id+": nothing running"); return; }
+    cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date()));
     bridge("/api/mark",{id:"-"});
     if(livePollId===id) stopCaseLive();
     setTimeout(()=>fetchThermal(id,false),1500); }   // let the last rows land, then show the final window
@@ -702,20 +732,23 @@ function retryCase(id){
   const cs=state.cases[id];
   const touched = cs.status!=="pending" || cs.start || cs.stop || cs.notes || cs.thermal;
   if(!touched){ toast(id+" is already clean — nothing to reset"); return; }
-  const n=(cs.attempts||[]).length+1;
-  if(!confirm(`Retry ${id}?\n\nAttempt ${n} (${cs.status}) is archived — it stays in the report and the exports.\nStatus, timestamps, thermal window and notes reset for a fresh run.`)) return;
-  cs.attempts=cs.attempts||[];
-  // archive the FULL thermal object (incl. decimated points) so the attempt's
-  // graph can be checked out later, not just summarized
-  cs.attempts.push({n, status:cs.status, start:cs.start, stop:cs.stop,
-    notes:cs.notes||"", thermal:cs.thermal||null});
-  if(livePollId===id) stopCaseLive();
-  delete viewingAttempt[id];
-  cs.status="pending"; cs.start=null; cs.stop=null; cs.notes=""; delete cs.thermal;
-  logEvent(id,"retry","attempt "+n+" archived ("+cs.attempts[n-1].status+")");
+  if(!confirm(`Retry ${id}?\n\nThe current attempt (${cs.status}) is archived — it stays in the report and the exports.\nStatus, timestamps, thermal window and notes reset for a fresh run.`)) return;
+  const n=archiveAttempt(id);
+  logEvent(id,"retry","attempt "+n+" archived");
   bridge("/api/mark",{id:"-"});      // drop the device marker if this case held it
   persist(); buildUI(); render();
   toast(id+" reset — attempt "+(n+1)+" ready");
+}
+function deleteAttempt(id,n){
+  const cs=state.cases[id], i=(cs.attempts||[]).findIndex(a=>a.n===n);
+  if(i<0) return;
+  const a=cs.attempts[i];
+  if(!confirm(`Delete ${id} attempt #${n} (${a.status})?\n\nIt disappears from the report and exports. This cannot be undone.`))return;
+  cs.attempts.splice(i,1);
+  if(viewingAttempt[id]===n) delete viewingAttempt[id];
+  logEvent(id,"attempt-deleted","#"+n+" ("+a.status+")");
+  persist(); renderAttempts(id); renderThermal(id);
+  toast(id+" attempt #"+n+" deleted");
 }
 function renderAttempts(id){
   const cs=state.cases[id], box=document.getElementById("attempts-"+id);
@@ -730,13 +763,15 @@ function renderAttempts(id){
     const nt=a.notes?" · "+a.notes.replace(/\s+/g," ").slice(0,70)+(a.notes.length>70?"…":""):"";
     const viewing=viewingAttempt[id]===a.n;
     return `<div class="att${viewing?' viewing':''}"><span class="att-txt">#${a.n} <span class="att-st st-${a.status}">${a.status}</span> <b>${t}</b>${d}${th}${nt}</span>
-      <button class="btn btn-sm" data-att-view="${a.n}">${viewing?"Viewing":"View"}</button></div>`;
+      <button class="btn btn-sm" data-att-view="${a.n}">${viewing?"Viewing":"View"}</button>
+      <a class="att-del" data-att-del="${a.n}" title="delete this attempt">×</a></div>`;
   }).join("");
   box.querySelectorAll("[data-att-view]").forEach(b=>b.onclick=()=>{
     viewingAttempt[id]=+b.dataset.attView;
     renderAttempts(id); renderThermal(id);
     document.getElementById("thermal-"+id).scrollIntoView({block:"nearest",behavior:"smooth"});
   });
+  box.querySelectorAll("[data-att-del]").forEach(x=>x.onclick=()=>deleteAttempt(id,+x.dataset.attDel));
 }
 function render(){
   let done=0;
