@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EnPortable · Field Session Runner</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161b22; --panel2:#1c2330; --line:#2a3444; --line2:#222a38;
+  --ink:#dbe4f0; --ink2:#8b98ab; --ink3:#5c6a7e;
+  --acc:#3fb6a8; --acc-dk:#2b8b80;
+  --ok:#3fbf6f; --ok-bg:rgba(63,191,111,.12);
+  --fail:#e05555; --fail-bg:rgba(224,85,85,.12);
+  --warn:#e0a83f; --warn-bg:rgba(224,168,63,.12);
+  --skip:#8b98ab; --skip-bg:rgba(139,152,171,.12);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:10px;
+}
+:root[data-theme="light"]{
+  --bg:#eef1f5; --panel:#ffffff; --panel2:#f6f8fb; --line:#d4dbe4; --line2:#e3e8ef;
+  --ink:#1a2230; --ink2:#54627a; --ink3:#8593a8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:7px 10px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:var(--acc)}
+.mono{font-family:var(--mono)}
+a{color:var(--acc)}
+
+/* ---------- lock screen ---------- */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.lock-card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:34px 30px;text-align:center}
+.lock-badge{width:54px;height:54px;margin:0 auto 16px;border-radius:14px;background:linear-gradient(135deg,var(--acc),#2b7fa8);display:flex;align-items:center;justify-content:center}
+.lock-badge svg{width:26px;height:26px;stroke:#fff}
+.lock-card h1{margin:0 0 4px;font-size:1.25rem;letter-spacing:.02em}
+.lock-card .sub{color:var(--ink2);font-size:.85rem;margin-bottom:22px}
+.lock-card input{width:100%;text-align:center;font-family:var(--mono);letter-spacing:.06em;padding:11px}
+.lock-card .btn-main{width:100%;margin-top:12px}
+.lock-err{color:var(--fail);font-size:.82rem;min-height:1.2em;margin-top:10px}
+.lock-alt{margin-top:18px;font-size:.8rem;color:var(--ink3)}
+.lock-alt a{cursor:pointer}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.shake{animation:shake .35s}
+
+/* ---------- shell ---------- */
+header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hd{max-width:1060px;margin:0 auto;padding:9px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.03em;white-space:nowrap;display:flex;align-items:center;gap:9px}
+.brand .dot{width:9px;height:9px;border-radius:3px;background:var(--acc)}
+.brand small{color:var(--ink3);font-weight:500}
+.hd .grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:3px 11px;font-size:.78rem;color:var(--ink2);white-space:nowrap;font-family:var(--mono)}
+.pill b{color:var(--ink)}
+.pill .st-dot{width:7px;height:7px;border-radius:50%;background:var(--skip)}
+.pill.sync-ok .st-dot{background:var(--ok)} .pill.sync-off .st-dot{background:var(--warn)}
+.pill.sync-err .st-dot{background:var(--fail)} .pill.sync-busy .st-dot{background:var(--acc);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.prog-wrap{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--ink2);font-family:var(--mono)}
+.prog{width:120px;height:7px;border-radius:99px;background:var(--line2);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),#2b7fa8);transition:width .3s}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:7px;color:var(--ink2);padding:4px 9px;font-size:.8rem}
+.iconbtn:hover{color:var(--ink);border-color:var(--ink3)}
+
+.wrap{max-width:1060px;margin:0 auto;padding:20px 18px 90px}
+
+/* ---------- config ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.cfg{padding:16px 18px;margin-bottom:22px}
+.cfg h2{margin:0 0 12px;font-size:.95rem;color:var(--ink2);text-transform:uppercase;letter-spacing:.08em}
+.cfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cfg-grid label{display:flex;flex-direction:column;gap:4px;font-size:.75rem;color:var(--ink2)}
+.cfg-grid input,.cfg-grid select{width:100%;font-size:.87rem}
+
+/* ---------- phases + cases ---------- */
+.phase{margin:26px 0 12px;display:flex;align-items:baseline;gap:10px}
+.phase h2{margin:0;font-size:1.05rem}
+.phase .ph-id{font-family:var(--mono);color:var(--acc);font-weight:700}
+.phase .ph-note{color:var(--ink3);font-size:.8rem}
+.case{margin-bottom:12px;overflow:hidden}
+.case-hd{display:flex;align-items:center;gap:10px;padding:11px 15px;cursor:pointer;user-select:none}
+.case-hd:hover{background:var(--panel2)}
+.cid{font-family:var(--mono);font-weight:700;color:var(--acc);white-space:nowrap}
+.ctitle{font-weight:600;flex:1;min-width:180px}
+.badge{font-size:.68rem;font-family:var(--mono);border-radius:5px;padding:2px 7px;white-space:nowrap;letter-spacing:.03em}
+.b-mut{background:var(--warn-bg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.b-p0{background:var(--fail-bg);color:var(--fail);border:1px solid color-mix(in srgb,var(--fail) 35%,transparent)}
+.b-ref{background:var(--panel2);color:var(--ink2);border:1px solid var(--line)}
+.st-chip{font-size:.72rem;font-weight:700;font-family:var(--mono);border-radius:99px;padding:3px 11px;text-transform:uppercase;letter-spacing:.05em}
+.st-pending{background:var(--line2);color:var(--ink3)}
+.st-running{background:var(--acc);color:#082220}
+.st-pass{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
+.st-fail{background:var(--fail-bg);color:var(--fail);border:1px solid var(--fail)}
+.st-blocked{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}
+.st-skipped{background:var(--skip-bg);color:var(--skip);border:1px solid var(--skip)}
+.case-body{border-top:1px solid var(--line2);padding:14px 17px;display:none}
+.case.open .case-body{display:block}
+.case-cols{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+@media(max-width:760px){.case-cols{grid-template-columns:1fr}}
+.case-body h4{margin:0 0 5px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.case-body ol{margin:0 0 14px;padding-left:20px}
+.case-body ol li{margin-bottom:3px}
+.kv{font-size:.9rem;margin-bottom:14px;color:var(--ink2)}
+.kv b{color:var(--ink)}
+.thermal{border-left:3px solid var(--acc);padding:6px 11px;background:var(--panel2);border-radius:0 7px 7px 0;font-size:.85rem;color:var(--ink2);margin-bottom:14px}
+.ctl-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:7px;padding:7px 14px;font-size:.85rem;font-weight:600}
+.btn:hover{border-color:var(--ink3)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-main{background:var(--acc);border-color:var(--acc);color:#07211f}
+.btn-main:hover{filter:brightness(1.08)}
+.btn-pass{color:var(--ok);border-color:var(--ok)} .btn-fail{color:var(--fail);border-color:var(--fail)}
+.btn-blocked{color:var(--warn);border-color:var(--warn)} .btn-skip{color:var(--skip)}
+.stamp{font-family:var(--mono);font-size:.78rem;color:var(--ink2);display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.stamp b{color:var(--ink)}
+.case textarea{width:100%;min-height:64px;resize:vertical;font-size:.87rem}
+
+/* ---------- footer bar ---------- */
+.bar{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:60}
+.bar-in{max-width:1060px;margin:0 auto;padding:9px 18px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.bar-in .grow{flex:1}
+.toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc);color:var(--ink);border-radius:9px;padding:9px 18px;font-size:.85rem;z-index:80;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.on{opacity:1}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;max-width:520px;width:92%;padding:22px}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOCK SCREEN ======================= -->
+<div id="lock">
+  <div class="lock-card" id="lockCard">
+    <div class="lock-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <h1>EnPortable Field Session</h1>
+    <div class="sub" id="lockSub">Enter session passphrase to unlock &amp; enable encrypted cloud sync</div>
+    <form id="lockForm">
+      <input type="password" id="passInput" placeholder="passphrase" autocomplete="current-password" autofocus>
+      <button class="btn btn-main" type="submit">Unlock</button>
+    </form>
+    <div class="lock-err" id="lockErr"></div>
+    <div class="lock-alt"><a id="offlineLink">Continue offline (local device storage only)</a></div>
+  </div>
+</div>
+
+<!-- ======================= APP ======================= -->
+<header hidden id="hdr">
+  <div class="hd">
+    <div class="brand"><span class="dot"></span>ENPORTABLE <small>field session runner</small></div>
+    <div class="grow"></div>
+    <span class="pill" id="clockPill"><b id="clock" class="mono">--:--:--</b></span>
+    <span class="pill" id="syncPill"><span class="st-dot"></span><span id="syncTxt">local only</span></span>
+    <div class="prog-wrap"><div class="prog"><i id="progBar"></i></div><span id="progTxt">0/24</span></div>
+    <button class="iconbtn" id="themeBtn" title="theme">◐</button>
+  </div>
+</header>
+
+<div class="wrap" hidden id="main">
+  <div class="card cfg">
+    <h2>Session configuration</h2>
+    <div class="cfg-grid" id="cfgGrid"></div>
+  </div>
+  <div id="catalog"></div>
+</div>
+
+<div class="bar" hidden id="bar">
+  <div class="bar-in">
+    <button class="btn" id="exportMd">⬇ Report (MD)</button>
+    <button class="btn" id="exportCsv">⬇ Timeline (CSV)</button>
+    <button class="btn" id="exportJson">⬇ Backup (JSON)</button>
+    <div class="grow"></div>
+    <button class="btn" id="pushBtn">Push ↑</button>
+    <button class="btn" id="pullBtn">Pull ↓</button>
+    <button class="btn" id="resetBtn" style="color:var(--fail)">Reset</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   EnPortable Field Session Runner
+   - offline-first: localStorage is source of truth
+   - optional E2E-encrypted sync to JSONBin (vault.json holds
+     the AES-GCM-wrapped access key; passphrase never stored)
+   ============================================================ */
+
+/* ---------------- crypto ---------------- */
+const te=new TextEncoder(), td=new TextDecoder();
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
+const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function deriveKey(pass,salt,iter){
+  const base=await crypto.subtle.importKey("raw",te.encode(pass),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},base,
+    {name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function aesEnc(key,obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,te.encode(JSON.stringify(obj)));
+  return {iv:b64(iv),ct:b64(ct)};
+}
+async function aesDec(key,blob){
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(blob.iv)},key,ub64(blob.ct));
+  return JSON.parse(td.decode(pt));
+}
+
+/* ---------------- test catalog ---------------- */
+const PHASES=[
+ ["A","Setup & baseline","logger first — every later timestamp hangs off this clock"],
+ ["B","P0 smoke","the ship-blocking basics, each one a thermal data point"],
+ ["C","Detections","policy fire paths under increasing pressure"],
+ ["D","Whitelist","suppression correctness — false quiet is a threat hidden"],
+ ["E","Resilience","restarts mid-work; state must fail clean, never lie"],
+ ["F","Thermal heavy","the hot cases — full cooldown before and between"],
+ ["G","Software update","mutating; runs last, after all evidence is off-device"],
+ ["H","Wrap-up","no data left behind"]
+];
+const C=(id,ph,title,refs,p0,mut,purpose,steps,expected,thermal)=>({id,ph,title,refs,p0,mut,purpose,steps,expected,thermal});
+const CASES=[
+C("S-01","A","Session setup & thermal logger start","agent_runner §0 · CT-170–175",false,false,
+ "Pin session config, start on-device logging, sync clocks. Nothing counts until this is done.",
+ ["Join unit hotspot; confirm web UI loads",
+  "SSH to the unit (key, or sshpass with password in env only)",
+  "Run capability probe + refresh session config; copy build/firmware into Config above",
+  "Start thermal logger → /data/logs/ (persistent, NOT /tmp); confirm rows appending at 1 Hz",
+  "Record Mac↔DUT clock offset on paper + in notes; record ambient °C in Config"],
+ "Logger appending; offsets recorded; config pinned.",
+ "Defines t₀. Every case Start/Stop below is correlated against this log."),
+C("R-01","A","Idle baseline — hotspot up, no client","CT-176* thermal",false,false,
+ "Thermal floor. Every later ΔT is measured against this.",
+ ["No clients connected, screen at default state","Hands off 10 min","Mark Start/Stop here"],
+ "Flat curve; steady state = ΔT < 1 °C over 5 min.",
+ "Floor reference — do not skip, do not shorten below 10 min."),
+C("R-02","A","Connected idle — one client, no load","CT-177* thermal",false,false,
+ "Radio-only contribution above floor.",
+ ["Connect phone (record transport in Config)","Pair if needed, then idle 5–10 min","Mark Start/Stop"],
+ "Small step above R-01 attributable to Wi-Fi radio.",
+ "Radio delta isolated from workload delta."),
+C("R-03","B","UI boots — home loads","P0 row 1",true,false,
+ "Web UI reachable and clean.",
+ ["Open web UI from Mac","Home renders fully; no 5xx, no console errors","Check OLED shows normal state"],
+ "Home loads, error-free.",null),
+C("R-04","B","License — seats visible","P0 · CT-002 area",true,false,
+ "License state correct before any pairing work.",
+ ["Open license/seats view","Seat count matches expectation for this unit"],
+ "Seats visible and plausible.",null),
+C("R-05","B","Pairing — device appears in list","P0",true,false,
+ "Pair the primary phone.",
+ ["Pair primary Android via chosen transport","Device appears in device list with correct identity"],
+ "Device listed; seat consumed correctly (cross-check R-04).",null),
+C("R-06","B","Policies page — defaults exist","P0 · CT-020",true,false,
+ "Policy inventory before detection work. Note camera policy's current state — R-11 depends on it.",
+ ["Open policies page","Defaults present; note camera policy state (enabled/disabled) in notes"],
+ "Page loads; defaults exist.",null),
+C("R-07","B","Baseline scan → report row","P0 · CT-178* thermal",true,false,
+ "The core P0 workload, instrumented.",
+ ["Start full scan on paired phone","Wait to completion — no interference","Report row exists with a risk level"],
+ "Scan completes; report row with risk level.",
+ "First real load ramp: note time-to-steady, peak zone, any cooling_device state change."),
+C("R-08","B","Connect event logged","P0 · CT-060 area",true,false,
+ "Event pipeline sanity.",
+ ["Open events view","Find the connect event for R-05 with correct device + timestamp"],
+ "Event present, correct, correctly timed.",null),
+C("R-09","B","Service health over SSH","CT-171–175 · dut_health.sh",false,false,
+ "Ground truth under the UI.",
+ ["Run dut_health.sh from the Mac","All checks pass (known tolerated failures aside)","Note uptime + HARD_RESET count as this session's baseline"],
+ "Health green; baselines recorded in notes.",null),
+C("R-10","B","OLED ↔ app state sync","P0",true,false,
+ "The physical screen must not disagree with the app.",
+ ["Compare OLED state vs app/web on: idle, connected, scanning","Note any mismatch verbatim"],
+ "States agree on all three.",null),
+C("R-11","C","Camera policy → detection fires","CT-020/024/025",false,true,
+ "The requested camera-policy case. Enabling the policy WRITES config → mutates.",
+ ["Enable camera policy, action = alert/notify (screenshot prior state first)",
+  "On the phone, trigger camera use per policy scope",
+  "Observe: event created, correct policy attribution, action fired",
+  "Record trigger→event latency in notes (target ≤30 s)"],
+ "Detection + action, correctly attributed, latency noted.",
+ "Mark Start exactly at trigger — gives detection pipeline a clean thermal signature."),
+C("R-12","C","Detection during active scan","—",false,false,
+ "Contention case: scan and live detection must not starve each other.",
+ ["Start a full scan","Mid-scan, trigger the camera policy again","Confirm BOTH: scan completes AND detection is logged"],
+ "Both complete; neither lost, neither corrupted.",
+ "Overlapping load — likely the highest CPU spike outside phase F. Watch peak."),
+C("R-13","C","Live IOC pair — Android + iOS","P0 live-detection row",true,false,
+ "The P0 live-detection requirement, both platforms.",
+ ["Trigger 1 known Android IOC → detected","Trigger 1 known iOS IOC → detected","Verify both events, correct platform attribution"],
+ "Both detected and attributed.",null),
+C("R-14","C","Detection burst — ≥5 in <60 s","—",false,false,
+ "Pipeline under burst: ordering, loss, UI responsiveness.",
+ ["Prepare ≥5 rapid triggers (mix policy types if possible)","Fire within 60 s; Start at first, Stop at last event visible","Count events vs triggers; check ordering + timestamps; UI stays responsive"],
+ "All N logged, ordered, no drops, no UI freeze. Any dedupe behavior documented, not assumed.",
+ "Short sharp spike — good for catching governor response."),
+C("R-15","D","Whitelist rule set — create & persist","CT-030",false,true,
+ "Rule-set CRUD. Writes config → mutates.",
+ ["Create whitelist set matching the R-11 camera trigger (screenshot before/after)","Reload page — set persists","Verify over API/SSH if quick"],
+ "Set persists across reload.",null),
+C("R-16","D","Whitelisted detection — suppressed","whitelist suppression (P2 row)",false,false,
+ "The suppression must be exactly as wide as the rule — no wider.",
+ ["Repeat the exact R-11 trigger","No alert/action fires","Check: is a raw event still recorded? Document actual behavior either way"],
+ "No alert. Raw-event behavior documented, not assumed.",null),
+C("R-17","D","Mixed: whitelisted + real detection together","—",false,false,
+ "The case that catches over-broad suppression.",
+ ["Trigger whitelisted item AND a non-whitelisted policy violation near-simultaneously",
+  "Real one alerts; whitelisted one stays quiet","No cross-suppression, ordering correct",
+  "Cleanup: remove/disable the whitelist set; restore camera policy to its R-06 state"],
+ "Only the real detection alerts. Cleanup done — unit config restored.",null),
+C("R-18","E","EnPortable restart during active scan","—",false,true,
+ "Device-side interruption. State must fail clean.",
+ ["Start a full scan","Mid-scan: clean reboot over SSH","⚠ After boot: RESTART THE THERMAL LOGGER (reboot kills it) — new file, note the gap",
+  "Device returns healthy (quick R-09 re-check)","Scan state: resumed or failed gracefully — no phantom/corrupt report","Fresh scan afterwards succeeds"],
+ "Clean recovery; honest scan state; follow-up scan OK.",
+ "Boot is its own thermal transient — keep 5 min of post-boot log before the follow-up scan."),
+C("R-19","E","Phone restart during active scan","—",false,false,
+ "Client-side interruption.",
+ ["Start a full scan","Mid-scan: reboot the phone","EnPortable notices the drop and reports it clearly — no hang, no eternal spinner","After phone returns: re-pair if needed; fresh scan succeeds"],
+ "Graceful drop handling; clean follow-up scan.",null),
+C("R-20","F","Charging + active scan","CT-181* thermal",false,false,
+ "Charger dissipation stacked on SoC load — a commonly missed worst case.",
+ ["Full cooldown to ~R-01 floor first","Plug charger; confirm charging state","Run scans back-to-back 15–20 min","Watch charge state — silent charge-inhibit mid-scan is a finding"],
+ "Scan unaffected; charging behavior documented; temps recorded.",
+ "Watch charger-IC/battery region + input current alongside SoC zones."),
+C("R-21","F","Worst case — charge + forensic + client + screen","CT-183* thermal",false,false,
+ "Everything at once. The limit case.",
+ ["Cooldown first","Charging + deep forensic acquisition + connected client + screen on","Run to steady state or thermal limit","If a limit/shutdown hits: that IS the data — capture last log lines + on-screen behavior"],
+ "No unexpected shutdown; UI responsive; peaks + any throttling recorded. If thermal shutdown occurs, check whether it's misreported as battery_low (CR-023 promotion opportunity).",
+ "The run the whole day exists for. Do not rush the steady-state window."),
+C("R-22","G","Software update — actually lands","CT-050/166 · CT-184* · F45 gate",false,true,
+ "'Update indeed': version must really change, and the box must survive the install.",
+ ["ALL evidence pulled off-device first (early S-02 pass)","Record current version over SSH","Install the provided update","Post: version CHANGED, services healthy (R-09), HARD_RESET count unchanged vs R-09 baseline","Web UI reachable; spot-check one scan"],
+ "Version changed; healthy; watchdog gate clean. Runs LAST — can brick the unit; have the recovery script ready.",
+ "Install extraction is the worst CPU transient of the day — logger must be running."),
+C("S-02","H","Evidence retrieval & report export","—",false,false,
+ "The day only counts if the data leaves the building readable.",
+ ["Stop logger; scp ALL thermal CSVs (including pre-reboot files from R-18)","OPEN each file — verify rows, not just file size","Export Report (MD) + Timeline (CSV) + Backup (JSON) from this app","Final ambient reading; final Push ↑ if online"],
+ "Everything local, verified readable, backed up.",null)
+];
+
+/* ---------------- state ---------------- */
+const LS_KEY="enportable_session_v1";
+const CFG_FIELDS=[["date","Date","date"],["operator","Operator","text"],["unit","Unit ID","text"],
+ ["build","Build under test","text"],["firmware","Firmware VERSION_ID","text"],["appver","Companion app ver","text"],
+ ["connection","Transport","select",["wifi_direct","usb","mixed"]],["ambient","Ambient °C (start)","text"]];
+let state=null, dataKey=null, binCfg=null, syncTimer=null, dirty=false;
+
+function freshState(){
+  const cases={}; CASES.forEach(c=>cases[c.id]={status:"pending",start:null,stop:null,notes:""});
+  return {v:1,config:{date:new Date().toISOString().slice(0,10)},cases,events:[],savedAt:null};
+}
+function loadLocal(){ try{const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&s.v===1) return s;}catch(e){} return null; }
+function persist(){
+  state.savedAt=new Date().toISOString();
+  localStorage.setItem(LS_KEY,JSON.stringify(state));
+  render(); scheduleSync();
+}
+function logEvent(caseId,kind,detail){ state.events.push({t:new Date().toISOString(),caseId,kind,detail:detail||""}); }
+
+/* ---------------- sync (JSONBin, E2E encrypted) ---------------- */
+const $sync=()=>document.getElementById("syncPill");
+function setSync(cls,txt){ const p=$sync(); p.className="pill "+cls; document.getElementById("syncTxt").textContent=txt; }
+function scheduleSync(){ dirty=true; if(!binCfg) return; clearTimeout(syncTimer); syncTimer=setTimeout(pushCloud,2500); }
+async function pushCloud(){
+  if(!binCfg||!dataKey) return;
+  setSync("sync-busy","syncing…");
+  try{
+    const blob=await aesEnc(dataKey,state);
+    const r=await fetch("https://api.jsonbin.io/v3/b/"+binCfg.binId,{method:"PUT",
+      headers:{"Content-Type":"application/json","X-Access-Key":binCfg.accessKey},
+      body:JSON.stringify({v:1,savedAt:state.savedAt,...blob})});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    dirty=false; setSync("sync-ok","synced "+hhmm(new Date()));
+  }catch(e){ setSync(navigator.onLine?"sync-err":"sync-off",navigator.onLine?"sync error":"offline · queued"); }
+}
+async function pullCloud(silent){
+  if(!binCfg||!dataKey) return null;
+  setSync("sync-busy","pulling…");
+  try{
+    const r=await fetch("https://api.jsonbin.io/v3/b/"+binCfg.binId+"/latest",
+      {headers:{"X-Access-Key":binCfg.accessKey,"X-Bin-Meta":"false"}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const rec=await r.json();
+    if(!rec||!rec.ct){ setSync("sync-ok","synced (bin empty)"); return null; }
+    const remote=await aesDec(dataKey,{iv:rec.iv,ct:rec.ct});
+    setSync("sync-ok","synced "+hhmm(new Date()));
+    return remote;
+  }catch(e){ setSync(navigator.onLine?"sync-err":"sync-off",navigator.onLine?"sync error":"offline"); if(!silent) toast("Pull failed: "+e.message); return null; }
+}
+window.addEventListener("online",()=>{ if(dirty) pushCloud(); });
+window.addEventListener("offline",()=>setSync("sync-off","offline · queued"));
+
+/* ---------------- unlock flow ---------------- */
+async function tryUnlock(pass){
+  const r=await fetch("vault.json",{cache:"no-store"});
+  if(!r.ok) throw new Error("novault");
+  const v=await r.json();
+  dataKey=await deriveKey(pass,ub64(v.salt),v.iter);
+  const secret=await aesDec(dataKey,v);            // throws on wrong passphrase
+  binCfg={accessKey:secret.accessKey,binId:secret.binId};
+}
+async function boot(offline){
+  state=loadLocal()||freshState();
+  if(!offline&&binCfg){
+    const remote=await pullCloud(true);
+    if(remote&&remote.savedAt&&(!state.savedAt||remote.savedAt>state.savedAt)){
+      state=remote; localStorage.setItem(LS_KEY,JSON.stringify(state));
+      toast("Loaded newer session from cloud ("+hhmm(new Date(remote.savedAt))+")");
+    }
+  }
+  document.getElementById("lock").remove();
+  for(const id of["hdr","main","bar"]) document.getElementById(id).hidden=false;
+  buildUI(); render();
+  setInterval(()=>{document.getElementById("clock").textContent=hhmmss(new Date());},1000);
+  if(!binCfg) setSync("sync-off","local only");
+}
+document.getElementById("lockForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const pass=document.getElementById("passInput").value;
+  const err=document.getElementById("lockErr"), card=document.getElementById("lockCard");
+  err.textContent="";
+  try{ await tryUnlock(pass); boot(false); }
+  catch(ex){
+    if(ex.message==="novault"){ err.textContent="No vault.json published yet — run setup.html locally first, or continue offline."; }
+    else{ err.textContent="Wrong passphrase."; card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
+  }
+});
+document.getElementById("offlineLink").addEventListener("click",()=>boot(true));
+
+/* ---------------- UI ---------------- */
+function hhmm(d){return d.toTimeString().slice(0,5);}
+function hhmmss(d){return d.toTimeString().slice(0,8);}
+function dur(a,b){ if(!a||!b)return""; const s=Math.round((new Date(b)-new Date(a))/1000);
+  return Math.floor(s/60)+"m"+String(s%60).padStart(2,"0")+"s"; }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),2600); }
+
+function buildUI(){
+  // config grid
+  const g=document.getElementById("cfgGrid");
+  g.innerHTML=CFG_FIELDS.map(([k,label,type,opts])=>{
+    if(type==="select") return `<label>${label}<select data-cfg="${k}">${opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`;
+    return `<label>${label}<input type="${type}" data-cfg="${k}"></label>`;
+  }).join("");
+  g.querySelectorAll("[data-cfg]").forEach(el=>{
+    el.value=state.config[el.dataset.cfg]||el.value||"";
+    el.addEventListener("change",()=>{ state.config[el.dataset.cfg]=el.value; persist(); });
+  });
+  // catalog
+  const cat=document.getElementById("catalog");
+  let html="";
+  for(const [pid,pname,pnote] of PHASES){
+    html+=`<div class="phase"><span class="ph-id">${pid}</span><h2>${pname}</h2><span class="ph-note">${pnote}</span></div>`;
+    for(const c of CASES.filter(x=>x.ph===pid)){
+      html+=`<div class="card case" id="case-${c.id}">
+        <div class="case-hd" data-toggle="${c.id}">
+          <span class="cid">${c.id}</span><span class="ctitle">${c.title}</span>
+          ${c.p0?'<span class="badge b-p0">P0</span>':""}${c.mut?'<span class="badge b-mut">MUTATES</span>':""}
+          ${c.refs&&c.refs!=="—"?`<span class="badge b-ref">${c.refs}</span>`:""}
+          <span class="st-chip" data-chip="${c.id}"></span>
+        </div>
+        <div class="case-body">
+          <div class="kv">${c.purpose}</div>
+          <div class="case-cols">
+            <div><h4>Steps</h4><ol>${c.steps.map(s=>`<li>${s}</li>`).join("")}</ol></div>
+            <div>
+              <h4>Expected</h4><div class="kv"><b>${c.expected}</b></div>
+              ${c.thermal?`<h4>Thermal watch</h4><div class="thermal">${c.thermal}</div>`:""}
+            </div>
+          </div>
+          <div class="stamp" data-stamp="${c.id}"></div>
+          <div class="ctl-row">
+            <button class="btn btn-main" data-act="start" data-id="${c.id}">▶ Start</button>
+            <button class="btn" data-act="stop" data-id="${c.id}">■ Stop</button>
+            <button class="btn btn-pass" data-act="pass" data-id="${c.id}">Pass</button>
+            <button class="btn btn-fail" data-act="fail" data-id="${c.id}">Fail</button>
+            <button class="btn btn-blocked" data-act="blocked" data-id="${c.id}">Blocked</button>
+            <button class="btn btn-skip" data-act="skipped" data-id="${c.id}">Skip</button>
+          </div>
+          <textarea placeholder="Notes / actuals / latencies / finding candidates…" data-notes="${c.id}"></textarea>
+        </div>
+      </div>`;
+    }
+  }
+  cat.innerHTML=html;
+  cat.querySelectorAll("[data-toggle]").forEach(el=>el.addEventListener("click",()=>{
+    document.getElementById("case-"+el.dataset.toggle).classList.toggle("open");
+  }));
+  cat.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation(); act(b.dataset.act,b.dataset.id);
+  }));
+  cat.querySelectorAll("[data-notes]").forEach(t=>t.addEventListener("change",()=>{
+    state.cases[t.dataset.notes].notes=t.value; persist();
+  }));
+  // bar
+  document.getElementById("exportMd").onclick=exportMd;
+  document.getElementById("exportCsv").onclick=exportCsv;
+  document.getElementById("exportJson").onclick=()=>download("enportable-session-backup.json",JSON.stringify(state,null,2),"application/json");
+  document.getElementById("pushBtn").onclick=()=>binCfg?pushCloud():toast("Local-only mode — no cloud configured");
+  document.getElementById("pullBtn").onclick=async()=>{ if(!binCfg)return toast("Local-only mode");
+    const r=await pullCloud(false); if(r){ state=r; localStorage.setItem(LS_KEY,JSON.stringify(state)); buildUI(); render(); toast("Cloud state restored"); } };
+  document.getElementById("resetBtn").onclick=()=>{ if(confirm("Reset ALL session data on this device? (Cloud copy untouched until next push)")){ state=freshState(); persist(); buildUI(); render(); } };
+  document.getElementById("themeBtn").onclick=()=>{
+    const r=document.documentElement; r.dataset.theme=r.dataset.theme==="light"?"":"light";
+  };
+}
+function act(a,id){
+  const cs=state.cases[id]; const now=new Date().toISOString();
+  if(a==="start"){ cs.start=now; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date())); }
+  else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date())); }
+  else { cs.status=a; if(!cs.stop&&(a==="pass"||a==="fail"))cs.stop=cs.stop||now; logEvent(id,"status",a); }
+  persist();
+}
+function render(){
+  let done=0;
+  for(const c of CASES){
+    const cs=state.cases[c.id];
+    if(["pass","fail","blocked","skipped"].includes(cs.status))done++;
+    const chip=document.querySelector(`[data-chip="${c.id}"]`);
+    if(chip){ chip.className="st-chip st-"+(cs.status||"pending"); chip.textContent=cs.status||"pending"; }
+    const st=document.querySelector(`[data-stamp="${c.id}"]`);
+    if(st){ st.innerHTML=(cs.start?`start <b>${hhmmss(new Date(cs.start))}</b>`:"")+
+      (cs.stop?` stop <b>${hhmmss(new Date(cs.stop))}</b>`:"")+
+      (cs.start&&cs.stop?` dur <b>${dur(cs.start,cs.stop)}</b>`:""); }
+    const ta=document.querySelector(`[data-notes="${c.id}"]`);
+    if(ta&&document.activeElement!==ta) ta.value=cs.notes;
+  }
+  document.getElementById("progBar").style.width=(100*done/CASES.length)+"%";
+  document.getElementById("progTxt").textContent=done+"/"+CASES.length;
+}
+
+/* ---------------- exports ---------------- */
+function download(name,text,mime){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([text],{type:mime||"text/plain"}));
+  a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportCsv(){
+  let out="case_id,title,status,start_iso,stop_iso,duration_s\n";
+  for(const c of CASES){ const s=state.cases[c.id];
+    const d=(s.start&&s.stop)?Math.round((new Date(s.stop)-new Date(s.start))/1000):"";
+    out+=`${c.id},"${c.title}",${s.status},${s.start||""},${s.stop||""},${d}\n`; }
+  download("enportable-timeline-"+(state.config.date||"session")+".csv",out,"text/csv");
+}
+function exportMd(){
+  const cfg=state.config;
+  let md=`# EnPortable field session — ${cfg.date||""}\n\n`;
+  md+=`| | |\n|---|---|\n`;
+  for(const [k,label] of CFG_FIELDS.map(f=>[f[0],f[1]])) if(cfg[k]) md+=`| ${label} | ${cfg[k]} |\n`;
+  md+=`\n## Summary\n\n| ID | Case | Refs | Status | Start | Stop | Dur |\n|---|---|---|---|---|---|---|\n`;
+  for(const c of CASES){ const s=state.cases[c.id];
+    md+=`| ${c.id} | ${c.title} | ${c.refs} | **${s.status}** | ${s.start?hhmmss(new Date(s.start)):""} | ${s.stop?hhmmss(new Date(s.stop)):""} | ${dur(s.start,s.stop)} |\n`; }
+  md+=`\n## Case detail\n`;
+  for(const c of CASES){ const s=state.cases[c.id];
+    md+=`\n### ${c.id} — ${c.title} — **${s.status}**\n`;
+    md+=`- Refs: ${c.refs}${c.mut?" · **mutates**":""}${c.p0?" · **P0**":""}\n`;
+    if(s.start)md+=`- Start: ${s.start}${s.stop?`  ·  Stop: ${s.stop}  ·  ${dur(s.start,s.stop)}`:""}\n`;
+    md+=`- Expected: ${c.expected}\n`;
+    if(s.notes)md+=`- **Actual / notes:** ${s.notes.replace(/\n/g,"\n  ")}\n`; }
+  md+=`\n## Event log\n\n| Time (ISO) | Case | Event | Detail |\n|---|---|---|---|\n`;
+  for(const e of state.events) md+=`| ${e.t} | ${e.caseId} | ${e.kind} | ${e.detail} |\n`;
+  md+=`\n---\n_Generated ${new Date().toISOString()} · timeline CSV pairs with on-device thermal log via case Start/Stop timestamps._\n`;
+  download("enportable-report-"+(cfg.date||"session")+".md",md,"text/markdown");
+}
+
+/* ---------------- service worker ---------------- */
+if("serviceWorker"in navigator&&location.protocol==="https:")
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
