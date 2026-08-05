@@ -118,6 +118,23 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .stamp b{color:var(--ink)}
 .case textarea{width:100%;min-height:64px;resize:vertical;font-size:.87rem}
 
+/* ---------- attempt history ---------- */
+.attempts{margin-top:10px;display:none}
+.attempts.on{display:block}
+.att-hd{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:5px}
+.att{font-family:var(--mono);font-size:.76rem;color:var(--ink3);border-left:2px solid var(--line);
+  padding:4px 10px;margin-bottom:4px;background:var(--panel2);border-radius:0 6px 6px 0}
+.att b{color:var(--ink2)}
+.att{display:flex;align-items:center;gap:8px}
+.att .att-txt{flex:1;min-width:0}
+.att.viewing{border-left-color:var(--acc)}
+.btn-sm{padding:2px 9px;font-size:.72rem;border-radius:6px}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.2s infinite;flex:none}
+.att .att-st{font-weight:700}
+.att .st-pass{color:var(--ok)} .att .st-fail{color:var(--fail)}
+.att .st-blocked{color:var(--warn)} .att .st-skipped{color:var(--skip)}
+.att .st-pending,.att .st-running{color:var(--ink3)}
+
 /* ---------- thermal output box ---------- */
 .thermal-out{margin-top:12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);padding:11px 13px;display:none}
 .thermal-out.on{display:block}
@@ -534,6 +551,7 @@ function dur(a,b){ if(!a||!b)return""; const s=Math.round((new Date(b)-new Date(
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),2600); }
 
 function buildUI(){
+  const wasOpen=[...document.querySelectorAll(".case.open")].map(e=>e.id);
   // config grid
   const g=document.getElementById("cfgGrid");
   g.innerHTML=CFG_FIELDS.map(([k,label,type,opts])=>{
@@ -574,15 +592,18 @@ function buildUI(){
             <button class="btn btn-fail" data-act="fail" data-id="${c.id}">Fail</button>
             <button class="btn btn-blocked" data-act="blocked" data-id="${c.id}">Blocked</button>
             <button class="btn btn-skip" data-act="skipped" data-id="${c.id}">Skip</button>
+            <button class="btn" data-retry="${c.id}" title="archive this attempt and reset the case for a fresh run">↺ Retry</button>
             <button class="btn" data-therm="${c.id}" title="fetch device log for this case's window" ${LOCAL_BRIDGE?"":"hidden"}>⟳ Thermal</button>
           </div>
           <textarea placeholder="Notes / actuals / latencies / finding candidates…" data-notes="${c.id}"></textarea>
+          <div class="attempts" id="attempts-${c.id}"></div>
           <div class="thermal-out" id="thermal-${c.id}"></div>
         </div>
       </div>`;
     }
   }
   cat.innerHTML=html;
+  wasOpen.forEach(i=>document.getElementById(i)?.classList.add("open"));  // survive rebuilds
   cat.querySelectorAll("[data-toggle]").forEach(el=>el.addEventListener("click",()=>{
     document.getElementById("case-"+el.dataset.toggle).classList.toggle("open");
   }));
@@ -594,6 +615,9 @@ function buildUI(){
   }));
   cat.querySelectorAll("[data-therm]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation(); fetchThermal(b.dataset.therm,true);
+  }));
+  cat.querySelectorAll("[data-retry]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation(); retryCase(b.dataset.retry);
   }));
   for(const c of CASES) if(state.cases[c.id].thermal) renderThermal(c.id);
   // bar
@@ -627,18 +651,64 @@ async function fetchS01(){
 }
 function act(a,id){
   const cs=state.cases[id]; const now=new Date().toISOString();
-  if(a==="start"){ cs.start=now; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
-    bridge("/api/mark",{id}); if(id==="S-01") fetchS01(); }
+  if(a==="start"){ cs.start=now; cs.stop=null; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
+    bridge("/api/mark",{id}); if(id==="S-01") fetchS01();
+    if(LOCAL_BRIDGE){ delete viewingAttempt[id]; startCaseLive(id); } }
   else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date()));
     bridge("/api/mark",{id:"-"});
-    setTimeout(()=>fetchThermal(id,false),1500); }   // let the last rows land, then show the window
+    if(livePollId===id) stopCaseLive();
+    setTimeout(()=>fetchThermal(id,false),1500); }   // let the last rows land, then show the final window
   else { cs.status=a; if(!cs.stop&&(a==="pass"||a==="fail"))cs.stop=cs.stop||now; logEvent(id,"status",a); }
   persist();
+}
+/* Retry = archive the attempt, then clear the live fields. Never discards:
+   the vault's runs are append-only, and "failed, passed on retry" is exactly
+   what the report has to show. */
+function retryCase(id){
+  const cs=state.cases[id];
+  const touched = cs.status!=="pending" || cs.start || cs.stop || cs.notes || cs.thermal;
+  if(!touched){ toast(id+" is already clean — nothing to reset"); return; }
+  const n=(cs.attempts||[]).length+1;
+  if(!confirm(`Retry ${id}?\n\nAttempt ${n} (${cs.status}) is archived — it stays in the report and the exports.\nStatus, timestamps, thermal window and notes reset for a fresh run.`)) return;
+  cs.attempts=cs.attempts||[];
+  // archive the FULL thermal object (incl. decimated points) so the attempt's
+  // graph can be checked out later, not just summarized
+  cs.attempts.push({n, status:cs.status, start:cs.start, stop:cs.stop,
+    notes:cs.notes||"", thermal:cs.thermal||null});
+  if(livePollId===id) stopCaseLive();
+  delete viewingAttempt[id];
+  cs.status="pending"; cs.start=null; cs.stop=null; cs.notes=""; delete cs.thermal;
+  logEvent(id,"retry","attempt "+n+" archived ("+cs.attempts[n-1].status+")");
+  bridge("/api/mark",{id:"-"});      // drop the device marker if this case held it
+  persist(); buildUI(); render();
+  toast(id+" reset — attempt "+(n+1)+" ready");
+}
+function renderAttempts(id){
+  const cs=state.cases[id], box=document.getElementById("attempts-"+id);
+  if(!box) return;
+  const list=cs.attempts||[];
+  if(!list.length){ box.className="attempts"; box.innerHTML=""; return; }
+  box.className="attempts on";
+  box.innerHTML=`<div class="att-hd">previous attempts (kept in report)</div>`+list.map(a=>{
+    const t=a.start?hhmmss(new Date(a.start)):"—";
+    const d=(a.start&&a.stop)?" · "+dur(a.start,a.stop):"";
+    const th=a.thermal?" · peak "+Math.max(...a.thermal.series.map(s=>s.peak)).toFixed(1)+"°":"";
+    const nt=a.notes?" · "+a.notes.replace(/\s+/g," ").slice(0,70)+(a.notes.length>70?"…":""):"";
+    const viewing=viewingAttempt[id]===a.n;
+    return `<div class="att${viewing?' viewing':''}"><span class="att-txt">#${a.n} <span class="att-st st-${a.status}">${a.status}</span> <b>${t}</b>${d}${th}${nt}</span>
+      <button class="btn btn-sm" data-att-view="${a.n}">${viewing?"Viewing":"View"}</button></div>`;
+  }).join("");
+  box.querySelectorAll("[data-att-view]").forEach(b=>b.onclick=()=>{
+    viewingAttempt[id]=+b.dataset.attView;
+    renderAttempts(id); renderThermal(id);
+    document.getElementById("thermal-"+id).scrollIntoView({block:"nearest",behavior:"smooth"});
+  });
 }
 function render(){
   let done=0;
   for(const c of CASES){
     const cs=state.cases[c.id];
+    renderAttempts(c.id);
     if(["pass","fail","blocked","skipped"].includes(cs.status))done++;
     const chip=document.querySelector(`[data-chip="${c.id}"]`);
     if(chip){ chip.className="st-chip st-"+(cs.status||"pending"); chip.textContent=cs.status||"pending"; }
@@ -656,7 +726,28 @@ function render(){
 /* ---------------- per-case thermal window ---------------- */
 const SERIES_VARS=["--s1","--s2","--s3","--s4"];
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-async function fetchThermal(id,manual){
+
+/* live polling: one case at a time, chained (next poll only after the
+   previous answer) so a slow SSH never stacks requests */
+let livePollId=null, livePollTimer=null;
+const viewingAttempt={};   // caseId -> archived attempt n on display (view state only)
+function startCaseLive(id){
+  stopCaseLive(); livePollId=id;
+  const box=document.getElementById("thermal-"+id);
+  if(box&&!state.cases[id].thermal){
+    box.className="thermal-out on";
+    box.innerHTML='<div class="th-hd"><span class="live-dot"></span>LIVE — waiting for first samples from the device log…</div>';
+  }
+  const loop=async()=>{
+    if(livePollId!==id) return;
+    await fetchThermal(id,false,true);
+    if(livePollId===id) livePollTimer=setTimeout(loop,5000);
+  };
+  setTimeout(loop,2500);   // give the logger a couple of rows first
+}
+function stopCaseLive(){ livePollId=null; clearTimeout(livePollTimer); }
+
+async function fetchThermal(id,manual,silent){
   const cs=state.cases[id];
   if(!cs.start){ if(manual)toast(id+": no Start timestamp yet"); return; }
   const from=Math.floor(new Date(cs.start)/1000);
@@ -668,18 +759,40 @@ async function fetchThermal(id,manual){
     s.pts=s.pts.filter((_,i)=>i%st===0||i===s.pts.length-1); }
   cs.thermal={fetched:new Date().toISOString(),n:r.n,t0:r.t0,t1:r.t1,partial:!cs.stop,series:r.series};
   persist(); renderThermal(id);
-  toast(id+" thermal: "+r.n+" samples"+(cs.stop?"":" (running)"));
+  if(!silent) toast(id+" thermal: "+r.n+" samples"+(cs.stop?"":" (running)"));
 }
 function renderThermal(id){
-  const th=state.cases[id].thermal, box=document.getElementById("thermal-"+id);
-  if(!th||!box) return;
-  const dur=th.t1-th.t0, mm=Math.floor(dur/60), ss=dur%60;
+  const cs=state.cases[id], box=document.getElementById("thermal-"+id);
+  if(!box) return;
+  const vn=viewingAttempt[id];
+  const att=vn?(cs.attempts||[]).find(a=>a.n===vn):null;
+  const th=att?att.thermal:cs.thermal;
+  const backBtn=att?`<button class="btn btn-sm" data-att-back="${id}" style="margin-left:auto">↩ Back to latest</button>`:"";
+  if(!th){
+    if(att){ box.className="thermal-out on";
+      box.innerHTML=`<div class="th-hd" style="display:flex;align-items:center">viewing attempt #${vn} (${att.status}) — no thermal was stored for it ${backBtn}</div>`;
+      wireAttBack(box);
+    } else box.className="thermal-out";
+    return;
+  }
+  const live=livePollId===id&&!cs.stop&&!att;
+  const dur=(th.t1!=null?th.t1-th.t0:th.dur)||0, mm=Math.floor(dur/60), ss=dur%60;
+  const hasPts=th.series.length&&th.series[0].pts;
   box.className="thermal-out on";
-  box.innerHTML=`<div class="th-hd">device log · ${th.n} samples · ${mm}m${String(ss).padStart(2,"0")}s window${th.partial?" · case still running":""} · fetched ${hhmmss(new Date(th.fetched))}</div>
+  box.innerHTML=`<div class="th-hd" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      ${att?`<b style="color:var(--warn)">attempt #${vn} (${att.status})</b> · `:""}${live?'<span class="live-dot"></span><b style="color:var(--ok)">LIVE</b> · ':""}
+      device log · ${th.n} samples · ${mm}m${String(ss).padStart(2,"0")}s window · fetched ${hhmmss(new Date(th.fetched||Date.now()))} ${backBtn}</div>
     <div class="th-legend">${th.series.map((s,i)=>
       `<span class="th-item"><i style="background:var(${SERIES_VARS[i]})"></i>${s.name} <b>${s.first}→${s.last}°</b> (peak ${s.peak}°)</span>`).join("")}</div>
-    <div class="th-wrap"><canvas></canvas><div class="th-tip"></div></div>`;
-  drawChart(box.querySelector("canvas"),box.querySelector(".th-tip"),th);
+    ${hasPts?`<div class="th-wrap"><canvas></canvas><div class="th-tip"></div></div>`
+            :`<div class="th-hd">summary only — graph points weren't stored for this attempt</div>`}`;
+  if(hasPts) drawChart(box.querySelector("canvas"),box.querySelector(".th-tip"),th);
+  wireAttBack(box);
+}
+function wireAttBack(box){
+  const b=box.querySelector("[data-att-back]");
+  if(b) b.onclick=()=>{ const id=b.dataset.attBack;
+    delete viewingAttempt[id]; renderAttempts(id); renderThermal(id); };
 }
 function drawChart(cv,tip,th){
   const wrap=cv.parentElement, W=wrap.clientWidth||600, H=170, dpr=window.devicePixelRatio||1;
@@ -760,10 +873,15 @@ function download(name,text,mime){
   a.download=name; a.click(); URL.revokeObjectURL(a.href);
 }
 function exportCsv(){
-  let out="case_id,title,status,start_iso,stop_iso,duration_s\n";
-  for(const c of CASES){ const s=state.cases[c.id];
+  // one row per attempt so the timeline joins cleanly against the thermal CSV
+  let out="case_id,attempt,title,status,start_iso,stop_iso,duration_s\n";
+  const row=(c,s,n)=>{
     const d=(s.start&&s.stop)?Math.round((new Date(s.stop)-new Date(s.start))/1000):"";
-    out+=`${c.id},"${c.title}",${s.status},${s.start||""},${s.stop||""},${d}\n`; }
+    return `${c.id},${n},"${c.title}",${s.status},${s.start||""},${s.stop||""},${d}\n`;
+  };
+  for(const c of CASES){ const s=state.cases[c.id];
+    for(const a of (s.attempts||[])) out+=row(c,a,a.n);
+    out+=row(c,s,(s.attempts||[]).length+1); }
   download("enportable-timeline-"+(state.config.date||"session")+".csv",out,"text/csv");
 }
 function exportMd(){
@@ -771,15 +889,25 @@ function exportMd(){
   let md=`# EnPortable field session — ${cfg.date||""}\n\n`;
   md+=`| | |\n|---|---|\n`;
   for(const [k,label] of CFG_FIELDS.map(f=>[f[0],f[1]])) if(cfg[k]) md+=`| ${label} | ${cfg[k]} |\n`;
-  md+=`\n## Summary\n\n| ID | Case | Refs | Status | Start | Stop | Dur |\n|---|---|---|---|---|---|---|\n`;
-  for(const c of CASES){ const s=state.cases[c.id];
-    md+=`| ${c.id} | ${c.title} | ${c.refs} | **${s.status}** | ${s.start?hhmmss(new Date(s.start)):""} | ${s.stop?hhmmss(new Date(s.stop)):""} | ${dur(s.start,s.stop)} |\n`; }
+  md+=`\n## Summary\n\n| ID | Case | Refs | Status | Start | Stop | Dur | Att |\n|---|---|---|---|---|---|---|---|\n`;
+  for(const c of CASES){ const s=state.cases[c.id]; const na=(s.attempts||[]).length;
+    md+=`| ${c.id} | ${c.title} | ${c.refs} | **${s.status}** | ${s.start?hhmmss(new Date(s.start)):""} | ${s.stop?hhmmss(new Date(s.stop)):""} | ${dur(s.start,s.stop)} | ${na?na+1:1} |\n`; }
   md+=`\n## Case detail\n`;
   for(const c of CASES){ const s=state.cases[c.id];
     md+=`\n### ${c.id} — ${c.title} — **${s.status}**\n`;
     md+=`- Refs: ${c.refs}${c.mut?" · **mutates**":""}${c.p0?" · **P0**":""}\n`;
     if(s.start)md+=`- Start: ${s.start}${s.stop?`  ·  Stop: ${s.stop}  ·  ${dur(s.start,s.stop)}`:""}\n`;
     md+=`- Expected: ${c.expected}\n`;
+    if(s.attempts&&s.attempts.length){
+      md+=`- Attempt history (${s.attempts.length+1} total; final result above):\n`;
+      for(const a of s.attempts){
+        md+=`  - #${a.n} **${a.status}**`+
+            (a.start?` ${hhmmss(new Date(a.start))}`:"")+
+            (a.start&&a.stop?`–${hhmmss(new Date(a.stop))} (${dur(a.start,a.stop)})`:"")+
+            (a.thermal?` · thermal peak ${Math.max(...a.thermal.series.map(z=>z.peak)).toFixed(1)}° over ${a.thermal.n} samples`:"")+
+            (a.notes?`\n    - notes: ${a.notes.replace(/\n/g,"\n      ")}`:"")+"\n";
+      }
+    }
     if(s.thermal){ const th=s.thermal;
       md+=`- Thermal (${th.n} samples, ${th.t1-th.t0}s, device log):`+
         th.series.map(z=>` ${z.name} ${z.first}→${z.last}° (peak ${z.peak}°)`).join(" ·")+"\n"; }
