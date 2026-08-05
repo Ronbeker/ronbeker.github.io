@@ -158,6 +158,23 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .sess-meta small{display:block;color:var(--ink3)}
 .sess-cur{color:var(--acc);font-size:.75rem;font-family:var(--mono)}
 
+/* ---------- live dock ---------- */
+.dock{border-bottom:1px solid var(--line);display:none}
+.dock.on{display:block}
+.dock-in{max-width:1060px;margin:0 auto;padding:7px 18px 4px}
+.dock-hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:.78rem;color:var(--ink2)}
+.dock-hd .mono{font-family:var(--mono)}
+.dock-hd .grow{flex:1 1 auto}
+.dock-hd select{padding:2px 6px;font-size:.75rem}
+.dock-hd input{padding:3px 9px;font-size:.78rem;width:130px}
+.dock-body{position:relative;margin-top:4px}
+.dock-body canvas{width:100%;height:108px;display:block;cursor:crosshair}
+.dock-body.hid{display:none}
+.stamp-chip{display:inline-flex;align-items:center;gap:5px;background:var(--warn-bg);border:1px solid var(--warn);
+  color:var(--warn);border-radius:99px;padding:1px 8px;font-size:.72rem;font-family:var(--mono);white-space:nowrap}
+.stamp-chip a{cursor:pointer;color:var(--warn);font-weight:700;text-decoration:none}
+.dock-chips{display:flex;gap:6px;flex-wrap:wrap;max-width:46%;overflow:hidden}
+
 /* ---------- footer bar ---------- */
 .bar{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:60}
 .bar-in{max-width:1060px;margin:0 auto;padding:9px 18px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -207,6 +224,21 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 </div>
 
 <div class="bar" hidden id="bar">
+  <div class="dock" id="dock">
+    <div class="dock-in">
+      <div class="dock-hd">
+        <span class="live-dot"></span><b style="color:var(--ok)">LIVE</b>
+        <select id="dockSpan" title="rolling window"><option value="300">5m</option><option value="600" selected>10m</option><option value="1800">30m</option></select>
+        <span class="mono" id="dockInfo">waiting for device…</span>
+        <div class="grow"></div>
+        <div class="dock-chips" id="dockChips"></div>
+        <input id="stampLabel" placeholder="stamp label" maxlength="24">
+        <button class="btn btn-sm" id="stampBtn" title="mark this moment on the graph">📍 Stamp</button>
+        <button class="iconbtn" id="dockToggle" title="collapse">▾</button>
+      </div>
+      <div class="dock-body" id="dockBody"><canvas></canvas><div class="th-tip"></div></div>
+    </div>
+  </div>
   <div class="bar-in">
     <button class="btn" id="exportMd">⬇ Report (MD)</button>
     <button class="btn" id="exportCsv">⬇ Timeline (CSV)</button>
@@ -414,7 +446,7 @@ function newSessionId(){
 }
 function freshState(){
   const cases={}; CASES.forEach(c=>cases[c.id]={status:"pending",start:null,stop:null,notes:""});
-  return {v:1,sessionId:newSessionId(),config:{date:new Date().toISOString().slice(0,10)},cases,events:[],savedAt:null};
+  return {v:1,sessionId:newSessionId(),config:{date:new Date().toISOString().slice(0,10)},cases,events:[],stamps:[],savedAt:null};
 }
 function loadLocal(){ try{const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&s.v===1) return s;}catch(e){} return null; }
 function persist(){
@@ -479,6 +511,7 @@ async function tryUnlock(pass){
 async function boot(offline){
   state=loadLocal()||freshState();
   if(!state.sessionId){ state.sessionId=newSessionId(); }   // migrate pre-session states
+  state.stamps=state.stamps||[];                            // migrate pre-stamp states
   if(!offline&&binCfg&&!LOCAL_BRIDGE){
     const remote=await pullCloud(true);
     if(remote&&remote.savedAt&&(!state.savedAt||remote.savedAt>state.savedAt)){
@@ -496,6 +529,7 @@ async function boot(offline){
     for(const id of["newBtn","sessBtn","saveBtn"]) document.getElementById(id).hidden=false;
     setSync("sync-ok","local · autosave on");
     startLiveLoop();
+    initDock();
   } else if(!binCfg) setSync("sync-off","local only");
 }
 document.getElementById("lockForm").addEventListener("submit",async e=>{
@@ -794,8 +828,8 @@ function wireAttBack(box){
   if(b) b.onclick=()=>{ const id=b.dataset.attBack;
     delete viewingAttempt[id]; renderAttempts(id); renderThermal(id); };
 }
-function drawChart(cv,tip,th){
-  const wrap=cv.parentElement, W=wrap.clientWidth||600, H=170, dpr=window.devicePixelRatio||1;
+function drawChart(cv,tip,th,stamps){
+  const wrap=cv.parentElement, W=wrap.clientWidth||600, H=cv.parentElement.classList.contains("dock-body")?108:170, dpr=window.devicePixelRatio||1;
   cv.width=W*dpr; cv.height=H*dpr;
   const g=cv.getContext("2d"); g.scale(dpr,dpr);
   const P={l:34,r:8,t:8,b:18};
@@ -819,6 +853,13 @@ function drawChart(cv,tip,th){
       s.pts.forEach(([t,c],j)=>{ j?g.lineTo(X(t),Y(c)):g.moveTo(X(t),Y(c)); });
       g.stroke();
     });
+    if(stamps) for(const s of stamps){
+      const x=X(s.x), warn=cssVar("--warn");
+      g.strokeStyle=warn; g.setLineDash([4,3]); g.lineWidth=1;
+      g.beginPath(); g.moveTo(x,P.t); g.lineTo(x,H-P.b); g.stroke(); g.setLineDash([]);
+      g.fillStyle=warn;
+      g.fillText(s.label.slice(0,12),Math.min(x+3,W-P.r-50),P.t+9);
+    }
   }
   base();
   cv.onmousemove=e=>{
@@ -837,6 +878,70 @@ function drawChart(cv,tip,th){
     tip.style.left=Math.min(W-tw-4,Math.max(0,X(t)+10))+"px"; tip.style.top="6px";
   };
   cv.onmouseleave=()=>{ tip.style.display="none"; base(); };
+}
+
+/* ---------------- live dock (rolling graph + ad-hoc stamps) ----------------
+   Always-on strip above the footer. Stamps are app-side epoch annotations —
+   they never touch the device's case-marker file, so improvised marks can't
+   corrupt a running case's CSV labels. */
+let dockData=null, dockTimer=null;
+function initDock(){
+  document.getElementById("dock").classList.add("on");
+  const body=document.getElementById("dockBody"), tog=document.getElementById("dockToggle");
+  if(localStorage.getItem("enp_dock_collapsed")==="1"){ body.classList.add("hid"); tog.textContent="▴"; }
+  tog.onclick=()=>{
+    const hid=body.classList.toggle("hid");
+    tog.textContent=hid?"▴":"▾";
+    localStorage.setItem("enp_dock_collapsed",hid?"1":"0");
+    if(!hid) renderDock();
+  };
+  const add=()=>{
+    const inp=document.getElementById("stampLabel");
+    const label=(inp.value.trim()||"mark").replace(/,/g,";");
+    state.stamps.push({t:Math.floor(Date.now()/1000),label});
+    logEvent("—","stamp",label); inp.value="";
+    persist(); renderDock(); toast("📍 "+label+" @ "+hhmmss(new Date()));
+  };
+  document.getElementById("stampBtn").onclick=add;
+  document.getElementById("stampLabel").addEventListener("keydown",e=>{ if(e.key==="Enter")add(); });
+  document.getElementById("dockSpan").onchange=()=>{ dockData=null; renderDock(); };
+  const loop=async()=>{
+    const span=+document.getElementById("dockSpan").value;
+    const now=Math.ceil(Date.now()/1000);
+    const r=await bridge(`/api/window?from=${now-span}&to=${now}&tail=1`);
+    if(r&&r.ok){ r.fetched=Date.now(); dockData=r; }
+    renderDock(r&&r.ok?null:(r&&r.error||"device unreachable"));
+    dockTimer=setTimeout(loop,8000);
+  };
+  loop();
+}
+function renderDock(err){
+  const info=document.getElementById("dockInfo"), body=document.getElementById("dockBody");
+  renderDockChips();
+  if(err&&!dockData){ info.textContent=err; return; }
+  if(!dockData){ info.textContent="waiting for device…"; return; }
+  const top=dockData.series[0];
+  info.textContent=`${dockData.n} samples · hottest ${top.name} ${top.last}°`+(err?" · (stale — "+err+")":"");
+  if(body.classList.contains("hid")) return;
+  const stamps=state.stamps
+    .filter(s=>s.t>=dockData.t0&&s.t<=dockData.t1)
+    .map(s=>({x:s.t-dockData.t0,label:s.label}));
+  drawChart(body.querySelector("canvas"),body.querySelector(".th-tip"),dockData,stamps);
+}
+function renderDockChips(){
+  const el=document.getElementById("dockChips");
+  const list=state.stamps.slice(-8).reverse();
+  el.innerHTML=list.map(s=>{
+    const i=state.stamps.indexOf(s);
+    return `<span class="stamp-chip">${s.label} ${hhmmss(new Date(s.t*1000))}<a data-del-stamp="${i}" title="delete stamp">×</a></span>`;
+  }).join("");
+  el.querySelectorAll("[data-del-stamp]").forEach(a=>a.onclick=()=>{
+    const s=state.stamps[+a.dataset.delStamp];
+    if(confirm(`Delete stamp "${s.label}" (${hhmmss(new Date(s.t*1000))})?`)){
+      state.stamps.splice(+a.dataset.delStamp,1);
+      persist(); renderDock();
+    }
+  });
 }
 
 /* ---------------- sessions (disk, via bridge) ---------------- */
@@ -882,6 +987,8 @@ function exportCsv(){
   for(const c of CASES){ const s=state.cases[c.id];
     for(const a of (s.attempts||[])) out+=row(c,a,a.n);
     out+=row(c,s,(s.attempts||[]).length+1); }
+  for(const s of (state.stamps||[]))
+    out+=`STAMP,,"${s.label}",,${new Date(s.t*1000).toISOString()},,\n`;
   download("enportable-timeline-"+(state.config.date||"session")+".csv",out,"text/csv");
 }
 function exportMd(){
@@ -912,6 +1019,10 @@ function exportMd(){
       md+=`- Thermal (${th.n} samples, ${th.t1-th.t0}s, device log):`+
         th.series.map(z=>` ${z.name} ${z.first}→${z.last}° (peak ${z.peak}°)`).join(" ·")+"\n"; }
     if(s.notes)md+=`- **Actual / notes:** ${s.notes.replace(/\n/g,"\n  ")}\n`; }
+  if(state.stamps&&state.stamps.length){
+    md+=`\n## Stamps (improvised marks)\n\n| Time | Epoch | Label |\n|---|---|---|\n`;
+    for(const s of state.stamps) md+=`| ${hhmmss(new Date(s.t*1000))} | ${s.t} | ${s.label} |\n`;
+  }
   md+=`\n## Event log\n\n| Time (ISO) | Case | Event | Detail |\n|---|---|---|---|\n`;
   for(const e of state.events) md+=`| ${e.t} | ${e.caseId} | ${e.kind} | ${e.detail} |\n`;
   md+=`\n---\n_Generated ${new Date().toISOString()} · timeline CSV pairs with on-device thermal log via case Start/Stop timestamps._\n`;
