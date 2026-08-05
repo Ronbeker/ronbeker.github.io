@@ -185,6 +185,19 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
      the AES-GCM-wrapped access key; passphrase never stored)
    ============================================================ */
 
+/* ---------------- local SSH bridge (field_server.py) ----------------
+   Only active when served from localhost; on the public page every call
+   below silently no-ops, so one codebase serves both. */
+const LOCAL_BRIDGE=["localhost","127.0.0.1"].includes(location.hostname);
+async function bridge(path,body){
+  if(!LOCAL_BRIDGE) return null;
+  try{
+    const r=await fetch(path,body?{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(body)}:undefined);
+    return await r.json();
+  }catch(e){ return null; }
+}
+
 /* ---------------- crypto ---------------- */
 const te=new TextEncoder(), td=new TextDecoder();
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));
@@ -411,6 +424,7 @@ async function boot(offline){
   buildUI(); render();
   setInterval(()=>{document.getElementById("clock").textContent=hhmmss(new Date());},1000);
   if(!binCfg) setSync("sync-off","local only");
+  bridge("/api/ping").then(r=>{ if(r&&r.ok) toast("Local SSH bridge active — S-01 auto-fetch + thermal markers on"); });
 }
 document.getElementById("lockForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -501,10 +515,25 @@ function buildUI(){
     const r=document.documentElement; r.dataset.theme=r.dataset.theme==="light"?"":"light";
   };
 }
+async function fetchS01(){
+  const r=await bridge("/api/s01");
+  if(!r) return;
+  if(!r.ok){ toast("S-01 fetch failed: "+(r.error||"?")); return; }
+  for(const k of["unit","build","firmware","appver"]){
+    if(r.config[k]){ state.config[k]=r.config[k];
+      const el=document.querySelector(`[data-cfg="${k}"]`); if(el)el.value=r.config[k]; }
+  }
+  const cs=state.cases["S-01"];
+  cs.notes=(cs.notes?cs.notes+"\n\n":"")+r.text;
+  logEvent("S-01","autofetch",r.fetched_at);
+  persist(); toast("DUT config fetched ✓ (fw "+(r.config.firmware||"?")+")");
+}
 function act(a,id){
   const cs=state.cases[id]; const now=new Date().toISOString();
-  if(a==="start"){ cs.start=now; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date())); }
-  else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date())); }
+  if(a==="start"){ cs.start=now; if(cs.status==="pending")cs.status="running"; logEvent(id,"start"); toast(id+" started "+hhmmss(new Date()));
+    bridge("/api/mark",{id}); if(id==="S-01") fetchS01(); }
+  else if(a==="stop"){ cs.stop=now; logEvent(id,"stop"); toast(id+" stopped "+hhmmss(new Date()));
+    bridge("/api/mark",{id:"-"}); }
   else { cs.status=a; if(!cs.stop&&(a==="pass"||a==="fail"))cs.stop=cs.stop||now; logEvent(id,"status",a); }
   persist();
 }
