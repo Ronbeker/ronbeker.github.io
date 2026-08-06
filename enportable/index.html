@@ -230,12 +230,14 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
     <div class="dock-in">
       <div class="dock-hd">
         <span class="live-dot"></span><b style="color:var(--ok)">LIVE</b>
-        <select id="dockSpan" title="rolling window"><option value="300">5m</option><option value="600" selected>10m</option><option value="1800">30m</option></select>
+        <select id="dockSpan" title="rolling window"><option value="300">5m</option><option value="600" selected>10m</option><option value="1800">30m</option><option value="3600">1h</option><option value="7200">2h</option><option value="all">ALL</option></select>
         <span class="mono" id="dockInfo">waiting for device…</span>
         <div class="grow"></div>
         <div class="dock-chips" id="dockChips"></div>
         <input id="stampLabel" placeholder="stamp label" maxlength="24">
         <button class="btn btn-sm" id="stampBtn" title="mark this moment on the graph">📍 Stamp</button>
+        <button class="btn btn-sm" id="dockCsv" title="export the visible window as CSV (samples + stamp labels)">⬇ CSV</button>
+        <button class="btn btn-sm" id="dockPng" title="export the graph image, stamp labels included">⬇ PNG</button>
         <button class="iconbtn" id="dockToggle" title="collapse">▾</button>
       </div>
       <div class="dock-body" id="dockBody"><canvas></canvas><div class="th-tip"></div></div>
@@ -244,6 +246,7 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
   <div class="bar-in">
     <button class="btn" id="exportMd">⬇ Report (MD)</button>
     <button class="btn" id="exportCsv">⬇ Timeline (CSV)</button>
+    <button class="btn" id="exportSamples">⬇ Samples (CSV)</button>
     <button class="btn" id="exportJson">⬇ Backup (JSON)</button>
     <div class="grow"></div>
     <button class="btn" id="newBtn" hidden>＋ New session</button>
@@ -457,6 +460,8 @@ function persist(){
   render(); scheduleSync();
 }
 function logEvent(caseId,kind,detail){ state.events.push({t:new Date().toISOString(),caseId,kind,detail:detail||""}); }
+// effective title: per-session rename overrides the catalog title everywhere
+const caseTitle=c=>(state.cases[c.id]&&state.cases[c.id].title)||c.title;
 
 /* ---------------- sync (JSONBin, E2E encrypted) ---------------- */
 const $sync=()=>document.getElementById("syncPill");
@@ -532,6 +537,9 @@ async function boot(offline){
     setSync("sync-ok","local · autosave on");
     startLiveLoop();
     initDock();
+    // resume the live case poll after a mid-case page reload
+    const running=CASES.find(c=>state.cases[c.id].start&&!state.cases[c.id].stop);
+    if(running){ startCaseLive(running.id); toast(running.id+" still running — live view resumed"); }
   } else if(!binCfg) setSync("sync-off","local only");
 }
 document.getElementById("lockForm").addEventListener("submit",async e=>{
@@ -606,7 +614,7 @@ function buildUI(){
     for(const c of CASES.filter(x=>x.ph===pid)){
       html+=`<div class="card case" id="case-${c.id}">
         <div class="case-hd" data-toggle="${c.id}">
-          <span class="cid">${c.id}</span><span class="ctitle">${c.title}</span>
+          <span class="cid">${c.id}</span><span class="ctitle">${caseTitle(c)}</span>
           ${c.p0?'<span class="badge b-p0">P0</span>':""}${c.mut?'<span class="badge b-mut">MUTATES</span>':""}
           ${c.refs&&c.refs!=="—"?`<span class="badge b-ref">${c.refs}</span>`:""}
           <span class="st-chip" data-chip="${c.id}"></span>
@@ -629,9 +637,13 @@ function buildUI(){
             <button class="btn btn-blocked" data-act="blocked" data-id="${c.id}">Blocked</button>
             <button class="btn btn-skip" data-act="skipped" data-id="${c.id}">Skip</button>
             <button class="btn" data-retry="${c.id}" title="archive this attempt and reset the case for a fresh run">↺ Retry</button>
+            <button class="btn" data-rename="${c.id}" title="rename this test — persists in the session and all exports">✎ Rename</button>
             <button class="btn" data-therm="${c.id}" title="fetch device log for this case's window" ${LOCAL_BRIDGE?"":"hidden"}>⟳ Thermal</button>
           </div>
           <textarea placeholder="Notes / actuals / latencies / finding candidates…" data-notes="${c.id}"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:5px">
+            <button class="btn btn-sm" data-notesave="${c.id}">💾 Save notes</button>
+          </div>
           <div class="attempts" id="attempts-${c.id}"></div>
           <div class="thermal-out" id="thermal-${c.id}"></div>
         </div>
@@ -655,10 +667,31 @@ function buildUI(){
   cat.querySelectorAll("[data-retry]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation(); retryCase(b.dataset.retry);
   }));
+  cat.querySelectorAll("[data-rename]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation();
+    const id=b.dataset.rename, c=CASES.find(x=>x.id===id);
+    const nt=prompt("Rename "+id+" (persists in session + exports):",caseTitle(c));
+    if(nt===null)return;
+    if(nt.trim()&&nt.trim()!==c.title) state.cases[id].title=nt.trim();
+    else delete state.cases[id].title;          // empty/original = back to catalog title
+    logEvent(id,"rename",state.cases[id].title||"(catalog title restored)");
+    persist(); buildUI(); render(); toast(id+" renamed");
+  }));
+  cat.querySelectorAll("[data-notesave]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation();
+    const id=b.dataset.notesave;
+    state.cases[id].notes=document.querySelector(`[data-notes="${id}"]`).value;
+    persist(); toast(id+" notes saved ✓");
+  }));
   for(const c of CASES) if(state.cases[c.id].thermal) renderThermal(c.id);
   // bar
   document.getElementById("exportMd").onclick=exportMd;
   document.getElementById("exportCsv").onclick=exportCsv;
+  document.getElementById("exportSamples").onclick=()=>{
+    const csv=buildSamplesCsv();
+    if(!csv) return toast("No thermal samples captured yet");
+    download("enportable-samples-"+(state.config.date||"session")+".csv",csv,"text/csv");
+  };
   document.getElementById("exportJson").onclick=()=>download("enportable-session-backup.json",JSON.stringify(state,null,2),"application/json");
   document.getElementById("pushBtn").onclick=()=>binCfg?pushCloud():toast("Local-only mode — no cloud configured");
   document.getElementById("pullBtn").onclick=async()=>{ if(!binCfg)return toast("Local-only mode");
@@ -915,6 +948,20 @@ function drawChart(cv,tip,th,stamps){
   cv.onmouseleave=()=>{ tip.style.display="none"; base(); };
 }
 
+/* every stored graph point, per test and attempt — pairs with the timeline CSV */
+function buildSamplesCsv(){
+  let out="case_id,attempt,case_title,series,epoch,rel_s,temp_c\n"; let any=false;
+  const emit=(c,n,th)=>{ if(!th||!th.series)return;
+    for(const s of th.series){ if(!s.pts)continue;
+      for(const[t,v]of s.pts){ any=true;
+        out+=`${c.id},${n},"${caseTitle(c)}",${s.name},${(th.t0||0)+t},${t},${v}\n`; } } };
+  for(const c of CASES){ const cs=state.cases[c.id];
+    const maxN=(cs.attempts||[]).reduce((m,a)=>Math.max(m,a.n),0);
+    for(const a of (cs.attempts||[])) emit(c,a.n,a.thermal);
+    emit(c,maxN+1,cs.thermal); }
+  return any?out:null;
+}
+
 /* ---------------- live dock (rolling graph + ad-hoc stamps) ----------------
    Always-on strip above the footer. Stamps are app-side epoch annotations —
    they never touch the device's case-marker file, so improvised marks can't
@@ -950,14 +997,42 @@ function initDock(){
   document.addEventListener("keydown",e=>{                  // Esc clears the selection
     if(e.key==="Escape"&&dockSel){ dockSel=null; updateStampBtn(); renderDock(); }
   });
-  document.getElementById("dockSpan").onchange=()=>{ dockData=null; renderDock(); };
+  document.getElementById("dockSpan").onchange=()=>{
+    dockData=null; renderDock();
+    clearTimeout(dockTimer); loop();      // refetch the new span immediately
+  };
+  document.getElementById("dockCsv").onclick=()=>{
+    if(!dockData) return toast("no dock data yet");
+    let out="type,series_or_label,epoch,rel_s,temp_c\n";
+    for(const s of dockData.series) for(const[t,v]of s.pts)
+      out+=`sample,${s.name},${dockData.t0+t},${t},${v}\n`;
+    for(const s of state.stamps.filter(x=>x.t>=dockData.t0&&x.t<=dockData.t1))
+      out+=`stamp,"${s.label}",${s.t},${s.t-dockData.t0},\n`;
+    download("enportable-dock-"+hhmmss(new Date()).replace(/:/g,"")+".csv",out,"text/csv");
+  };
+  document.getElementById("dockPng").onclick=()=>{
+    const cv=document.getElementById("dockBody").querySelector("canvas");
+    if(!dockData||!cv.width) return toast("no graph to export");
+    const ex=document.createElement("canvas"); ex.width=cv.width; ex.height=cv.height;
+    const g=ex.getContext("2d");
+    g.fillStyle=cssVar("--panel2"); g.fillRect(0,0,ex.width,ex.height);  // solid bg for the PNG
+    g.drawImage(cv,0,0);
+    const a=document.createElement("a");
+    a.href=ex.toDataURL("image/png");
+    a.download="enportable-dock-"+hhmmss(new Date()).replace(/:/g,"")+".png"; a.click();
+  };
   const loop=async()=>{
-    const span=+document.getElementById("dockSpan").value;
+    const sel=document.getElementById("dockSpan").value;
+    const all=sel==="all", span=all?86399:+sel;
     const now=Math.ceil(Date.now()/1000);
-    const r=await bridge(`/api/window?from=${now-span}&to=${now}&tail=1`);
+    // tail fast-path for windows the device can serve from the file's end;
+    // ALL walks the whole file, so it polls least often
+    const tail=!all&&span<=7200?"&tail=1":"";
+    const r=await bridge(`/api/window?from=${now-span}&to=${now}${tail}`);
     if(r&&r.ok){ r.fetched=Date.now(); dockData=r; }
     renderDock(r&&r.ok?null:(r&&r.error||"device unreachable"));
-    dockTimer=setTimeout(loop,8000);
+    const iv=span<=600?8000:span<=1800?12000:span<=3600?15000:30000;
+    dockTimer=setTimeout(loop,iv);
   };
   loop();
 }
@@ -1045,7 +1120,7 @@ function exportCsv(){
   let out="case_id,attempt,title,status,start_iso,stop_iso,duration_s\n";
   const row=(c,s,n)=>{
     const d=(s.start&&s.stop)?Math.round((new Date(s.stop)-new Date(s.start))/1000):"";
-    return `${c.id},${n},"${c.title}",${s.status},${s.start||""},${s.stop||""},${d}\n`;
+    return `${c.id},${n},"${caseTitle(c)}",${s.status},${s.start||""},${s.stop||""},${d}\n`;
   };
   for(const c of CASES){ const s=state.cases[c.id];
     for(const a of (s.attempts||[])) out+=row(c,a,a.n);
