@@ -16,11 +16,13 @@
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --r:10px;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; /* dataviz-validated, dark */
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
 }
 :root[data-theme="light"]{
   --bg:#eef1f5; --panel:#ffffff; --panel2:#f6f8fb; --line:#d4dbe4; --line2:#e3e8ef;
   --ink:#1a2230; --ink2:#54627a; --ink3:#8593a8;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; /* light steps of same theme */
+  --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -826,7 +828,7 @@ function render(){
 }
 
 /* ---------------- per-case thermal window ---------------- */
-const SERIES_VARS=["--s1","--s2","--s3","--s4"];
+const SERIES_VARS=["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
 /* live polling: one case at a time, chained (next poll only after the
